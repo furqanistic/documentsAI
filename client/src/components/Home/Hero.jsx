@@ -1,6 +1,7 @@
 import { AnimatePresence, motion, useAnimation } from 'framer-motion'
 import {
   ArrowRight,
+  BarChart3,
   Book,
   Bot,
   BrainCircuit,
@@ -25,7 +26,7 @@ const Hero = () => {
   const features = [
     { icon: <Bot size={18} />, text: 'AI formatting' },
     { icon: <Users size={18} />, text: 'Collaborating teams' },
-    { icon: <LineChart size={18} />, text: 'Real-time analytics' },
+    { icon: <BarChart3 size={18} />, text: 'Real-time analytics' },
     { icon: <GraduationCap size={18} />, text: 'Auto-grading' },
     { icon: <FileText size={18} />, text: 'Client proposals' },
     { icon: <Smartphone size={18} />, text: 'Interactive online tests' },
@@ -151,7 +152,7 @@ const Hero = () => {
               transition={{ delay: 0.8, duration: 0.6 }}
             >
               <motion.button
-                className='flex items-center justify-center px-4 py-2 text-sm font-medium text-white transition-colors bg-black rounded-lg sm:text-base hover:bg-gray-800'
+                className='flex items-center justify-center px-4 py-1.5 text-sm font-medium text-white transition-colors bg-black rounded-lg md:py-2 md:text-sm hover:bg-gray-800'
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -169,7 +170,7 @@ const Hero = () => {
                 </motion.div>
               </motion.button>
               <motion.button
-                className='flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg sm:text-base hover:bg-gray-50'
+                className='flex items-center justify-center px-4 py-1.5 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg md:py-2 md:text-sm hover:bg-gray-50'
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -303,7 +304,7 @@ const EnhancedDocumentInterface = () => {
         </div>
 
         {/* Document preview area - Increased height for mobile */}
-        <div className='relative h-120 sm:h-120 lg:h-140 overflow-y-auto'>
+        <div className='relative h-128 lg:h-142 overflow-y-auto'>
           <AnimatePresence mode='wait'>
             {activeTab === 'document' ? (
               <motion.div
@@ -322,7 +323,7 @@ const EnhancedDocumentInterface = () => {
                   </div>
                   <div className='flex justify-end'>
                     <motion.button
-                      className='flex items-center px-2 sm:px-3 py-1 text-xs font-medium text-white bg-black rounded-md'
+                      className='flex items-center px-2 sm:px-3 py-2 text-xs font-medium text-white bg-black rounded-md'
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -452,7 +453,7 @@ const EnhancedDocumentInterface = () => {
                 </div>
 
                 {/* Action buttons */}
-                <div className='flex justify-between mt-4'>
+                <div className='flex justify-between mt-4 '>
                   <button className='px-2 sm:px-3 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-md'>
                     Preview
                   </button>

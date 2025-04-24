@@ -100,7 +100,7 @@ const templates = [
 const categories = [
   { name: 'All', icon: null, active: true },
   { name: 'Academic', icon: Award, active: false },
-  { name: 'Educational', icon: School, active: false },
+  { name: 'Education', icon: School, active: false },
   { name: 'Professional', icon: Briefcase, active: false },
 ]
 

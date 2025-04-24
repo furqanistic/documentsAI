@@ -37,7 +37,7 @@ const HowItWorks = () => {
     <div className='w-full bg-gray-50 py-2 sm:py-4 px-2 sm:px-4'>
       <div className='container mx-auto max-w-7xl'>
         {/* Section header with animated underline */}
-        <div className='mb-12 text-center'>
+        <div className='mb-12 pt-6 text-center'>
           <motion.div
             className='inline-flex items-center px-3 py-1 mb-3 md:mb-4 space-x-1 text-xs font-medium text-gray-800 bg-white rounded-full shadow-sm sm:px-4 sm:py-2 sm:space-x-2 sm:text-sm'
             initial={{ opacity: 0, scale: 0.9 }}
@@ -71,13 +71,13 @@ const HowItWorks = () => {
           </motion.p>
         </div>
 
-        {/* Tab navigation */}
+        {/* Tab navigation - UPDATED to match Testimonials mobile view */}
         <div className='flex justify-center mb-6 md:mb-10 px-1'>
           <div className='inline-flex p-1 bg-white rounded-lg shadow-sm w-full max-w-md'>
             {tabs.map((tab) => (
               <motion.button
                 key={tab.id}
-                className={`relative flex-1 px-1 sm:px-2 md:px-6 py-1 sm:py-2 text-xs xs:text-xs md:text-sm font-medium rounded-md ${
+                className={`relative flex-1 px-1 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium rounded-md ${
                   activeTab === tab.id
                     ? 'text-white'
                     : 'text-gray-600 hover:text-gray-800'
@@ -205,7 +205,7 @@ const HowItWorks = () => {
                   transition={{ duration: 0.5, delay: 0.4 }}
                 >
                   <motion.button
-                    className='inline-flex items-center justify-center px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 text-xs sm:text-sm font-medium text-white transition-colors bg-black rounded-lg hover:bg-gray-800'
+                    className='inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium text-white transition-colors bg-black rounded-lg hover:bg-gray-800'
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -271,14 +271,14 @@ const HowItWorks = () => {
                             size={12}
                             className='text-gray-700 mr-1 sm:mr-2 flex-shrink-0 sm:w-3.5 sm:h-3.5'
                           />
-                          <span className='font-medium text-gray-800 text-2xs xs:text-xs sm:text-sm truncate'>
+                          <span className='font-medium text-gray-800 text-sm sm:text-base md:text-lg truncate'>
                             Convert to Interactive Test
                           </span>
                         </div>
                         <motion.button
-                          className='flex items-center px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-md whitespace-nowrap flex-shrink-0'
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                          className='flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-md whitespace-nowrap flex-shrink-0'
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
                         >
                           Convert
                         </motion.button>
@@ -332,7 +332,7 @@ const HowItWorks = () => {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
                       >
-                        <div className='font-medium text-xs sm:text-sm text-gray-800 mb-1.5 sm:mb-2'>
+                        <div className='font-semibold text-xs sm:text-sm text-gray-800 mb-1.5 sm:mb-2'>
                           Multiple Choice Questions
                         </div>
                         <div className='bg-white p-2 sm:p-3 border border-gray-200 rounded-md'>
@@ -361,7 +361,7 @@ const HowItWorks = () => {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5, delay: 0.2 }}
                       >
-                        <div className='font-medium text-xs sm:text-sm text-gray-800 mb-1.5 sm:mb-2'>
+                        <div className='font-semibold text-xs sm:text-sm text-gray-800 mb-1.5 sm:mb-2'>
                           Short Answer Questions
                         </div>
                         <div className='bg-white p-2 sm:p-3 border border-gray-200 rounded-md'>
@@ -540,10 +540,10 @@ const HowItWorks = () => {
                     {/* Progress indicator */}
                     <div className='mb-3 sm:mb-4'>
                       <div className='flex items-center justify-between mb-1.5 sm:mb-2'>
-                        <div className='text-xs sm:text-sm font-medium text-gray-700'>
+                        <div className='font-semibold text-xs sm:text-sm text-gray-800'>
                           Progress
                         </div>
-                        <div className='text-2xs xs:text-xs sm:text-sm text-gray-500'>
+                        <div className='text-xs sm:text-sm text-gray-500'>
                           5/15 questions
                         </div>
                       </div>
@@ -557,10 +557,10 @@ const HowItWorks = () => {
 
                     {/* Current question */}
                     <div className='bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-200'>
-                      <div className='text-xs sm:text-sm md:text-base lg:text-lg font-medium text-gray-800 mb-2 sm:mb-4'>
+                      <div className='text-sm sm:text-base md:text-lg font-medium text-gray-800 mb-2 sm:mb-4'>
                         Question 5
                       </div>
-                      <div className='text-xs sm:text-sm md:text-base lg:text-lg text-gray-700 mb-3 sm:mb-5'>
+                      <div className='text-xs sm:text-sm md:text-base text-gray-700 mb-3 sm:mb-5'>
                         A 5kg object accelerates at 2m/s² when a force is
                         applied. What is the magnitude of the force?
                       </div>
@@ -804,14 +804,14 @@ const HowItWorks = () => {
                             size={12}
                             className='text-gray-700 mr-1 sm:mr-2 flex-shrink-0 sm:w-3.5 sm:h-3.5'
                           />
-                          <span className='font-medium text-gray-800 text-2xs xs:text-xs sm:text-sm truncate'>
+                          <span className='font-medium text-gray-800 text-sm sm:text-base md:text-lg truncate'>
                             AI Document Generation
                           </span>
                         </div>
                         <motion.button
-                          className='flex items-center px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-md whitespace-nowrap flex-shrink-0'
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                          className='flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-md whitespace-nowrap flex-shrink-0'
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
                         >
                           Generate
                         </motion.button>
@@ -847,7 +847,7 @@ const HowItWorks = () => {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
                       >
-                        <div className='font-medium text-xs sm:text-sm text-gray-800 mb-1.5 sm:mb-2'>
+                        <div className='font-semibold text-xs sm:text-sm text-gray-800 mb-1.5 sm:mb-2'>
                           Document Preview
                         </div>
                         <div className='bg-white p-2 sm:p-3 border border-gray-200 rounded-md'>
@@ -858,12 +858,12 @@ const HowItWorks = () => {
 
                           {/* Document sections */}
                           <div className='space-y-2 sm:space-y-3'>
-                            <div className='font-medium text-xs sm:text-sm text-gray-700'>
+                            <div className='font-semibold text-xs sm:text-sm text-gray-700'>
                               Executive Summary
                             </div>
                             <div className='h-5 sm:h-6 md:h-10 bg-gray-50 rounded-md border border-gray-200'></div>
 
-                            <div className='font-medium text-xs sm:text-sm text-gray-700'>
+                            <div className='font-semibold text-xs sm:text-sm text-gray-700'>
                               AI Market Trends
                             </div>
                             <div className='h-5 sm:h-6 md:h-10 bg-gray-50 rounded-md border border-gray-200'></div>
@@ -879,7 +879,7 @@ const HowItWorks = () => {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5, delay: 0.2 }}
                       >
-                        <div className='font-medium text-xs sm:text-sm text-gray-800 mb-1.5 sm:mb-2'>
+                        <div className='font-semibold text-xs sm:text-sm text-gray-800 mb-1.5 sm:mb-2'>
                           Export Options
                         </div>
                         <div className='flex flex-wrap gap-1 sm:gap-2'>
@@ -887,17 +887,17 @@ const HowItWorks = () => {
                             (format, idx) => (
                               <motion.div
                                 key={idx}
-                                className='flex items-center p-1.5 sm:p-2 bg-white rounded-md border border-gray-200 text-[9px] xxs:text-[10px] xs:text-2xs sm:text-xs cursor-pointer'
+                                className='flex items-center p-1.5 sm:p-2 bg-white rounded-md border border-gray-200 text-xs xs:text-sm sm:text-sm cursor-pointer'
                                 whileHover={{
                                   scale: 1.05,
                                   backgroundColor: '#f9fafb',
                                 }}
                                 whileTap={{ scale: 0.95 }}
                               >
-                                <div className='w-3 h-3 sm:w-4 sm:h-4 sm:w-5 sm:h-5 mr-1 sm:mr-1.5 bg-gray-100 rounded-md flex items-center justify-center'>
+                                <div className='w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-1.5 sm:mr-2 bg-gray-100 rounded-md flex items-center justify-center'>
                                   <FileText
-                                    size={8}
-                                    className='text-gray-600 sm:w-2.5 sm:h-2.5'
+                                    size={10}
+                                    className='text-gray-600 sm:w-3 sm:h-3'
                                   />
                                 </div>
                                 {format}

@@ -188,7 +188,7 @@ const Testimonial = () => {
 
         {/* Tab navigation */}
         <div className='flex justify-center mb-6 md:mb-10 px-1 '>
-          <div className='inline-flex p-1  bg-white rounded-lg shadow-sm w-full max-w-md'>
+          <div className='inline-flex p-1 bg-white rounded-lg shadow-sm w-full max-w-md'>
             {tabs.map((tab) => (
               <motion.button
                 key={tab.id}
@@ -355,7 +355,7 @@ const Testimonial = () => {
             students learn, and professionals validate skills.
           </p>
           <motion.button
-            className='inline-flex items-center justify-center px-4 md:px-6 py-2 md:py-3 text-sm md:text-base font-medium text-white transition-colors bg-black rounded-lg hover:bg-gray-800'
+            className='inline-flex items-center justify-center px-4 md:px-6 py-1.5 md:py-2 text-sm md:text-sm font-medium text-white transition-colors bg-black rounded-lg hover:bg-gray-800'
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
           >

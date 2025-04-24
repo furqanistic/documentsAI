@@ -5,16 +5,33 @@ import React, { useEffect, useState } from 'react'
 // Define the height of the navbar for spacing calculations
 const NAVBAR_HEIGHT = '64px'
 
-// AI-focused navigation categories with Pricing after Examples
+// AI-focused navigation categories with Pricing after Examples and added hrefs
 const navLinks = [
   {
     name: 'Create Documents',
     description: 'Generate professional documents instantly',
+    href: '/',
   },
-  { name: 'Interactive Tests', description: 'Auto-graded online assessments' },
-  { name: 'Smart Templates', description: 'Pre-designed AI templates' },
-  { name: 'Examples', description: 'View sample AI-generated content' },
-  { name: 'Pricing', description: 'Affordable plans for all your needs' },
+  {
+    name: 'Interactive Tests',
+    description: 'Auto-graded online assessments',
+    href: '/',
+  },
+  {
+    name: 'Smart Templates',
+    description: 'Pre-designed AI templates',
+    href: '/templates',
+  },
+  {
+    name: 'Examples',
+    description: 'View sample AI-generated content',
+    href: '/',
+  },
+  {
+    name: 'Pricing',
+    description: 'Affordable plans for all your needs',
+    href: '/',
+  },
 ]
 
 // Topbar Component
@@ -62,7 +79,7 @@ const Topbar = () => {
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
               <motion.a
-                href='#'
+                href={link.href}
                 className='text-sm text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-0 whitespace-nowrap'
                 whileHover={{ scale: 1.05 }}
               >
@@ -78,7 +95,7 @@ const Topbar = () => {
             whileHover={{ y: -1 }}
             className='hidden md:block text-sm font-medium text-white hover:text-white transition-colors duration-200 whitespace-nowrap'
           >
-            Login
+            Log In
           </motion.button>
 
           <motion.button
@@ -120,7 +137,7 @@ const Topbar = () => {
                 {navLinks.map((link, i) => (
                   <motion.a
                     key={link.name}
-                    href='#'
+                    href={link.href}
                     initial={{ opacity: 0, y: -5 }}
                     animate={{
                       opacity: 1,
@@ -138,16 +155,16 @@ const Topbar = () => {
 
                 <div className='grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-gray-800'>
                   <motion.a
-                    href='#'
+                    href='/login'
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
                     className='py-2.5 text-sm text-center font-medium rounded-md border border-white text-white hover:bg-gray-900'
                   >
-                    Login
+                    Log In
                   </motion.a>
                   <motion.a
-                    href='#'
+                    href='/signup'
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.25 }}
