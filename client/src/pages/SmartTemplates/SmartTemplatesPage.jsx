@@ -1,9 +1,12 @@
+import SmartHeader from '@/components/SmartTemplates/SmartHeader'
+import TemplateCard from '@/components/SmartTemplates/TemplateCard'
 import { motion } from 'framer-motion'
 import {
   Book,
   BookOpen,
   Briefcase,
-  ExternalLink,
+  Calculator,
+  DollarSign,
   Eye,
   FilePlus,
   FileText,
@@ -12,55 +15,96 @@ import {
   Search,
   Sparkles,
   Users,
+  X,
 } from 'lucide-react'
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Layout from '../Layout/Layout'
 
 const SmartTemplatesPage = () => {
   // State to track selected category
   const [selectedCategory, setSelectedCategory] = useState('All')
+  // State for mobile dropdown
+  const [showMobileFilter, setShowMobileFilter] = useState(false)
+  // Search functionality
+  const [searchTerm, setSearchTerm] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [isSearching, setIsSearching] = useState(false)
+  // Ref for dropdown
+  const dropdownRef = useRef(null)
 
+  // Handle clicking outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowMobileFilter(false)
+      }
+    }
+
+    // Add event listener
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+
+    // Cleanup event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [dropdownRef])
+
+  // Updated icon sizes to match ExamplesPage
   const templateCategories = [
     {
       id: 0,
       title: 'All',
-      icon: <Grid className='w-5 h-5' />,
+      icon: <Grid className='w-4 h-4' />,
       popular: 'View all templates',
     },
     {
       id: 1,
       title: 'Education',
-      icon: <Book className='w-5 h-5' />,
+      icon: <Book className='w-4 h-4' />,
       popular: 'Exams, Study Guides',
     },
     {
       id: 2,
       title: 'Professional',
-      icon: <Briefcase className='w-5 h-5' />,
+      icon: <Briefcase className='w-4 h-4' />,
       popular: 'Reports, Presentations',
     },
     {
       id: 3,
       title: 'Academic',
-      icon: <BookOpen className='w-5 h-5' />,
+      icon: <BookOpen className='w-4 h-4' />,
       popular: 'Research Papers, Citations',
     },
     {
       id: 4,
-      title: 'Interview',
-      icon: <Users className='w-5 h-5' />,
-      popular: 'Questions, Evaluation Forms',
+      title: 'Finance',
+      icon: <DollarSign className='w-4 h-4' />,
+      popular: 'Budgets, Forecasts',
     },
     {
       id: 5,
-      title: 'Content',
-      icon: <FileText className='w-5 h-5' />,
-      popular: 'Blog Posts, Articles',
+      title: 'Accounting',
+      icon: <Calculator className='w-4 h-4' />,
+      popular: 'Statements, Reports',
     },
     {
       id: 6,
+      title: 'Interview',
+      icon: <Users className='w-4 h-4' />,
+      popular: 'Questions, Evaluation Forms',
+    },
+    {
+      id: 7,
+      title: 'Content',
+      icon: <FileText className='w-4 h-4' />,
+      popular: 'Blog Posts, Articles',
+    },
+    {
+      id: 8,
       title: 'Custom',
-      icon: <FilePlus className='w-5 h-5' />,
+      icon: <FilePlus className='w-4 h-4' />,
       popular: 'Start from scratch',
     },
   ]
@@ -94,6 +138,24 @@ const SmartTemplatesPage = () => {
         tagColor: 'bg-black text-white',
         category: 'Academic',
         users: '856',
+      },
+      {
+        icon: <DollarSign className='w-6 h-6 text-gray-700' />,
+        title: 'Financial Report',
+        description: 'Comprehensive financial statements with analysis',
+        tag: 'Popular',
+        tagColor: 'bg-black text-white',
+        category: 'Finance',
+        users: '890',
+      },
+      {
+        icon: <Calculator className='w-6 h-6 text-gray-700' />,
+        title: 'Expense Report',
+        description: 'Organized expense tracking with categorization',
+        tag: 'Popular',
+        tagColor: 'bg-black text-white',
+        category: 'Accounting',
+        users: '845',
       },
       {
         icon: <Users className='w-6 h-6 text-gray-700' />,
@@ -210,6 +272,64 @@ const SmartTemplatesPage = () => {
         users: '612',
       },
     ],
+    Finance: [
+      {
+        icon: <DollarSign className='w-6 h-6 text-gray-700' />,
+        title: 'Financial Report',
+        description: 'Comprehensive financial statements with analysis',
+        tag: 'Popular',
+        tagColor: 'bg-black text-white',
+        category: 'Finance',
+        users: '890',
+      },
+      {
+        icon: <DollarSign className='w-6 h-6 text-gray-700' />,
+        title: 'Budget Planner',
+        description: 'Detailed budget planning with forecasting tools',
+        tag: 'Finance',
+        tagColor: 'bg-gray-100 text-gray-600',
+        category: 'Finance',
+        users: '768',
+      },
+      {
+        icon: <DollarSign className='w-6 h-6 text-gray-700' />,
+        title: 'Investment Analysis',
+        description: 'ROI calculations and investment opportunity assessment',
+        tag: 'Finance',
+        tagColor: 'bg-gray-100 text-gray-600',
+        category: 'Finance',
+        users: '654',
+      },
+    ],
+    Accounting: [
+      {
+        icon: <Calculator className='w-6 h-6 text-gray-700' />,
+        title: 'Expense Report',
+        description: 'Organized expense tracking with categorization',
+        tag: 'Popular',
+        tagColor: 'bg-black text-white',
+        category: 'Accounting',
+        users: '845',
+      },
+      {
+        icon: <Calculator className='w-6 h-6 text-gray-700' />,
+        title: 'Balance Sheet',
+        description: 'Professional balance sheet with automated calculations',
+        tag: 'Accounting',
+        tagColor: 'bg-gray-100 text-gray-600',
+        category: 'Accounting',
+        users: '732',
+      },
+      {
+        icon: <Calculator className='w-6 h-6 text-gray-700' />,
+        title: 'Tax Documentation',
+        description: 'Tax preparation forms with compliance features',
+        tag: 'Accounting',
+        tagColor: 'bg-gray-100 text-gray-600',
+        category: 'Accounting',
+        users: '625',
+      },
+    ],
     Interview: [
       {
         icon: <Users className='w-6 h-6 text-gray-700' />,
@@ -308,180 +428,59 @@ const SmartTemplatesPage = () => {
     },
   }
 
-  const itemVariants = {
-    hidden: { y: 10, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: 'spring', stiffness: 100, damping: 15 },
-    },
-  }
-
   // Handle category change
   const handleCategoryChange = (category) => {
     setSelectedCategory(category)
   }
 
-  // State for mobile dropdown
-  const [showMobileFilter, setShowMobileFilter] = useState(false)
+  // Handle search in real-time as user types
+  // Update the handleSearchInput function to also close the mobile filter
+  const handleSearchInput = (e) => {
+    const value = e.target.value
+    setSearchTerm(value)
 
-  // Handle search functionality
-  const [searchTerm, setSearchTerm] = useState('')
-  const handleSearch = () => {
-    // For now, let's assume searching just goes to All category with a message
-    setSelectedCategory('All')
-    // In a real app, you would filter the templates based on the search term
+    // Close the mobile filter dropdown when searching
+    setShowMobileFilter(false)
+
+    // If search term is empty, reset search state
+    if (value.trim() === '') {
+      setIsSearching(false)
+      return
+    }
+
+    setIsSearching(true)
+
+    // Search across all categories
+    const results = []
+    Object.keys(templatesByCategory).forEach((category) => {
+      const categoryResults = templatesByCategory[category].filter(
+        (template) =>
+          template.title.toLowerCase().includes(value.toLowerCase()) ||
+          template.description.toLowerCase().includes(value.toLowerCase())
+      )
+      results.push(...categoryResults)
+    })
+
+    // Remove duplicates (templates might appear in multiple categories)
+    const uniqueResults = Array.from(
+      new Set(results.map((item) => item.title))
+    ).map((title) => results.find((item) => item.title === title))
+
+    setSearchResults(uniqueResults)
+  }
+
+  // Clear search
+  const clearSearch = () => {
+    setSearchTerm('')
+    setIsSearching(false)
   }
 
   return (
     <Layout>
       <div className='w-full min-h-screen bg-white text-gray-900'>
-        {/* Modern Header */}
-        <div className='w-full bg-black relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8'>
-          {/* Abstract Background Elements */}
-          <div className='absolute top-0 left-0 w-full h-full opacity-30'>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.4 }}
-              transition={{ duration: 1.5 }}
-              className='absolute w-64 h-64 rounded-full bg-gradient-to-r from-gray-700 to-gray-800 blur-3xl -top-20 -left-20'
-            />
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.3 }}
-              transition={{ duration: 1.5, delay: 0.2 }}
-              className='absolute w-96 h-96 rounded-full bg-gradient-to-r from-gray-800 to-gray-900 blur-3xl -bottom-40 -right-20'
-            />
-          </div>
+        {/* Header */}
+        <SmartHeader />
 
-          {/* Grid Pattern Overlay */}
-          <div className='absolute inset-0 opacity-10 bg-grid-pattern'></div>
-
-          <div className='max-w-5xl mx-auto relative z-10'>
-            <div className='flex flex-col md:flex-row items-center justify-between'>
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className='text-center md:text-left mb-8 md:mb-0 md:pr-8'
-              >
-                <div className='flex items-center mb-3'>
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className='bg-white bg-opacity-10 rounded-full p-1 mr-3'
-                  >
-                    <Sparkles className='w-5 h-5 text-white' />
-                  </motion.div>
-                  <div className='flex items-center space-x-2'>
-                    {' '}
-                    {/* Added wrapper div */}
-                    <motion.span
-                      initial={{ opacity: 0, x: -5 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 0.1 }}
-                      className='uppercase text-xs font-semibold tracking-wider text-gray-400 whitespace-nowrap'
-                    >
-                      AI-Powered
-                    </motion.span>
-                  </div>
-                </div>
-                <h1 className='text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight'>
-                  Smart Templates
-                </h1>
-                <motion.div
-                  initial={{ width: '0%' }}
-                  animate={{ width: '40%' }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
-                  className='h-1 bg-gradient-to-r from-gray-500 to-gray-400 rounded-full mb-4 hidden md:block'
-                />
-                <p className='text-gray-300 text-lg mb-4 max-w-lg leading-relaxed'>
-                  Create professional documents in seconds with our AI‑powered
-                  templates. Support for 100+ languages.
-                </p>
-
-                <div className='flex items-center'>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    className='px-4 py-2 bg-white text-black font-medium rounded-lg flex items-center space-x-2 text-sm'
-                  >
-                    <Plus className='w-3.5 h-3.5' />
-                    <span>New Document</span>
-                  </motion.button>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.3 }}
-                className='relative w-full md:w-1/2 max-w-sm'
-              >
-                {/* Floating document elements */}
-                <motion.div
-                  initial={{ y: 10 }}
-                  animate={{ y: -5 }}
-                  transition={{
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                    duration: 2,
-                  }}
-                  className='absolute -top-6 -right-6 w-24 h-32 bg-white bg-opacity-5 backdrop-blur-sm rounded-lg border border-gray-700 shadow-lg z-10 transform rotate-6'
-                />
-
-                <motion.div
-                  initial={{ y: -5 }}
-                  animate={{ y: 10 }}
-                  transition={{
-                    repeat: Infinity,
-                    repeatType: 'reverse',
-                    duration: 2.5,
-                  }}
-                  className='absolute -bottom-8 -left-6 w-28 h-36 bg-white bg-opacity-5 backdrop-blur-sm rounded-lg border border-gray-700 shadow-lg transform -rotate-12'
-                />
-
-                {/* Main document preview */}
-                <div className='bg-white bg-opacity-5 backdrop-blur-sm border border-gray-700 rounded-xl shadow-2xl p-5 relative z-20'>
-                  <div className='flex justify-between items-center mb-4'>
-                    <div className='flex space-x-1.5'>
-                      <div className='w-3 h-3 bg-gray-500 rounded-full'></div>
-                      <div className='w-3 h-3 bg-gray-500 rounded-full'></div>
-                      <div className='w-3 h-3 bg-gray-500 rounded-full'></div>
-                    </div>
-                    <div className='text-xs font-medium text-gray-400'>
-                      AI Template
-                    </div>
-                  </div>
-
-                  <div className='h-36 flex flex-col justify-center items-center'>
-                    <div className='w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center mb-3'>
-                      <FileText className='w-5 h-5 text-gray-300' />
-                    </div>
-                    <div className='space-y-1.5 w-full'>
-                      <div className='h-2 bg-gray-700 rounded-full w-3/5 mx-auto'></div>
-                      <div className='h-2 bg-gray-700 rounded-full w-4/5 mx-auto'></div>
-                      <div className='h-2 bg-gray-700 rounded-full w-2/3 mx-auto'></div>
-                    </div>
-                  </div>
-
-                  <motion.div
-                    initial={{ width: '0%' }}
-                    animate={{ width: '100%' }}
-                    transition={{ duration: 1.5, delay: 0.5 }}
-                    className='h-1 bg-gradient-to-r from-gray-600 to-gray-500 rounded-full mt-5'
-                  />
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </div>
-
-        {/* Style tag for grid pattern */}
         <style jsx>{`
           .bg-grid-pattern {
             background-image: linear-gradient(
@@ -498,224 +497,210 @@ const SmartTemplatesPage = () => {
           }
         `}</style>
 
-        {/* Improved Responsive Search Bar */}
-        <div className='max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 relative z-20'>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className='bg-white rounded-lg shadow-lg p-2 flex flex-col sm:flex-row items-center border border-gray-100'
-          >
-            <div className='px-2 hidden sm:block'>
-              <Search className='h-5 w-5 text-gray-400' />
-            </div>
-            <div className='relative flex-1 w-full'>
-              <div className='absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none sm:hidden'>
-                <Search className='h-4 h-4 text-gray-400' />
-              </div>
-              <input
-                type='text'
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className='w-full py-2 pl-8 sm:pl-2 pr-2 text-sm bg-transparent focus:outline-none text-gray-900 placeholder-gray-500'
-                placeholder='Search templates...'
-              />
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleSearch}
-              className='mt-2 sm:mt-0 w-full sm:w-auto ml-0 sm:ml-2 px-3 py-1.5 text-sm bg-black text-white rounded-md'
-            >
-              Search
-            </motion.button>
-          </motion.div>
-        </div>
+        {/* Category Navigation - Updated to match Examples page */}
+        <div className='w-full pt-12 pb-8'>
+          {' '}
+          {/* Updated padding to match Examples page */}
+          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+            <div className='flex justify-between items-center mb-5'>
+              <h2 className='text-xl font-bold text-gray-900'>
+                Explore Templates
+              </h2>
 
-        {/* Completely Redesigned Mobile-First Category Navigation */}
-        <div className='max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4'>
-          <div className='flex justify-between items-center mb-5'>
-            <h2 className='text-xl font-bold text-gray-900'>
-              Explore Templates
-            </h2>
-
-            {/* UPDATED Mobile Dropdown - Fixed width and smaller elements */}
-            <div className='relative sm:hidden'>
-              <button
-                onClick={() => setShowMobileFilter(!showMobileFilter)}
-                className='flex items-center justify-between w-32 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none'
-              >
-                <span className='flex items-center'>
-                  <span className='mr-1.5'>
-                    {
-                      templateCategories.find(
-                        (c) => c.title === selectedCategory
-                      )?.icon
-                    }
+              {/* Mobile Dropdown with ref for click-outside detection */}
+              <div className='relative sm:hidden' ref={dropdownRef}>
+                <button
+                  onClick={() => setShowMobileFilter(!showMobileFilter)}
+                  className='flex items-center justify-between w-32 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none'
+                >
+                  <span className='flex items-center'>
+                    <span className='mr-1.5'>
+                      {
+                        templateCategories.find(
+                          (c) => c.title === selectedCategory
+                        )?.icon
+                      }
+                    </span>
+                    <span className='truncate'>{selectedCategory}</span>
                   </span>
-                  <span className='truncate'>{selectedCategory}</span>
-                </span>
-                <svg
-                  className='w-4 h-4 ml-1'
-                  xmlns='http://www.w3.org/2000/svg'
-                  viewBox='0 0 20 20'
-                  fill='currentColor'
-                  aria-hidden='true'
-                >
-                  <path
-                    fillRule='evenodd'
-                    d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'
-                    clipRule='evenodd'
-                  />
-                </svg>
-              </button>
+                  <svg
+                    className='w-4 h-4 ml-1'
+                    xmlns='http://www.w3.org/2000/svg'
+                    viewBox='0 0 20 20'
+                    fill='currentColor'
+                    aria-hidden='true'
+                  >
+                    <path
+                      fillRule='evenodd'
+                      d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'
+                      clipRule='evenodd'
+                    />
+                  </svg>
+                </button>
 
-              {/* UPDATED Mobile Dropdown Menu - More compact */}
-              {showMobileFilter && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className='absolute z-10 w-32 mt-1 bg-white shadow-lg rounded-md py-1 ring-1 ring-black ring-opacity-5 focus:outline-none'
-                >
-                  {templateCategories.map((category) => (
-                    <div
-                      key={category.id}
-                      onClick={() => {
-                        handleCategoryChange(category.title)
-                        setShowMobileFilter(false)
-                      }}
-                      className={`flex items-center px-3 py-1.5 text-xs cursor-pointer ${
-                        selectedCategory === category.title
-                          ? 'bg-gray-100 text-gray-900'
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <span className='mr-1.5'>{category.icon}</span>
-                      <span className='truncate'>{category.title}</span>
-                    </div>
-                  ))}
-                </motion.div>
-              )}
+                {/* Mobile Dropdown Menu */}
+                {showMobileFilter && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className='absolute z-10 w-32 mt-1 bg-white shadow-lg rounded-md py-1 ring-1 ring-black ring-opacity-5 focus:outline-none'
+                  >
+                    {templateCategories.map((category) => (
+                      <div
+                        key={category.id}
+                        onClick={() => {
+                          handleCategoryChange(category.title)
+                          setShowMobileFilter(false)
+                        }}
+                        className={`flex items-center px-3 py-1.5 text-xs cursor-pointer ${
+                          selectedCategory === category.title
+                            ? 'bg-gray-100 text-gray-900 rounded-md mx-1'
+                            : 'text-gray-700 hover:bg-gray-50 hover:rounded-md hover:mx-1'
+                        }`}
+                      >
+                        <span className='mr-1.5'>{category.icon}</span>
+                        <span className='truncate'>{category.title}</span>
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Desktop Category Chips */}
-          <div className='hidden sm:flex sm:flex-wrap sm:gap-2'>
-            {templateCategories.map((category) => (
-              <motion.button
-                key={category.id}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => handleCategoryChange(category.title)}
-                className={`px-4 py-1.5 rounded-full flex items-center text-sm font-medium ${
-                  selectedCategory === category.title
-                    ? 'bg-black text-white shadow-sm'
-                    : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                <span className='mr-1.5'>{category.icon}</span>
-                {category.title}
-              </motion.button>
-            ))}
+            {/* Desktop Category Chips - Adjusted to match Examples page */}
+            <div
+              className='hidden sm:flex sm:flex-wrap sm:gap-2 mb-6 justify-center'
+              style={{ width: '100%' }}
+            >
+              {templateCategories.map((category) => (
+                <motion.button
+                  key={category.id}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => handleCategoryChange(category.title)}
+                  className={`px-4 py-1.5 rounded-full flex items-center text-sm font-medium ${
+                    selectedCategory === category.title
+                      ? 'bg-black text-white shadow-sm'
+                      : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className='mr-2'>{category.icon}</span>
+                  {category.title}
+                </motion.button>
+              ))}
+            </div>
+
+            {/* Search Bar - Adjusted margin to match Examples page */}
+            <div className='flex justify-center'>
+              <div className='relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg'>
+                <input
+                  type='text'
+                  value={searchTerm}
+                  onChange={handleSearchInput}
+                  onFocus={() => setShowMobileFilter(false)}
+                  className='w-full py-2 pl-4 pr-10 text-sm bg-white border border-gray-200 rounded-full focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-gray-800 placeholder-gray-500 shadow-sm'
+                  placeholder='Search templates...'
+                />
+                {searchTerm && (
+                  <button
+                    onClick={clearSearch}
+                    className='absolute inset-y-0 right-0 px-3 flex items-center justify-center text-gray-400 hover:text-gray-600'
+                  >
+                    <X className='h-4 w-4' />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Templates - More Compact Design */}
-        {/* <div className='w-full  py-6 px-4 sm:px-6 lg:px-8'>
-          <div className='max-w-5xl mx-auto'>
+        {/* Templates Grid - Adding mb-10 to search bar container to match Examples page */}
+        <div className='w-full py-2'>
+          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10'>
+            {' '}
+            {/* Added mb-10 here to create consistent gap */}
             <div className='flex justify-between items-center mb-4'>
               <h2 className='text-lg font-semibold text-gray-900'>
-                {selectedCategory === 'All'
+                {isSearching
+                  ? `Search Results for "${searchTerm}"`
+                  : selectedCategory === 'All'
                   ? 'All Templates'
                   : `${selectedCategory} Templates`}
                 <span className='text-sm text-gray-500 ml-2'>
-                  ({templatesByCategory[selectedCategory].length})
+                  (
+                  {isSearching
+                    ? searchResults.length
+                    : templatesByCategory[selectedCategory].length}
+                  )
                 </span>
               </h2>
-            </div>
-
-            <motion.div
-              key={selectedCategory} // This forces re-render on category change
-              variants={containerVariants}
-              initial='hidden'
-              animate='visible'
-              className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4'
-            >
-              {templatesByCategory[selectedCategory].map((template, index) => (
-                <motion.div
-                  key={index}
-                  variants={itemVariants}
-                  whileHover={{
-                    scale: 1.02,
-                    boxShadow: '0 4px 12px -2px rgba(0, 0, 0, 0.05)',
-                  }}
-                  className={`bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden ${
-                    template.category === 'Custom'
-                      ? 'border-l-2 border-l-black'
-                      : ''
-                  }`}
+              {isSearching && (
+                <button
+                  onClick={clearSearch}
+                  className='text-xs text-gray-600 hover:text-black flex items-center'
                 >
-                  <div className='p-3 sm:p-4'>
-                    <div className='flex items-start justify-between mb-3'>
-                      <div
-                        className={`p-2 ${
-                          template.category === 'Custom'
-                            ? 'bg-black'
-                            : 'bg-gray-50'
-                        } rounded-lg`}
-                      >
-                        <div
-                          className={
-                            template.category === 'Custom'
-                              ? 'text-white'
-                              : 'text-gray-700'
-                          }
-                        >
-                          {template.icon}
-                        </div>
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    className='h-3 w-3 mr-1'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M6 18L18 6M6 6l12 12'
+                    />
+                  </svg>
+                  Clear
+                </button>
+              )}
+            </div>
+            <div style={{ minHeight: '600px' }}>
+              <motion.div
+                key='templates-grid'
+                variants={containerVariants}
+                initial='hidden'
+                animate='visible'
+                className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 relative'
+              >
+                {isSearching ? (
+                  searchResults.length > 0 ? (
+                    searchResults.map((template, index) => (
+                      <TemplateCard key={index} template={template} />
+                    ))
+                  ) : (
+                    <div className='col-span-full py-10 text-center'>
+                      <div className='mb-2'>
+                        <Search className='w-6 h-6 text-gray-400 mx-auto' />
                       </div>
-                      <span
-                        className={`text-xs px-2 py-0.5 ${template.tagColor} rounded-full`}
+                      <h3 className='text-gray-700 font-medium mb-1'>
+                        No templates found
+                      </h3>
+                      <p className='text-gray-500 text-sm'>
+                        We couldn't find any templates matching "{searchTerm}"
+                      </p>
+                      <button
+                        onClick={clearSearch}
+                        className='mt-3 text-sm text-gray-600 hover:text-black underline'
                       >
-                        {template.tag}
-                      </span>
+                        Clear search
+                      </button>
                     </div>
-                    <h3 className='text-sm font-semibold text-gray-900 truncate'>
-                      {template.title}
-                    </h3>
-                    <p className='text-xs text-gray-500 mt-1 mb-3 line-clamp-2'>
-                      {template.description}
-                    </p>
-
-                    <div className='flex items-center justify-between'>
-                      <span className='text-xs text-gray-500'>
-                        {template.users} users
-                      </span>
-                      <div className='flex space-x-1'>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className='px-2 py-1 bg-white border border-gray-200 text-gray-700 rounded-md text-xs font-medium flex items-center'
-                        >
-                          <Eye className='w-3 h-3 mr-1' />
-                          <span>View</span>
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className='px-2 py-1 bg-black text-white rounded-md text-xs font-medium'
-                        >
-                          Use
-                        </motion.button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
+                  )
+                ) : (
+                  templatesByCategory[selectedCategory].map(
+                    (template, index) => (
+                      <TemplateCard key={index} template={template} />
+                    )
+                  )
+                )}
+              </motion.div>
+            </div>
           </div>
-        </div> */}
+        </div>
       </div>
     </Layout>
   )

@@ -25,87 +25,87 @@ const Testimonial = () => {
   const testimonials = {
     educators: [
       {
-        name: 'Dr. Michelle Patel',
+        name: 'Dr. Michelle Vascio',
         role: 'University Professor',
         image: 'michelle',
-        quote: `This platform has completely transformed my assessment workflow. 
-                I can create, distribute, and grade tests in a fraction of the time it used to take.`,
+        quote:
+          'This platform has completely transformed my assessment workflow. I can create, distribute, and grade tests in a fraction of the time it used to take.',
         rating: 5,
         verified: true,
       },
       {
-        name: 'James Wilson',
+        name: 'Diego Alzarugo',
         role: 'High School Teacher',
         image: 'james',
-        quote: `The anti-cheating measures and analytics have made remote testing actually viable. 
-                My students love the instant feedback, and I love how much time I save on grading.`,
+        quote:
+          'The anti-cheating measures and analytics have made remote testing actually viable. My students love the instant feedback, and I love how much time I save on grading.',
         rating: 5,
         verified: true,
       },
       {
-        name: 'Sarah Johnson',
+        name: 'Sarah Darmington',
         role: 'Education Director',
         image: 'sarah',
-        quote: `Rolling this out across our entire school district has improved assessment consistency 
-                and saved thousands of hours of teacher time. The ROI was immediate.`,
+        quote:
+          'Rolling this out across our entire school district has improved assessment consistency and saved thousands of hours of teacher time. The ROI was immediate.',
         rating: 5,
         verified: true,
       },
       {
-        name: 'Robert Chen',
+        name: 'Robert Cvetkovic',
         role: 'Math Department Chair',
         image: 'robert',
-        quote: `The ability to create randomized math problems with step-by-step solutions has been 
-                a game-changer for our department. Students get more practice with immediate feedback.`,
+        quote:
+          'The ability to create randomized math problems with step-by-step solutions has been a game-changer for our department. Students get more practice with immediate feedback.',
         rating: 4,
         verified: true,
       },
     ],
     students: [
       {
-        name: 'Emma Rodriguez',
+        name: 'Mia Elbasani',
         role: 'MBA Student',
         image: 'emma',
-        quote: `Taking exams online used to be stressful, but this platform makes it so intuitive. 
-                The interface is clean, and I can focus on the content rather than figuring out how to use the system.`,
+        quote:
+          'Taking exams online used to be stressful, but this platform makes it so intuitive. The interface is clean, and I can focus on the content rather than figuring out how to use the system.',
         rating: 5,
         verified: true,
       },
       {
-        name: 'Alex Kim',
+        name: 'Soo Kim',
         role: 'Computer Science Major',
         image: 'alex',
-        quote: `The instant feedback on coding assessments has helped me improve faster than traditional methods. 
-                I can see where I went wrong and fix it immediately.`,
+        quote:
+          'The instant feedback on coding assessments has helped me improve faster than traditional methods. I can see where I went wrong and fix it immediately.',
         rating: 5,
         verified: true,
       },
       {
-        name: 'Taylor Johnson',
+        name: 'Taylor Johansen',
         role: 'High School Senior',
         image: 'taylor',
-        quote: `I use this to study for AP exams. The practice tests are really helpful and 
-                I can track my progress over time to see which areas I need to focus on.`,
+        quote:
+          'I use this to study for AP exams. The practice tests are really helpful and I can track my progress over time to see which areas I need to focus on.',
         rating: 4,
         verified: true,
       },
       {
-        name: 'Marcus Williams',
+        name: 'DeMarcus Williams',
         role: 'Online Degree Student',
         image: 'marcus',
-        quote: `As a remote student, assessment platforms are crucial. This one is by far the best I've used - 
-                reliable, easy to navigate, and the mobile experience is excellent.`,
+        quote:
+          "As a remote student, assessment platforms are crucial. This one is by far the best I've used - reliable, easy to navigate, and the mobile experience is excellent.",
         rating: 5,
         verified: true,
       },
     ],
     professionals: [
       {
-        name: 'Michael Chen',
+        name: 'Furqan Malik',
         role: 'Corporate Trainer',
         image: 'michael',
-        quote: `We use this for all our certification assessments now. The analytics have helped us 
-                refine our training materials based on where participants are struggling.`,
+        quote:
+          'We use this for all our certification assessments now. The analytics have helped us refine our training materials based on where participants are struggling.',
         rating: 5,
         verified: true,
       },
@@ -113,43 +113,35 @@ const Testimonial = () => {
         name: 'Priya Sharma',
         role: 'HR Director',
         image: 'priya',
-        quote: `We've implemented this platform for our skills assessments during recruitment. 
-                It's standardized our process and reduced hiring time by 30%.`,
+        quote:
+          "We've implemented this platform for our skills assessments during recruitment. It's standardized our process and reduced hiring time by 30%.",
         rating: 5,
         verified: true,
       },
       {
-        name: 'David Okafor',
+        name: 'David Obiakaeze',
         role: 'EdTech Administrator',
         image: 'david',
-        quote: `The seamless integration with our existing LMS made adoption painless. 
-                The support team was fantastic during our institutional rollout.`,
+        quote:
+          'The seamless integration with our existing LMS made adoption painless. The support team was fantastic during our institutional rollout.',
         rating: 4,
         verified: true,
       },
       {
-        name: 'Lisa Gonzalez',
+        name: 'Lisa Goncalves',
         role: 'Product Manager',
         image: 'lisa',
-        quote: `Our team uses this for knowledge checks during product training. 
-                The ability to include interactive elements in assessments helps keep engagement high.`,
+        quote:
+          'Our team uses this for knowledge checks during product training. The ability to include interactive elements in assessments helps keep engagement high.',
         rating: 5,
         verified: true,
       },
     ],
   }
 
-  // Stats data
-  const stats = [
-    { value: '2,500+', label: 'Educational institutions' },
-    { value: '1.8M', label: 'Active users' },
-    { value: '98%', label: 'Satisfaction rate' },
-    { value: '14M+', label: 'Assessments completed' },
-  ]
-
   return (
-    <div className='w-full bg-gray-50 py-8 md:py-16 px-3 md:px-4 '>
-      <div className='container mx-auto max-w-7xl '>
+    <div className='w-full bg-gray-50 py-6 lg:py-10 px-3 md:px-4'>
+      <div className='container mx-auto max-w-7xl'>
         {/* Section header */}
         <div className='mb-12 text-center'>
           <motion.div
@@ -271,7 +263,7 @@ const Testimonial = () => {
               <div className='p-2 md:p-3 bg-gray-50 text-xs text-gray-500 flex justify-between items-center'>
                 {testimonial.verified && (
                   <div className='flex items-center'>
-                    <CheckCircle2 size={10} className='text-green-500 mr-1' />
+                    <CheckCircle2 size={14} className='text-green-500 mr-1' />
                     <span>Verified User</span>
                   </div>
                 )}
@@ -280,7 +272,7 @@ const Testimonial = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Share2 size={10} className='mr-1' />
+                  <Share2 size={14} className='mr-1' />
                   <span>Share</span>
                 </motion.button>
               </div>
@@ -355,7 +347,7 @@ const Testimonial = () => {
             students learn, and professionals validate skills.
           </p>
           <motion.button
-            className='inline-flex items-center justify-center px-4 md:px-6 py-1.5 md:py-2 text-sm md:text-sm font-medium text-white transition-colors bg-black rounded-lg hover:bg-gray-800'
+            className='inline-flex items-center justify-center px-4 md:px-6 py-1.5 md:py-2 text-sm md:text-sm font-medium text-white transition-colors bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg hover:bg-gray-800'
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
           >

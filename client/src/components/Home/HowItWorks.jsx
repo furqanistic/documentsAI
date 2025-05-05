@@ -34,7 +34,7 @@ const HowItWorks = () => {
   ]
 
   return (
-    <div className='w-full bg-gray-50 py-2 sm:py-4 px-2 sm:px-4'>
+    <div className='w-full bg-gray-50 py-6 lg:py-10 pt-0 lg:pt-2 px-2 sm:px-4'>
       <div className='container mx-auto max-w-7xl'>
         {/* Section header with animated underline */}
         <div className='mb-12 pt-6 text-center'>
@@ -205,7 +205,7 @@ const HowItWorks = () => {
                   transition={{ duration: 0.5, delay: 0.4 }}
                 >
                   <motion.button
-                    className='inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium text-white transition-colors bg-black rounded-lg hover:bg-gray-800'
+                    className='inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium text-white transition-colors bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg hover:bg-gray-800'
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -267,16 +267,12 @@ const HowItWorks = () => {
                     >
                       <div className='flex justify-between items-center mb-2 sm:mb-3 md:mb-4'>
                         <div className='flex items-center min-w-0 mr-2'>
-                          <BrainCircuit
-                            size={12}
-                            className='text-gray-700 mr-1 sm:mr-2 flex-shrink-0 sm:w-3.5 sm:h-3.5'
-                          />
                           <span className='font-medium text-gray-800 text-sm sm:text-base md:text-lg truncate'>
                             Convert to Interactive Test
                           </span>
                         </div>
                         <motion.button
-                          className='flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-md whitespace-nowrap flex-shrink-0'
+                          className='flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-gradient-to-br from-blue-600 to-blue-800 rounded-md whitespace-nowrap flex-shrink-0'
                           whileHover={{ scale: 1.03 }}
                           whileTap={{ scale: 0.97 }}
                         >
@@ -487,7 +483,7 @@ const HowItWorks = () => {
                   transition={{ duration: 0.5, delay: 0.4 }}
                 >
                   <motion.button
-                    className='inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium text-white transition-colors bg-black rounded-lg hover:bg-gray-800'
+                    className='inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium text-white transition-colors bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg hover:bg-gray-800'
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -613,7 +609,7 @@ const HowItWorks = () => {
                           Previous
                         </motion.button>
                         <motion.button
-                          className='px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-md'
+                          className='px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-gradient-to-br from-blue-600 to-blue-800  rounded-md'
                           whileHover={{ scale: 1.03 }}
                           whileTap={{ scale: 0.97 }}
                         >
@@ -738,7 +734,7 @@ const HowItWorks = () => {
                   transition={{ duration: 0.5, delay: 0.4 }}
                 >
                   <motion.button
-                    className='inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium text-white transition-colors bg-black rounded-lg hover:bg-gray-800'
+                    className='inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium text-white transition-colors bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg hover:bg-gray-800'
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -800,16 +796,12 @@ const HowItWorks = () => {
                     >
                       <div className='flex justify-between items-center mb-2 sm:mb-3 md:mb-4'>
                         <div className='flex items-center min-w-0 mr-2'>
-                          <BrainCircuit
-                            size={12}
-                            className='text-gray-700 mr-1 sm:mr-2 flex-shrink-0 sm:w-3.5 sm:h-3.5'
-                          />
                           <span className='font-medium text-gray-800 text-sm sm:text-base md:text-lg truncate'>
                             AI Document Generation
                           </span>
                         </div>
                         <motion.button
-                          className='flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-md whitespace-nowrap flex-shrink-0'
+                          className='flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-gradient-to-br from-blue-600 to-blue-800 rounded-md whitespace-nowrap flex-shrink-0'
                           whileHover={{ scale: 1.03 }}
                           whileTap={{ scale: 0.97 }}
                         >

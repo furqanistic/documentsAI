@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,6 +18,17 @@
     />
     <title>Calani AI</title>
   </head>
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+      overflow-x: hidden;
+      width: 100%;
+    }
+    [data-framer-name='Container'] {
+      contain: paint;
+    }
+  </style>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

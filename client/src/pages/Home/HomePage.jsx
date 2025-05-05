@@ -9,14 +9,15 @@ import Layout from '../Layout/Layout'
 
 const HomePage = () => {
   return (
-    <Layout>
-      <Hero />
-      <HowItWorks />
-      <TemplateGallery />
-      <Testimonials />
-      <CalaniFAQ />
-      <Footer />
-    </Layout>
+    <>
+      <Layout>
+        <Hero />
+        <HowItWorks />
+        <TemplateGallery />
+        <Testimonials />
+        <CalaniFAQ />
+      </Layout>
+    </>
   )
 }
 

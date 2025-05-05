@@ -49,7 +49,7 @@ const Hero = () => {
 
       {/* Floating particles */}
 
-      <div className='container relative z-10 px-4 py-6 lg:py-16 mx-auto max-w-7xl'>
+      <div className='container relative z-10 px-4 py-6 lg:py-10  mx-auto max-w-7xl'>
         <div className='flex flex-col items-center gap-4 lg:gap-8 lg:flex-row lg:justify-between lg:items-center'>
           {/* Left column - Text content */}
           <motion.div
@@ -94,7 +94,7 @@ const Hero = () => {
                 </span>{' '}
                 in minutes,{' '}
                 <span className='block sm:inline'>
-                  <span className='uppercase text-red-600'>not</span> hours
+                  <span className='uppercase text-red-600'>NOT</span> hours
                 </span>
               </motion.h1>
 
@@ -123,12 +123,11 @@ const Hero = () => {
               >
                 {features.map((feature, index) => (
                   <motion.div
-                    key={index}
                     className={`flex items-center px-2 py-1 text-xs sm:text-sm font-medium rounded-md ${
                       currentFeature === index
                         ? 'bg-black text-white'
                         : 'bg-gray-100 text-gray-700'
-                    }`}
+                    } whitespace-nowrap`}
                     animate={{
                       scale: currentFeature === index ? 1.05 : 1,
                       backgroundColor:
@@ -152,7 +151,7 @@ const Hero = () => {
               transition={{ delay: 0.8, duration: 0.6 }}
             >
               <motion.button
-                className='flex items-center justify-center px-4 py-1.5 text-sm font-medium text-white transition-colors bg-black rounded-lg md:py-2 md:text-sm hover:bg-gray-800'
+                className='flex items-center justify-center px-4 py-1.5 text-sm font-medium text-white transition-colors bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg md:py-2 md:text-sm hover:bg-gray-800'
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -180,8 +179,9 @@ const Hero = () => {
           </motion.div>
 
           {/* Right column - Enhanced document and test interface - Now visible on all screen sizes */}
+          {/* Right column - Enhanced document and test interface */}
           <motion.div
-            className='relative w-full max-w-sm md:max-w-md lg:max-w-md xl:max-w-lg'
+            className='relative w-full max-w-full md:max-w-md lg:max-w-md xl:max-w-lg'
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4, duration: 0.8 }}
@@ -226,7 +226,7 @@ const EnhancedDocumentInterface = () => {
 
       {/* Modern UI container */}
       <motion.div
-        className='relative overflow-hidden bg-white border border-gray-200 rounded-2xl shadow-xl'
+        className='relative overflow-hidden bg-white border border-gray-200 rounded-2xl shadow-xl mx-4 md:mx-0'
         initial={{ y: 20 }}
         animate={{
           y: [0, -8, 0],
@@ -261,12 +261,11 @@ const EnhancedDocumentInterface = () => {
           </div>
           <div className='flex items-center space-x-3'>
             <motion.div
-              className='flex items-center px-2 py-1 text-xs font-medium text-white bg-black rounded-full'
+              className='flex items-center px-2 py-1 text-xs font-medium text-white bg-black  rounded-full'
               animate={{ opacity: [0.8, 1, 0.8] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <BrainCircuit size={10} className='mr-1' />
-              <span>AI Active</span>
+              <span>AI-Active</span>
             </motion.div>
           </div>
         </div>
@@ -323,7 +322,7 @@ const EnhancedDocumentInterface = () => {
                   </div>
                   <div className='flex justify-end'>
                     <motion.button
-                      className='flex items-center px-2 sm:px-3 py-2 text-xs font-medium text-white bg-black rounded-md'
+                      className='flex items-center px-2 sm:px-3 py-2 text-xs font-medium text-white bg-gradient-to-br from-blue-600 to-blue-800 rounded-md'
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -442,12 +441,11 @@ const EnhancedDocumentInterface = () => {
 
                   {/* Convert to Interactive Test button */}
                   <motion.button
-                    className='flex items-center justify-center w-full px-3 py-2 mt-3 text-xs font-medium text-white bg-blue-600 rounded-md'
-                    whileHover={{ scale: 1.02, backgroundColor: '#2563eb' }}
+                    className='flex items-center justify-center w-full px-3 py-2 mt-3 text-xs font-medium text-white bg-gradient-to-br from-blue-600 to-blue-800 rounded-md'
+                    whileHover={{ scale: 1.02, backgroundColor: '#1c55f2' }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setActiveTab('interactive')}
                   >
-                    <GraduationCap size={12} className='mr-1' />
                     Convert to Interactive Test
                   </motion.button>
                 </div>
@@ -462,12 +460,12 @@ const EnhancedDocumentInterface = () => {
                       Edit
                     </button>
                     <motion.button
-                      className='px-2 sm:px-3 py-2 text-xs font-medium text-white bg-black rounded-md'
+                      className='px-2 sm:px-3 py-2 text-xs font-medium text-white bg-green-600 rounded-md'
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       animate={
                         showCheck
-                          ? { backgroundColor: '#000', scale: [1, 1.05, 1] }
+                          ? { backgroundColor: '#16a34a', scale: [1, 1.05, 1] }
                           : {}
                       }
                       transition={
@@ -587,7 +585,7 @@ const EnhancedDocumentInterface = () => {
                         Test Link
                       </div>
                       <div className='flex items-center space-x-2'>
-                        <div className='px-2 py-1 text-xs bg-gray-100 rounded'>
+                        <div className='px-2 py-1 text-xs bg-gray-100 rounded truncate'>
                           exam.calani.ai/sci10-28fj3
                         </div>
                         <button className='p-1 text-xs text-gray-500 bg-gray-100 rounded'>

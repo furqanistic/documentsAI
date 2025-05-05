@@ -21,16 +21,13 @@ const Footer = () => {
   ]
 
   return (
-    <footer className='bg-black text-white py-4'>
+    <footer className='bg-black text-white py-4 w-full'>
       <div className='container mx-auto px-2'>
         <div className='flex flex-wrap items-center justify-between'>
           {/* Logo and tagline - centered on mobile */}
           <div className='flex items-center space-x-4 mb-2 md:mb-0 w-full md:w-1/4 justify-center md:justify-start'>
             <div className='flex items-center'>
-              <div className='w-6 h-6 bg-white rounded-md flex items-center justify-center'>
-                <span className='text-black font-bold text-xs'>C</span>
-              </div>
-              <span className='ml-2 font-bold text-white'>Calani AI</span>
+              <img src='./logo.png' alt='Calani Logo' className='h-10' />
             </div>
             <div className='hidden sm:block text-xs text-gray-400'>
               <p className='m-0'>AI-Powered Document Creation</p>
