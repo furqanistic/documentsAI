@@ -1,9 +1,9 @@
 import AiPromptSuggestions from '@/components/CreateDocuments/AiPromptSuggestions'
 import CreateDocumentsHeader from '@/components/CreateDocuments/CreateDocumentsHeader'
-import DocumentMetadataOptions from '@/components/CreateDocuments/DocumentMetadataOptions'
+import DocumentBranding from '@/components/CreateDocuments/DocumentBranding'
 import DocumentPreview from '@/components/CreateDocuments/DocumentPreview'
-import InteractiveTestOptions from '@/components/CreateDocuments/InteractiveTestOptions'
 import SidebarCreateDocument from '@/components/CreateDocuments/SidebarCreateDocument'
+import InteractiveTestOptions from '@/components/InteractiveTests/InteractiveTestOptions'
 import { motion } from 'framer-motion'
 import {
   ArrowRight,
@@ -41,7 +41,7 @@ const CreateDocumentsPage = () => {
   const [showInteractiveOptions, setShowInteractiveOptions] = useState(false)
   const [convertToInteractive, setConvertToInteractive] = useState(false)
   const [interactiveSettings, setInteractiveSettings] = useState({
-    timeLimit: 60,
+    timeLimit: 30,
     showResults: true,
     allowRetry: true,
     isPublic: false,
@@ -86,7 +86,8 @@ const CreateDocumentsPage = () => {
 
   useEffect(() => {
     // Reset convert to interactive option when document type changes
-    if (selectedDocType !== 0) {
+    if (selectedDocType !== 1) {
+      // Changed from 0 to 1
       setConvertToInteractive(false)
       setShowInteractiveOptions(false)
     }
@@ -130,14 +131,14 @@ const CreateDocumentsPage = () => {
   // Document types with enhanced descriptions
   const documentTypes = [
     {
-      icon: <FileQuestion className='h-5 w-5' />,
-      name: 'Exam / Quiz',
-      description: 'Create assessments',
-    },
-    {
       icon: <FileText className='h-5 w-5' />,
       name: 'Professional Documents',
       description: 'Formal business and official documents',
+    },
+    {
+      icon: <FileQuestion className='h-5 w-5' />,
+      name: 'Exams & Quizzes',
+      description: 'Create assessments',
     },
     {
       icon: <Users className='h-5 w-5' />,
@@ -146,7 +147,7 @@ const CreateDocumentsPage = () => {
     },
     {
       icon: <FilePlus className='h-5 w-5' />,
-      name: 'Report',
+      name: 'Reports',
       description: 'Comprehensive data analysis reports',
     },
   ]
@@ -456,10 +457,8 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                   animate='visible'
                   variants={staggerContainer}
                 >
-                  {/* Document Type Selection - at top */}
-                  <motion.div variants={itemVariant} className='mb-6'>
-                    <h3 className='text-sm font-medium text-gray-700 mb-3 md:mb-4 flex items-center'>
-                      <LayoutGrid className='h-4 w-4 mr-2 text-gray-700' />
+                  <motion.div variants={itemVariant} className='mb-5 pt-4'>
+                    <h3 className='text-base md:text-lg font-medium text-black mb-3'>
                       Document Type
                     </h3>
                     <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4'>
@@ -494,8 +493,8 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
 
                               {selectedDocType === index && (
                                 <div className='flex-shrink-0 ml-1'>
-                                  <div className='h-4 w-4 sm:h-5 sm:w-5 bg-gray-800 rounded-full flex items-center justify-center'>
-                                    <Check className='h-2 w-2 sm:h-3 sm:w-3 text-white' />
+                                  <div className='h-5 w-5 sm:h-5 sm:w-5 bg-gray-900 rounded-full flex items-center justify-center'>
+                                    <Check className='h-3 w-3 sm:h-3 sm:w-3 text-white' />
                                   </div>
                                 </div>
                               )}
@@ -510,9 +509,10 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                   </motion.div>
 
                   {/* Introduction Help Text */}
-                  <motion.div variants={itemVariant} className='mb-4'>
-                    <div className='p-3 md:p-4 bg-gray-50 rounded-lg border border-gray-200 flex items-start'>
-                      <HelpCircle className='h-5 w-5 text-gray-500 mr-2 md:mr-3 flex-shrink-0 mt-0.5' />
+
+                  <motion.div variants={itemVariant} className='mb-5'>
+                    <div className='p-3 md:p-4 bg-blue-50 rounded-lg border border-blue-200 flex items-start'>
+                      <HelpCircle className='h-5 w-5 text-blue-500 mr-2 md:mr-3 flex-shrink-0 mt-0.5' />
                       <p className='text-xs md:text-sm text-gray-700'>
                         You can create documents in two ways: upload a file or
                         describe what you need in the text prompt below.
@@ -520,10 +520,10 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                     </div>
                   </motion.div>
 
-                  {/* FILE UPLOAD SECTION - NOW FIRST */}
-                  <motion.div variants={itemVariant} className='mb-6'>
-                    <div className='flex items-center justify-between mb-2'>
-                      <label className='block text-sm font-medium text-gray-700'>
+                  {/* FILE UPLOAD SECTION */}
+                  <motion.div variants={itemVariant} className='mb-5 pt-4'>
+                    <div className='flex items-center justify-between mb-3'>
+                      <label className='block text-base md:text-lg font-medium text-black'>
                         Upload a File (Optional)
                       </label>
                     </div>
@@ -571,10 +571,9 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                     </div>
                   </motion.div>
 
-                  {/* Text prompt area - NOW SECOND */}
-                  <motion.div variants={itemVariant}>
-                    <div className='flex items-center justify-between mb-2'>
-                      <label className='block text-sm font-medium text-gray-700'>
+                  <motion.div variants={itemVariant} className='mb-5 pt-4'>
+                    <div className='flex items-center justify-between mb-3'>
+                      <label className='block text-base md:text-lg font-medium text-black'>
                         Describe What You Need
                       </label>
                       <div className='flex items-center space-x-1'>
@@ -586,9 +585,9 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                         </button>
                       </div>
                     </div>
-                    <div className='relative'>
+                    <div className='relative h-32 md:h-40'>
                       <textarea
-                        className='w-full h-32 md:h-40 p-3 md:p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none resize-none text-xs md:text-sm shadow-sm placeholder:text-xs md:placeholder:text-sm'
+                        className='w-full h-full p-3 md:p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none resize-none text-xs md:text-sm shadow-sm placeholder:text-xs md:placeholder:text-sm'
                         placeholder='E.g., Create a mid-term exam for a college-level Intro to Psychology course. Include 30 multiple choice questions and 3 essay questions covering topics like cognitive development, research methods, and behavioral psychology.'
                         value={promptText}
                         onChange={(e) => setPromptText(e.target.value)}
@@ -607,11 +606,13 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                     </div>
                   </motion.div>
 
-                  {/* AI Prompt Suggestions Component */}
-                  <AiPromptSuggestions
-                    suggestions={promptSuggestions[selectedDocType] || []}
-                    onSuggestionClick={applyPromptSuggestion}
-                  />
+                  {/* AI Prompt Suggestions Component - with reduced but consistent padding */}
+                  <div className='pt-1'>
+                    <AiPromptSuggestions
+                      suggestions={promptSuggestions[selectedDocType] || []}
+                      onSuggestionClick={applyPromptSuggestion}
+                    />
+                  </div>
 
                   {/* Generate Document Button */}
                   <motion.div
@@ -619,7 +620,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                     className='mt-6 md:mt-8 flex justify-end'
                   >
                     <div className='flex items-center space-x-3 md:space-x-4 w-full'>
-                      <button className='text-gray-700 py-2 px-3 md:px-4 rounded-lg text-xs md:text-sm font-medium flex items-center hover:bg-gray-100 transition-all border border-gray-300'>
+                      <button className='text-gray-700 py-2 px-3 md:px-4 rounded-md text-sm font-medium flex items-center hover:bg-gray-100 transition-all border border-gray-300'>
                         <div className='flex items-center space-x-1 md:space-x-2'>
                           <Clock className='h-4 w-4' />
                           <span>Save Draft</span>
@@ -627,7 +628,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                       </button>
 
                       <button
-                        className='bg-gray-900 text-white py-2 px-4 md:px-6 rounded-lg text-xs md:text-sm font-medium flex items-center justify-center shadow-sm hover:bg-gray-800 transition-all ml-auto'
+                        className='bg-gradient-to-br from-blue-600 to-blue-800 text-white py-2 px-4 md:px-6 rounded-md text-sm font-medium flex items-center justify-center shadow-sm hover:bg-gray-800 transition-all ml-auto'
                         onClick={handleGenerate}
                         disabled={isLoading}
                       >
@@ -648,9 +649,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                           <div className='flex items-center space-x-1 md:space-x-2'>
                             <Sparkles className='h-4 w-4' />
                             <span>
-                              {generationComplete
-                                ? 'Regenerate'
-                                : 'Generate Document'}
+                              {generationComplete ? 'Regenerate' : 'Generate'}
                             </span>
                           </div>
                         )}
@@ -660,7 +659,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
 
                   {/* Document Branding Options - Add after generation button but before preview */}
                   {generationComplete && (
-                    <DocumentMetadataOptions
+                    <DocumentBranding
                       metadata={documentMetadata}
                       onMetadataChange={setDocumentMetadata}
                       enabled={brandingEnabled}
@@ -690,34 +689,35 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                       />
 
                       {/* Interactive Test Conversion Option - Only for Exam/Quiz types */}
-                      {(selectedDocType === 0 ||
-                        documentContent.includes('Multiple Choice')) && (
+
+                      {selectedDocType === 1 && (
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.5 }}
-                          className='mt-6 p-5 border border-blue-300 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 shadow-md text-white'
+                          className='mt-5 p-3 md:p-5 border border-blue-300 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 shadow-md text-white'
                         >
-                          <div className='flex flex-col md:flex-row md:items-center md:justify-between'>
-                            <div className='flex items-center mb-4 md:mb-0'>
-                              <div className='w-12 h-12 rounded-full bg-white flex items-center justify-center mr-4 flex-shrink-0 shadow-md'>
-                                <Zap className='h-6 w-6 text-blue-600' />
+                          {/* Mobile layout - fixed text wrapping */}
+                          <div className='md:hidden'>
+                            <div className='text-center mb-3'>
+                              <div className='w-10 h-10 mx-auto rounded-full bg-white flex items-center justify-center shadow-md mb-2'>
+                                <Zap className='h-5 w-5 text-blue-600' />
                               </div>
-                              <div>
-                                <h3 className='text-base md:text-lg font-medium text-white'>
-                                  Make this an interactive online test
-                                </h3>
-                                <p className='text-sm text-white text-opacity-90 mt-1'>
-                                  Add time limits, automatic grading, and
-                                  generate a shareable link
-                                </p>
-                              </div>
+
+                              <h3 className='text-base font-medium text-white mb-1 leading-tight px-2'>
+                                Make this an interactive online test
+                              </h3>
+
+                              <p className='text-xs text-white/90 max-w-xs mx-auto px-2'>
+                                Time limits • Auto-grading • Share links
+                              </p>
                             </div>
-                            <div className='flex items-center mt-3 md:mt-0 self-end md:self-auto'>
-                              <div className='bg-white/10 p-1 rounded-lg flex shadow-md backdrop-blur-sm'>
+
+                            <div className='mt-3'>
+                              <div className='bg-white/10 p-0.5 rounded-lg flex shadow-md backdrop-blur-sm'>
                                 <button
                                   onClick={() => setConvertToInteractive(false)}
-                                  className={`px-5 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                                  className={`flex-1 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                                     !convertToInteractive
                                       ? 'bg-white text-blue-800 shadow-md'
                                       : 'text-white'
@@ -727,7 +727,49 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                                 </button>
                                 <button
                                   onClick={() => setConvertToInteractive(true)}
-                                  className={`px-5 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                                  className={`flex-1 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                                    convertToInteractive
+                                      ? 'bg-white text-blue-800 shadow-md'
+                                      : 'text-white'
+                                  }`}
+                                >
+                                  Yes
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Desktop layout - unchanged */}
+                          <div className='hidden md:flex flex-row items-center justify-between'>
+                            <div className='flex items-center'>
+                              <div className='w-12 h-12 rounded-full bg-white flex items-center justify-center mr-4 flex-shrink-0 shadow-md'>
+                                <Zap className='h-6 w-6 text-blue-600' />
+                              </div>
+                              <div>
+                                <h3 className='text-lg font-medium text-white'>
+                                  Make this an interactive online test
+                                </h3>
+                                <p className='text-sm text-white text-opacity-80 mt-1'>
+                                  Add time limits, automatic grading, and
+                                  shareable link
+                                </p>
+                              </div>
+                            </div>
+                            <div className='flex items-center ml-2'>
+                              <div className='bg-white/10 p-1 rounded-lg flex shadow-md backdrop-blur-sm'>
+                                <button
+                                  onClick={() => setConvertToInteractive(false)}
+                                  className={`px-5 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                                    !convertToInteractive
+                                      ? 'bg-white text-blue-800 shadow-md'
+                                      : 'text-white'
+                                  }`}
+                                >
+                                  No
+                                </button>
+                                <button
+                                  onClick={() => setConvertToInteractive(true)}
+                                  className={`px-5 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                                     convertToInteractive
                                       ? 'bg-white text-blue-800 shadow-md'
                                       : 'text-white'
@@ -802,27 +844,25 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                     </motion.div>
                   )}
 
-                  {/* Export Options Section - Simple, No Box */}
+                  {/* Export Options Section - with reduced but consistent padding */}
                   {showExportOptions && (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.3 }}
-                      className='mt-6 border-t border-gray-100 pt-4'
+                      className='mt-5 pt-4 border-t border-gray-100'
                     >
-                      <h3 className='text-sm font-medium text-gray-800 mb-4'>
+                      <h3 className='text-base font-medium text-gray-800 mb-3'>
                         Export Options
                       </h3>
 
                       <div className='mb-4'>
-                        <label className='block text-sm text-gray-600 mb-2'>
-                          Select Format
-                        </label>
+                        {/* Removed "Select Format" text */}
                         <div className='grid grid-cols-2 sm:grid-cols-4 gap-2'>
                           {exportFormats.map((format) => (
                             <button
                               key={format.id}
-                              className={`relative py-3 px-4 rounded-md transition-all ${
+                              className={`relative py-2 px-4 rounded-md text-sm font-medium transition-all ${
                                 selectedExportFormat === format.id
                                   ? 'bg-blue-50 border-2 border-blue-600 text-blue-700'
                                   : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'
@@ -842,17 +882,20 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                         </div>
                       </div>
 
-                      <div className='flex flex-col sm:flex-row sm:justify-end gap-2 mt-4'>
+                      {/* Updated button layout */}
+                      <div className='grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4'>
+                        {/* Share button positioned under PDF */}
                         <button
-                          className='bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md text-sm font-medium flex items-center justify-center hover:bg-gray-50 transition-all order-2 sm:order-1'
+                          className='bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md text-sm font-medium flex items-center justify-center hover:bg-gray-50 transition-all col-span-1 sm:col-start-1'
                           onClick={() => {}}
                         >
                           <Share className='h-4 w-4 mr-2' />
                           <span>Share</span>
                         </button>
 
+                        {/* Download button positioned under Plain Text */}
                         <button
-                          className='bg-green-600 text-white py-2 px-4 rounded-md text-sm font-medium flex items-center justify-center shadow-sm hover:bg-green-700 transition-all order-1 sm:order-2'
+                          className='bg-green-600 text-white py-2 px-4 rounded-md text-sm font-medium flex items-center justify-center shadow-sm hover:bg-green-700 transition-all col-span-1 sm:col-start-4'
                           onClick={() => handleExport(selectedExportFormat)}
                           disabled={isLoading}
                         >

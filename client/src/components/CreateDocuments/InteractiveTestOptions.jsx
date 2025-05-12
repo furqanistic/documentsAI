@@ -1,593 +1,824 @@
-import { motion } from 'framer-motion'
+// file 1
+
 import {
   ChevronDown,
+  ChevronUp,
   Clock,
-  Copy,
   Eye,
-  Link as LinkIcon,
+  FileText,
+  Globe,
+  Image,
+  Link,
   Lock,
+  Mail,
+  Percent,
   Settings,
   Shield,
-  Shuffle,
-  Smartphone,
-  ToggleLeft,
-  User,
-  Users,
-  Zap,
+  Upload,
 } from 'lucide-react'
-import React, { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
+// Common styles extracted as constants for consistency
+const STYLES = {
+  input:
+    'block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+  sectionHeader: {
+    base: 'w-full flex justify-between items-center py-3 px-4 text-left text-sm font-medium transition-colors duration-200',
+    expanded: 'bg-blue-50 text-gray-700 border-b border-gray-200',
+    collapsed: 'bg-gray-50 text-gray-700 hover:bg-gray-100',
+  },
+  settingsGroup:
+    'mb-5 p-4 bg-white rounded-lg border border-gray-200 shadow-sm h-auto md:h-[250px] flex flex-col',
+  toggleButton: {
+    base: 'block w-10 h-5 rounded-full transition-colors duration-200',
+    active: 'bg-blue-600',
+    inactive: 'bg-gray-300',
+  },
+  toggleSlider: {
+    base: 'absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full shadow transition-transform duration-200 ease-in-out',
+    active: 'transform translate-x-5',
+  },
+}
+
+// Reusable ToggleSwitch component
+const ToggleSwitch = ({
+  label,
+  isChecked,
+  onChange,
+  activeLabel,
+  inactiveLabel,
+}) => (
+  <div className='flex items-center space-x-3'>
+    <label className='inline-flex items-center cursor-pointer'>
+      <div className='relative'>
+        <input
+          type='checkbox'
+          className='sr-only'
+          checked={isChecked}
+          onChange={onChange}
+        />
+        <div
+          className={`${STYLES.toggleButton.base} ${
+            isChecked
+              ? STYLES.toggleButton.active
+              : STYLES.toggleButton.inactive
+          }`}
+        ></div>
+        <div
+          className={`${STYLES.toggleSlider.base} ${
+            isChecked ? STYLES.toggleSlider.active : ''
+          }`}
+        ></div>
+      </div>
+    </label>
+    <span className='text-xs md:text-sm font-medium text-gray-700'>
+      {isChecked ? activeLabel : inactiveLabel}
+    </span>
+  </div>
+)
+
+// Reusable section header
+const SectionHeader = ({ icon: Icon, title, isExpanded, onToggle }) => (
+  <button
+    className={`${STYLES.sectionHeader.base} ${
+      isExpanded
+        ? STYLES.sectionHeader.expanded
+        : STYLES.sectionHeader.collapsed
+    }`}
+    onClick={onToggle}
+    aria-expanded={isExpanded}
+  >
+    <div className='flex items-center'>
+      <Icon className='h-5 w-5 mr-3 text-gray-700' />
+      <span className='text-base font-medium'>{title}</span>
+    </div>
+    {isExpanded ? (
+      <ChevronUp className='h-5 w-5 text-blue-600' />
+    ) : (
+      <ChevronDown className='h-5 w-5 text-gray-500' />
+    )}
+  </button>
+)
+
+// Reusable settings group
+const SettingsGroup = ({ icon: Icon, title, children, className = '' }) => (
+  <div className={`${STYLES.settingsGroup} ${className}`}>
+    <div className='flex items-center pb-2 border-b border-gray-100 mb-3'>
+      <Icon className='h-4 w-4 text-gray-700 mr-2' />
+      <span className='text-sm font-semibold text-gray-800'>{title}</span>
+    </div>
+    <div className='flex-1 flex flex-col justify-between'>{children}</div>
+  </div>
+)
+
+// Improved image uploader with preview
+const ImageUploader = ({ onImageChange, disabled, currentImage }) => {
+  const fileInputRef = useRef(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const processFile = (file) => {
+    if (file && onImageChange) {
+      const reader = new FileReader()
+      reader.onload = (event) => onImageChange(event.target.result)
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handlers = {
+    click: () => fileInputRef.current.click(),
+    fileChange: (e) => processFile(e.target.files[0]),
+    dragOver: (e) => {
+      e.preventDefault()
+      if (!disabled) setIsDragging(true)
+    },
+    dragLeave: () => setIsDragging(false),
+    drop: (e) => {
+      e.preventDefault()
+      setIsDragging(false)
+      if (!disabled) processFile(e.dataTransfer.files[0])
+    },
+  }
+
+  // Hidden file input (shared between layouts)
+  const fileInput = (
+    <input
+      type='file'
+      ref={fileInputRef}
+      className='hidden'
+      accept='image/*'
+      onChange={handlers.fileChange}
+      disabled={disabled}
+    />
+  )
+
+  if (isMobile) {
+    return (
+      <div className={disabled ? 'opacity-50 pointer-events-none' : ''}>
+        <label className='block text-xs font-medium text-gray-700 mb-1.5'>
+          Organization Logo
+        </label>
+        {fileInput}
+        <button
+          onClick={handlers.click}
+          type='button'
+          className='w-full flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white'
+        >
+          <Upload className='h-3 w-3 mr-1' />
+          {currentImage ? 'Change logo' : 'Upload logo'}
+        </button>
+        {currentImage && (
+          <div className='mt-1 flex justify-center'>
+            <img
+              src={currentImage}
+              alt='Logo preview'
+              className='max-h-10 max-w-full object-contain'
+            />
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className={disabled ? 'opacity-50 pointer-events-none' : ''}>
+      <label className='block text-sm font-medium text-gray-700 mb-1'>
+        Organization Logo
+      </label>
+      {fileInput}
+      <div
+        onDragOver={handlers.dragOver}
+        onDragLeave={handlers.dragLeave}
+        onDrop={handlers.drop}
+        onClick={handlers.click}
+        className={`
+          flex justify-center px-4 pt-3 pb-3 border-2 
+          ${isDragging ? 'border-blue-400 bg-blue-50' : 'border-gray-300'} 
+          border-dashed rounded-md cursor-pointer hover:bg-gray-50 transition-colors
+          ${currentImage ? 'h-20' : 'h-16'}
+        `}
+      >
+        <div className='space-y-1 text-center'>
+          {currentImage ? (
+            <div className='flex items-center'>
+              <img
+                src={currentImage}
+                alt='Logo preview'
+                className='max-h-12 max-w-full object-contain mr-2'
+              />
+              <div className='flex items-center text-sm text-blue-600'>
+                <Upload className='h-3 w-3 mr-1' />
+                <span>Change</span>
+              </div>
+            </div>
+          ) : (
+            <div className='flex items-center'>
+              <svg
+                className='h-10 w-10 text-gray-400 mr-2'
+                stroke='currentColor'
+                fill='none'
+                viewBox='0 0 48 48'
+                aria-hidden='true'
+              >
+                <path
+                  d='M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02'
+                  strokeWidth={2}
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                />
+              </svg>
+              <div>
+                <p className='text-sm font-medium text-blue-600'>
+                  Click to upload{' '}
+                  <span className='text-gray-500 font-normal'>
+                    or drag and drop
+                  </span>
+                </p>
+                <p className='text-xs text-gray-500'>PNG, JPG, GIF up to 2MB</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Default settings with sensible defaults
+const DEFAULT_SETTINGS = {
+  // Basic settings
+  timeLimit: 30,
+  showResults: true,
+  allowRetry: true,
+  isPublic: false,
+  passingScore: 70,
+  gradingScheme: 'standard',
+  enablePartialCredit: false,
+  showCorrectAnswers: true,
+
+  // Appearance settings
+  customTheme: 'default',
+  showProgressBar: true,
+  questionLayout: 'standard',
+  logoUrl: '',
+  showBranding: false,
+
+  // Security settings
+  requireLogin: false,
+  preventTabSwitching: false,
+  disableCopyPaste: false,
+  ipRestriction: false,
+
+  // Notifications
+  sendResultsEmail: false,
+  emailTemplate: 'default',
+  notifyInstructor: false,
+
+  // Advanced settings
+  randomizeQuestions: false,
+  questionTimeLimit: false,
+  allowSaving: true,
+  showFeedback: true,
+  feedbackType: 'detailed',
+  accessPeriod: { start: '', end: '' },
+  certificate: false,
+  printable: true,
+}
+
+// Main component
 const InteractiveTestOptions = ({
-  settings,
+  settings = {},
   onSettingsChange,
   onGenerateLink,
   interactiveLink,
   isLoading,
 }) => {
-  const [activeTab, setActiveTab] = useState('basic')
-  const [showCustomTimeInput, setShowCustomTimeInput] = useState(false)
-  const [customTimeHours, setCustomTimeHours] = useState('')
-  const [customTimeMinutes, setCustomTimeMinutes] = useState('')
+  const [expandedSection, setExpandedSection] = useState('test-setup')
 
-  // Animation variants
-  const tabVariants = {
-    inactive: { opacity: 0.7 },
-    active: { opacity: 1 },
+  // Merge provided settings with defaults
+  const allSettings = useMemo(
+    () => ({ ...DEFAULT_SETTINGS, ...settings }),
+    [settings]
+  )
+
+  // Generalized handlers
+  const handleToggleChange = (setting) => {
+    onSettingsChange({
+      ...settings,
+      [setting]: !settings[setting],
+    })
   }
 
-  const contentVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  const handleInputChange = (setting, value) => {
+    onSettingsChange({
+      ...settings,
+      [setting]: value,
+    })
   }
 
-  // Handle settings changes
-  const handleSettingChange = (key, value) => {
-    onSettingsChange({ ...settings, [key]: value })
+  const toggleSection = (section) => {
+    setExpandedSection(expandedSection === section ? null : section)
   }
 
-  // Handle custom time limit input
-  const handleCustomHoursChange = (e) => {
-    // Only allow numeric inputs
-    const value = e.target.value.replace(/\D/g, '')
-    setCustomTimeHours(value)
-  }
+  // Render test setup section content
+  const renderTestSetupContent = () => (
+    <div className='p-4 sm:p-5 bg-white'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6'>
+        {/* Left Column - Test Settings */}
+        <div>
+          <h4 className='font-medium text-gray-800 mb-3 sm:mb-4 text-sm uppercase tracking-wider'>
+            Basic Settings
+          </h4>
 
-  const handleCustomMinutesChange = (e) => {
-    // Only allow numeric inputs
-    const value = e.target.value.replace(/\D/g, '')
-    setCustomTimeMinutes(value)
-  }
-
-  const applyCustomTime = () => {
-    const hours = parseInt(customTimeHours || '0', 10)
-    const minutes = parseInt(customTimeMinutes || '0', 10)
-
-    if ((hours > 0 || minutes > 0) && !isNaN(hours) && !isNaN(minutes)) {
-      const totalMinutes = hours * 60 + minutes
-      handleSettingChange('timeLimit', totalMinutes)
-    }
-    setShowCustomTimeInput(false)
-  }
-
-  // Handle link copy
-  const handleCopyLink = () => {
-    if (interactiveLink) {
-      navigator.clipboard.writeText(interactiveLink)
-    }
-  }
-
-  return (
-    <div className='border rounded-lg border-gray-200 overflow-hidden shadow-md'>
-      <div className='bg-gray-100 p-3 border-b border-gray-200'>
-        <div className='flex items-center'>
-          <Zap className='h-4 w-4 mr-2 text-blue-600' />
-          <span className='text-sm font-medium'>Interactive Test Options</span>
-        </div>
-      </div>
-
-      {/* Settings tabs */}
-      <div className='border-b border-gray-200 bg-white'>
-        <div className='flex'>
-          <motion.button
-            variants={tabVariants}
-            animate={activeTab === 'basic' ? 'active' : 'inactive'}
-            className={`flex-1 py-2.5 px-3 text-center text-xs font-medium relative ${
-              activeTab === 'basic'
-                ? 'text-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-            onClick={() => setActiveTab('basic')}
-          >
-            <div className='flex items-center justify-center'>
-              <Clock className='h-4 w-4 mr-1.5' />
-              <span>Basic Settings</span>
-            </div>
-            {activeTab === 'basic' && (
-              <motion.div
-                className='absolute bottom-0 left-0 w-full h-0.5 bg-blue-600'
-                layoutId='activeSettingsTab'
-              />
-            )}
-          </motion.button>
-
-          <motion.button
-            variants={tabVariants}
-            animate={activeTab === 'advanced' ? 'active' : 'inactive'}
-            className={`flex-1 py-2.5 px-3 text-center text-xs font-medium relative ${
-              activeTab === 'advanced'
-                ? 'text-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-            onClick={() => setActiveTab('advanced')}
-          >
-            <div className='flex items-center justify-center'>
-              <Settings className='h-4 w-4 mr-1.5' />
-              <span>Advanced</span>
-            </div>
-            {activeTab === 'advanced' && (
-              <motion.div
-                className='absolute bottom-0 left-0 w-full h-0.5 bg-blue-600'
-                layoutId='activeSettingsTab'
-              />
-            )}
-          </motion.button>
-
-          <motion.button
-            variants={tabVariants}
-            animate={activeTab === 'sharing' ? 'active' : 'inactive'}
-            className={`flex-1 py-2.5 px-3 text-center text-xs font-medium relative ${
-              activeTab === 'sharing'
-                ? 'text-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-            onClick={() => setActiveTab('sharing')}
-          >
-            <div className='flex items-center justify-center'>
-              <Users className='h-4 w-4 mr-1.5' />
-              <span>Access</span>
-            </div>
-            {activeTab === 'sharing' && (
-              <motion.div
-                className='absolute bottom-0 left-0 w-full h-0.5 bg-blue-600'
-                layoutId='activeSettingsTab'
-              />
-            )}
-          </motion.button>
-        </div>
-      </div>
-
-      {/* Tab content */}
-      <div className='p-4 bg-white'>
-        {activeTab === 'basic' && (
-          <motion.div
-            variants={contentVariants}
-            initial='hidden'
-            animate='visible'
-            key='basic-content'
-          >
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
-              <div>
-                <label className='block text-xs font-medium text-gray-700 mb-1'>
-                  Time Limit
-                </label>
-                <div className='relative'>
+          <SettingsGroup icon={Clock} title='Time Controls'>
+            <div>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Test Duration
+                  </label>
                   <select
-                    className='w-full p-2 border border-gray-200 rounded-md text-xs'
-                    value={showCustomTimeInput ? 'custom' : settings.timeLimit}
-                    onChange={(e) => {
-                      const value = e.target.value
-                      if (value === 'custom') {
-                        setShowCustomTimeInput(true)
-                        setCustomTimeHours('')
-                        setCustomTimeMinutes('')
-                      } else {
-                        setShowCustomTimeInput(false)
-                        handleSettingChange('timeLimit', parseInt(value))
-                      }
-                    }}
-                  >
-                    <option value='0'>No time limit</option>
-                    <option value='30'>30 minutes</option>
-                    <option value='60'>1 hour</option>
-                    <option value='90'>1.5 hours</option>
-                    <option value='120'>2 hours</option>
-                    <option value='custom'>Custom...</option>
-                  </select>
-                </div>
-
-                {/* Custom time input */}
-                {showCustomTimeInput && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className='mt-2'
-                  >
-                    <div className='flex flex-col sm:flex-row items-start sm:items-center gap-2'>
-                      <div className='flex items-center gap-2 flex-1'>
-                        <div className='w-full'>
-                          <label className='block text-xs text-gray-500 mb-1'>
-                            Hours
-                          </label>
-                          <input
-                            type='text'
-                            placeholder='0'
-                            value={customTimeHours}
-                            onChange={handleCustomHoursChange}
-                            className='p-2 border border-gray-200 rounded-md text-xs w-full'
-                          />
-                        </div>
-                        <div className='w-full'>
-                          <label className='block text-xs text-gray-500 mb-1'>
-                            Minutes
-                          </label>
-                          <input
-                            type='text'
-                            placeholder='0'
-                            value={customTimeMinutes}
-                            onChange={handleCustomMinutesChange}
-                            className='p-2 border border-gray-200 rounded-md text-xs w-full'
-                          />
-                        </div>
-                      </div>
-                      <div className='mt-4 sm:mt-0 w-full sm:w-auto'>
-                        <button
-                          onClick={applyCustomTime}
-                          className='bg-blue-600 text-white py-2 px-3 rounded-md text-xs w-full sm:w-auto'
-                        >
-                          Apply
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-
-              <div>
-                <label className='block text-xs font-medium text-gray-700 mb-1'>
-                  Question Display
-                </label>
-                <div className='relative'>
-                  <select
-                    className='w-full p-2 border border-gray-200 rounded-md text-xs'
-                    value={settings.questionDisplay || 'all'}
+                    value={allSettings.timeLimit}
                     onChange={(e) =>
-                      handleSettingChange('questionDisplay', e.target.value)
+                      handleInputChange(
+                        'timeLimit',
+                        parseInt(e.target.value, 10)
+                      )
                     }
+                    className={STYLES.input}
+                    aria-label='Select test duration'
                   >
-                    <option value='all'>Show all questions at once</option>
-                    <option value='one'>One question at a time</option>
-                    <option value='section'>Questions by section</option>
+                    {[5, 10, 15, 30, 45, 60, 90, 120, 0].map((val) => (
+                      <option key={val} value={val}>
+                        {val === 0
+                          ? 'No time limit'
+                          : val >= 60
+                          ? `${val / 60} hour${val > 60 ? 's' : ''}`
+                          : `${val} minutes`}
+                      </option>
+                    ))}
                   </select>
+                </div>
+
+                <div className='flex items-center h-full pt-6'>
+                  <ToggleSwitch
+                    isChecked={allSettings.questionTimeLimit}
+                    onChange={() => handleToggleChange('questionTimeLimit')}
+                    activeLabel='Per-question timer'
+                    inactiveLabel='No question timer'
+                  />
                 </div>
               </div>
             </div>
+            <div className='mt-auto pt-4 hidden md:block'></div>
+          </SettingsGroup>
 
-            <div className='space-y-3'>
-              <label className='flex items-start space-x-2 text-xs group cursor-pointer p-1 rounded-md hover:bg-gray-50 transition-colors'>
-                <input
-                  type='checkbox'
-                  className='h-4 w-4 rounded mt-0.5 accent-blue-600'
-                  checked={settings.showResults}
-                  onChange={(e) =>
-                    handleSettingChange('showResults', e.target.checked)
-                  }
-                />
-                <div>
-                  <span className='font-medium text-gray-700 block mb-0.5'>
-                    Show results immediately
-                  </span>
-                  <span className='text-xs text-gray-500'>
-                    Students can see correct answers after submitting
-                  </span>
+          <SettingsGroup icon={Globe} title='Access & Attempts'>
+            <div>
+              <div className='grid grid-cols-1 gap-3'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                  <div className='flex items-center'>
+                    <ToggleSwitch
+                      isChecked={allSettings.isPublic}
+                      onChange={() => handleToggleChange('isPublic')}
+                      activeLabel='Public access'
+                      inactiveLabel='Private access'
+                    />
+                  </div>
+
+                  <div className='flex items-center'>
+                    <ToggleSwitch
+                      isChecked={allSettings.allowRetry}
+                      onChange={() => handleToggleChange('allowRetry')}
+                      activeLabel='Multiple attempts'
+                      inactiveLabel='Single attempt'
+                    />
+                  </div>
                 </div>
-              </label>
 
-              <label className='flex items-start space-x-2 text-xs group cursor-pointer p-1 rounded-md hover:bg-gray-50 transition-colors'>
-                <input
-                  type='checkbox'
-                  className='h-4 w-4 rounded mt-0.5 accent-blue-600'
-                  checked={settings.allowRetry}
-                  onChange={(e) =>
-                    handleSettingChange('allowRetry', e.target.checked)
-                  }
-                />
-                <div>
-                  <span className='font-medium text-gray-700 block mb-0.5'>
-                    Allow multiple attempts
-                  </span>
-                  <span className='text-xs text-gray-500'>
-                    Students can retake the test multiple times
-                  </span>
-                </div>
-              </label>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                  <div className='flex items-center'>
+                    <ToggleSwitch
+                      isChecked={allSettings.allowSaving}
+                      onChange={() => handleToggleChange('allowSaving')}
+                      activeLabel='Save progress'
+                      inactiveLabel='No progress saving'
+                    />
+                  </div>
 
-              <label className='flex items-start space-x-2 text-xs group cursor-pointer p-1 rounded-md hover:bg-gray-50 transition-colors'>
-                <input
-                  type='checkbox'
-                  className='h-4 w-4 rounded mt-0.5 accent-blue-600'
-                  checked={settings.randomizeQuestions || false}
-                  onChange={(e) =>
-                    handleSettingChange('randomizeQuestions', e.target.checked)
-                  }
-                />
-                <div>
-                  <span className='font-medium text-gray-700 block mb-0.5'>
-                    Randomize question order
-                  </span>
-                  <span className='text-xs text-gray-500'>
-                    Questions appear in a different order for each student
-                  </span>
-                </div>
-              </label>
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab === 'advanced' && (
-          <motion.div
-            variants={contentVariants}
-            initial='hidden'
-            animate='visible'
-            key='advanced-content'
-          >
-            <div className='space-y-4'>
-              <div>
-                <label className='block text-xs font-medium text-gray-700 mb-1'>
-                  Passing Score (%)
-                </label>
-                <div className='relative'>
-                  <input
-                    type='text'
-                    className='w-full p-2 border border-gray-200 rounded-md text-xs'
-                    value={
-                      settings.passingScore !== undefined
-                        ? settings.passingScore
-                        : ''
-                    }
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '')
-                      handleSettingChange(
-                        'passingScore',
-                        value === '' ? '' : parseInt(value)
-                      )
-                    }}
-                    placeholder='70'
-                  />
-                  <div className='absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-gray-500'>
-                    %
+                  <div className='flex items-center'>
+                    <ToggleSwitch
+                      isChecked={allSettings.randomizeQuestions}
+                      onChange={() => handleToggleChange('randomizeQuestions')}
+                      activeLabel='Randomize questions'
+                      inactiveLabel='Fixed order'
+                    />
                   </div>
                 </div>
               </div>
+            </div>
+            <div className='mt-auto pt-4 hidden md:block'></div>
+          </SettingsGroup>
+        </div>
 
-              <div>
-                <label className='block text-xs font-medium text-gray-700 mb-1'>
-                  Results Display
+        {/* Right Column - Grading Settings */}
+        <div>
+          <h4 className='font-medium text-gray-800 mb-3 sm:mb-4 text-sm uppercase tracking-wider'>
+            Grading Settings
+          </h4>
+
+          <SettingsGroup icon={Percent} title='Scoring & Grading'>
+            <div>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Passing Score (%)
+                  </label>
+                  <input
+                    type='number'
+                    min='0'
+                    max='100'
+                    value={allSettings.passingScore}
+                    onChange={(e) =>
+                      handleInputChange(
+                        'passingScore',
+                        parseInt(e.target.value, 10)
+                      )
+                    }
+                    className={STYLES.input}
+                    aria-label='Enter passing score percentage'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Grading Scheme
+                  </label>
+                  <select
+                    value={allSettings.gradingScheme}
+                    onChange={(e) =>
+                      handleInputChange('gradingScheme', e.target.value)
+                    }
+                    className={STYLES.input}
+                    aria-label='Select grading scheme'
+                  >
+                    <option value='standard'>Standard (A-F)</option>
+                    <option value='percentage'>Percentage Only</option>
+                    <option value='passfail'>Pass/Fail Only</option>
+                    <option value='points'>Points Based</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                <div className='flex items-center'>
+                  <ToggleSwitch
+                    isChecked={allSettings.enablePartialCredit}
+                    onChange={() => handleToggleChange('enablePartialCredit')}
+                    activeLabel='Partial credit'
+                    inactiveLabel='No partial credit'
+                  />
+                </div>
+
+                <div className='flex items-center'>
+                  <ToggleSwitch
+                    isChecked={allSettings.certificate}
+                    onChange={() => handleToggleChange('certificate')}
+                    activeLabel='Issue certificate'
+                    inactiveLabel='No certificate'
+                  />
+                </div>
+              </div>
+            </div>
+            <div className='mt-auto hidden md:block'></div>
+          </SettingsGroup>
+
+          <SettingsGroup icon={Eye} title='Results & Feedback'>
+            <div>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3'>
+                <div className='flex items-center'>
+                  <ToggleSwitch
+                    isChecked={allSettings.showResults}
+                    onChange={() => handleToggleChange('showResults')}
+                    activeLabel='Show results'
+                    inactiveLabel='Hide results'
+                  />
+                </div>
+
+                <div className='flex items-center'>
+                  <ToggleSwitch
+                    isChecked={allSettings.showCorrectAnswers}
+                    onChange={() => handleToggleChange('showCorrectAnswers')}
+                    activeLabel='Show answers'
+                    inactiveLabel='Hide answers'
+                  />
+                </div>
+              </div>
+
+              <div className='flex items-center mb-3'>
+                <ToggleSwitch
+                  isChecked={allSettings.showFeedback}
+                  onChange={() => handleToggleChange('showFeedback')}
+                  activeLabel='Show feedback'
+                  inactiveLabel='No feedback'
+                />
+              </div>
+
+              <div
+                className={
+                  allSettings.showFeedback
+                    ? ''
+                    : 'opacity-50 pointer-events-none'
+                }
+              >
+                <label className='block text-sm font-medium text-gray-700 mb-1'>
+                  Feedback Type
                 </label>
                 <select
-                  className='w-full p-2 border border-gray-200 rounded-md text-xs'
-                  value={settings.resultsDisplay || 'detailed'}
+                  value={allSettings.feedbackType}
                   onChange={(e) =>
-                    handleSettingChange('resultsDisplay', e.target.value)
+                    handleInputChange('feedbackType', e.target.value)
                   }
+                  className={STYLES.input}
+                  aria-label='Select feedback type'
+                  disabled={!allSettings.showFeedback}
                 >
-                  <option value='detailed'>
-                    Detailed feedback (show correct answers)
-                  </option>
-                  <option value='summary'>Summary only (total score)</option>
-                  <option value='pass-fail'>Pass/Fail only</option>
+                  <option value='detailed'>Detailed Explanation</option>
+                  <option value='basic'>Basic Correct/Incorrect</option>
+                  <option value='endOnly'>Only at End of Test</option>
+                </select>
+              </div>
+            </div>
+          </SettingsGroup>
+        </div>
+      </div>
+    </div>
+  )
+
+  // Render appearance section content
+  const renderAppearanceContent = () => (
+    <div className='p-4 sm:p-5 bg-white'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6'>
+        {/* Theme and Layout */}
+        <div>
+          <h4 className='font-medium text-gray-800 mb-3 sm:mb-4 text-sm uppercase tracking-wider'>
+            Theme & Layout
+          </h4>
+
+          <SettingsGroup icon={Image} title='Visual Style'>
+            <div>
+              <div className='mb-4'>
+                <label className='block text-sm font-medium text-gray-700 mb-1'>
+                  Theme
+                </label>
+                <select
+                  value={allSettings.customTheme}
+                  onChange={(e) =>
+                    handleInputChange('customTheme', e.target.value)
+                  }
+                  className={STYLES.input}
+                  aria-label='Select theme'
+                >
+                  {[
+                    'default',
+                    'professional',
+                    'academic',
+                    'minimal',
+                    'colorful',
+                  ].map((theme) => (
+                    <option key={theme} value={theme}>
+                      {theme.charAt(0).toUpperCase() + theme.slice(1)}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              <div className='space-y-3'>
-                <label className='flex items-start space-x-2 text-xs group cursor-pointer p-1 rounded-md hover:bg-gray-50 transition-colors'>
-                  <input
-                    type='checkbox'
-                    className='h-4 w-4 rounded mt-0.5 accent-blue-600'
-                    checked={settings.preventBacktracking || false}
-                    onChange={(e) =>
-                      handleSettingChange(
-                        'preventBacktracking',
-                        e.target.checked
-                      )
-                    }
-                  />
-                  <div>
-                    <span className='font-medium text-gray-700 block mb-0.5'>
-                      Prevent question backtracking
-                    </span>
-                    <span className='text-xs text-gray-500'>
-                      Students cannot go back to previous questions
-                    </span>
-                  </div>
-                </label>
-
-                <label className='flex items-start space-x-2 text-xs group cursor-pointer p-1 rounded-md hover:bg-gray-50 transition-colors'>
-                  <input
-                    type='checkbox'
-                    className='h-4 w-4 rounded mt-0.5 accent-blue-600'
-                    checked={settings.showTimer || true}
-                    onChange={(e) =>
-                      handleSettingChange('showTimer', e.target.checked)
-                    }
-                  />
-                  <div>
-                    <span className='font-medium text-gray-700 block mb-0.5'>
-                      Show countdown timer
-                    </span>
-                    <span className='text-xs text-gray-500'>
-                      Display time remaining during the test
-                    </span>
-                  </div>
-                </label>
-
-                <label className='flex items-start space-x-2 text-xs group cursor-pointer p-1 rounded-md hover:bg-gray-50 transition-colors'>
-                  <input
-                    type='checkbox'
-                    className='h-4 w-4 rounded mt-0.5 accent-blue-600'
-                    checked={settings.preventCopyPaste || false}
-                    onChange={(e) =>
-                      handleSettingChange('preventCopyPaste', e.target.checked)
-                    }
-                  />
-                  <div>
-                    <span className='font-medium text-gray-700 block mb-0.5'>
-                      Prevent copy & paste
-                    </span>
-                    <span className='text-xs text-gray-500'>
-                      Disable copy/paste functionality during the test
-                    </span>
-                  </div>
-                </label>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab === 'sharing' && (
-          <motion.div
-            variants={contentVariants}
-            initial='hidden'
-            animate='visible'
-            key='sharing-content'
-          >
-            <div className='space-y-4'>
               <div>
-                <label className='block text-xs font-medium text-gray-700 mb-1'>
-                  Access Control
+                <label className='block text-sm font-medium text-gray-700 mb-1'>
+                  Question Layout
                 </label>
-                <div className='relative'>
-                  <select
-                    className='w-full p-2 border border-gray-200 rounded-md text-xs'
-                    value={settings.accessControl || 'link'}
-                    onChange={(e) =>
-                      handleSettingChange('accessControl', e.target.value)
-                    }
-                  >
-                    <option value='link'>Anyone with the link</option>
-                    <option value='password'>Password protected</option>
-                    <option value='email'>Specific email addresses only</option>
-                  </select>
-                </div>
-              </div>
-
-              {settings.accessControl === 'password' && (
-                <div>
-                  <label className='block text-xs font-medium text-gray-700 mb-1'>
-                    Password
-                  </label>
-                  <div className='relative'>
-                    <input
-                      type='password'
-                      className='w-full p-2 border border-gray-200 rounded-md text-xs pr-10'
-                      value={settings.password || ''}
-                      onChange={(e) =>
-                        handleSettingChange('password', e.target.value)
-                      }
-                      placeholder='Enter test password'
-                    />
-                    <div className='absolute right-2 top-1/2 transform -translate-y-1/2'>
-                      <Lock className='h-4 w-4 text-gray-400' />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className='space-y-3'>
-                <label className='flex items-start space-x-2 text-xs group cursor-pointer p-1 rounded-md hover:bg-gray-50 transition-colors'>
-                  <input
-                    type='checkbox'
-                    className='h-4 w-4 rounded mt-0.5 accent-blue-600'
-                    checked={settings.isPublic}
-                    onChange={(e) =>
-                      handleSettingChange('isPublic', e.target.checked)
-                    }
-                  />
-                  <div>
-                    <span className='font-medium text-gray-700 block mb-0.5'>
-                      Make test publicly discoverable
-                    </span>
-                    <span className='text-xs text-gray-500'>
-                      Test can be found through search
-                    </span>
-                  </div>
-                </label>
-
-                <label className='flex items-start space-x-2 text-xs group cursor-pointer p-1 rounded-md hover:bg-gray-50 transition-colors'>
-                  <input
-                    type='checkbox'
-                    className='h-4 w-4 rounded mt-0.5 accent-blue-600'
-                    checked={settings.collectUserData || false}
-                    onChange={(e) =>
-                      handleSettingChange('collectUserData', e.target.checked)
-                    }
-                  />
-                  <div>
-                    <span className='font-medium text-gray-700 block mb-0.5'>
-                      Collect user information
-                    </span>
-                    <span className='text-xs text-gray-500'>
-                      Request name and email before taking the test
-                    </span>
-                  </div>
-                </label>
-
-                <label className='flex items-start space-x-2 text-xs group cursor-pointer p-1 rounded-md hover:bg-gray-50 transition-colors'>
-                  <input
-                    type='checkbox'
-                    className='h-4 w-4 rounded mt-0.5 accent-blue-600'
-                    checked={settings.enableMobile || true}
-                    onChange={(e) =>
-                      handleSettingChange('enableMobile', e.target.checked)
-                    }
-                  />
-                  <div>
-                    <span className='font-medium text-gray-700 block mb-0.5'>
-                      Enable mobile access
-                    </span>
-                    <span className='text-xs text-gray-500'>
-                      Allow students to take the test on mobile devices
-                    </span>
-                  </div>
-                </label>
+                <select
+                  value={allSettings.questionLayout}
+                  onChange={(e) =>
+                    handleInputChange('questionLayout', e.target.value)
+                  }
+                  className={STYLES.input}
+                  aria-label='Select question layout'
+                >
+                  <option value='standard'>One question per page</option>
+                  <option value='all'>All questions on one page</option>
+                  <option value='sections'>
+                    Questions grouped by sections
+                  </option>
+                </select>
               </div>
             </div>
-          </motion.div>
-        )}
+            <div className='mt-auto'></div>
+          </SettingsGroup>
+        </div>
+
+        {/* Branding */}
+        <div>
+          <h4 className='font-medium text-gray-800 mb-3 sm:mb-4 text-sm uppercase tracking-wider'>
+            Branding
+          </h4>
+
+          <SettingsGroup icon={Image} title='Custom Branding'>
+            <div>
+              <div className='flex items-center mb-3'>
+                <ToggleSwitch
+                  isChecked={allSettings.showBranding}
+                  onChange={() => handleToggleChange('showBranding')}
+                  activeLabel='Use custom branding'
+                  inactiveLabel='Default branding'
+                />
+              </div>
+
+              <ImageUploader
+                onImageChange={(imageData) =>
+                  handleInputChange('logoUrl', imageData)
+                }
+                disabled={!allSettings.showBranding}
+                currentImage={allSettings.logoUrl}
+              />
+            </div>
+          </SettingsGroup>
+        </div>
+      </div>
+    </div>
+  )
+
+  // Render security section content
+  const renderSecurityContent = () => (
+    <div className='p-4 sm:p-5 bg-white'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6'>
+        <SettingsGroup icon={Shield} title='Proctoring Controls'>
+          <div>
+            <div className='space-y-4'>
+              {/* Former Authentication controls */}
+              <div className='flex items-center'>
+                <ToggleSwitch
+                  isChecked={allSettings.requireLogin}
+                  onChange={() => handleToggleChange('requireLogin')}
+                  activeLabel='Require user login'
+                  inactiveLabel='No login required'
+                />
+              </div>
+
+              <div className='flex items-center'>
+                <ToggleSwitch
+                  isChecked={allSettings.ipRestriction}
+                  onChange={() => handleToggleChange('ipRestriction')}
+                  activeLabel='IP address restrictions'
+                  inactiveLabel='No IP restrictions'
+                />
+              </div>
+
+              {/* Former Proctoring controls */}
+              <div className='flex items-center'>
+                <ToggleSwitch
+                  isChecked={allSettings.preventTabSwitching}
+                  onChange={() => handleToggleChange('preventTabSwitching')}
+                  activeLabel='Prevent tab switching'
+                  inactiveLabel='Allow tab switching'
+                />
+              </div>
+
+              <div className='flex items-center'>
+                <ToggleSwitch
+                  isChecked={allSettings.disableCopyPaste}
+                  onChange={() => handleToggleChange('disableCopyPaste')}
+                  activeLabel='Disable copy/paste'
+                  inactiveLabel='Allow copy/paste'
+                />
+              </div>
+            </div>
+          </div>
+          <div className='mt-auto pt-8'></div>
+        </SettingsGroup>
+
+        <SettingsGroup icon={Mail} title='Email Notifications'>
+          <div>
+            <div className='space-y-3'>
+              <div className='flex items-center'>
+                <ToggleSwitch
+                  isChecked={allSettings.sendResultsEmail}
+                  onChange={() => handleToggleChange('sendResultsEmail')}
+                  activeLabel='Email results to participants'
+                  inactiveLabel='No result emails'
+                />
+              </div>
+
+              <div className='flex items-center'>
+                <ToggleSwitch
+                  isChecked={allSettings.notifyInstructor}
+                  onChange={() => handleToggleChange('notifyInstructor')}
+                  activeLabel='Notify instructor'
+                  inactiveLabel="Don't notify instructor"
+                />
+              </div>
+            </div>
+
+            <div
+              className={`mt-3 ${
+                allSettings.sendResultsEmail
+                  ? ''
+                  : 'opacity-50 pointer-events-none'
+              }`}
+            >
+              <label className='block text-sm font-medium text-gray-700 mb-1'>
+                Email Template
+              </label>
+              <select
+                value={allSettings.emailTemplate}
+                onChange={(e) =>
+                  handleInputChange('emailTemplate', e.target.value)
+                }
+                className={STYLES.input}
+                aria-label='Select email template'
+                disabled={!allSettings.sendResultsEmail}
+              >
+                <option value='default'>Default Template</option>
+                <option value='minimal'>Minimal</option>
+                <option value='detailed'>Detailed Results</option>
+                <option value='certificate'>With Certificate</option>
+              </select>
+            </div>
+          </div>
+        </SettingsGroup>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className='mt-4 sm:mt-6 border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm'>
+      {/* Main Configuration Header */}
+      <div className='px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 bg-white'>
+        <h3 className='text-lg font-medium text-gray-800 flex items-center'>
+          <Settings className='h-5 w-5 mr-2 text-blue-600' />
+          Test Configuration
+        </h3>
+        <p className='text-sm text-gray-500 mt-1'>Configure test settings</p>
       </div>
 
-      {/* Footer with actions */}
-      <div className='bg-gray-100 p-3 border-t border-gray-200'>
-        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3'>
-          <button
-            onClick={onGenerateLink}
-            className={`px-3 py-2 rounded-md text-xs font-medium flex items-center justify-center ${
-              settings.generateLink
-                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            } transition-colors shadow-sm`}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                  ease: 'linear',
-                }}
-                className='h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2'
-              />
-            ) : (
-              <LinkIcon className='h-4 w-4 mr-1.5' />
-            )}
-            <span>
-              {settings.generateLink
-                ? 'Regenerate Link'
-                : 'Generate Shareable Link'}
-            </span>
-          </button>
-        </div>
+      {/* Test Setup Section */}
+      <div className='border-b border-gray-200'>
+        <SectionHeader
+          icon={FileText}
+          title='Test Setup'
+          isExpanded={expandedSection === 'test-setup'}
+          onToggle={() => toggleSection('test-setup')}
+        />
+        {expandedSection === 'test-setup' && renderTestSetupContent()}
+      </div>
+
+      {/* Appearance Section */}
+      <div className='border-b border-gray-200'>
+        <SectionHeader
+          icon={Image}
+          title='Appearance & Layout'
+          isExpanded={expandedSection === 'appearance'}
+          onToggle={() => toggleSection('appearance')}
+        />
+        {expandedSection === 'appearance' && renderAppearanceContent()}
+      </div>
+
+      {/* Security Section */}
+      <div className='border-b border-gray-200'>
+        <SectionHeader
+          icon={Lock}
+          title='Security & Privacy'
+          isExpanded={expandedSection === 'security'}
+          onToggle={() => toggleSection('security')}
+        />
+        {expandedSection === 'security' && renderSecurityContent()}
+      </div>
+
+      {/* Generate Link Button */}
+      <div className='p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end'>
+        <button
+          onClick={onGenerateLink}
+          className={`px-4 py-2 rounded-md text-sm font-medium flex items-center transition-colors shadow-sm ${
+            interactiveLink
+              ? 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+          }`}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <div className='animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2' />
+          ) : (
+            <Link className='h-4 w-4 mr-2' />
+          )}
+          <span>{interactiveLink ? 'Regenerate Link' : 'Generate Link'}</span>
+        </button>
       </div>
     </div>
   )

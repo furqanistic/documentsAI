@@ -33,6 +33,18 @@ const DocumentPreview = ({ content, onContentChange }) => {
   const searchInputRef = useRef(null)
   const contentRef = useRef(null)
   const editRef = useRef(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Check if viewport is mobile-sized
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Parse content into pages for better display
   useEffect(() => {
@@ -323,6 +335,23 @@ const DocumentPreview = ({ content, onContentChange }) => {
     exit: { opacity: 0, x: -20 },
   }
 
+  // Determine icon size based on screen size
+  const iconSize = isMobile ? 20 : 16 // Bigger icons on mobile
+  const smallIconSize = isMobile ? 16 : 14
+
+  // Calculate appropriate height for content area in fullscreen
+  // Adjusted to ensure footer is visible on small screens
+  const getContentHeight = () => {
+    if (!fullscreen) return 'max-h-96 md:max-h-[28rem]'
+
+    // On mobile, especially small screens like iPhone SE, we need to reserve more space
+    if (isMobile) {
+      return 'h-[calc(100vh-200px)]' // Increased from 160px to 200px for mobile
+    }
+
+    return 'h-[calc(100vh-160px)]'
+  }
+
   return (
     <motion.div
       className={`border rounded-lg border-gray-200 overflow-hidden shadow-sm ${
@@ -337,27 +366,47 @@ const DocumentPreview = ({ content, onContentChange }) => {
         <div className='flex flex-wrap items-center justify-between gap-y-2'>
           <div className='flex items-center space-x-3 md:space-x-4'>
             <div className='flex items-center'>
-              <FileText className='h-4 w-4 text-gray-500 mr-2' />
-              <span className='text-xs md:text-sm font-medium'>
+              <FileText
+                className={`h-${isMobile ? 5 : 4} w-${
+                  isMobile ? 5 : 4
+                } text-gray-500 mr-2`}
+              />
+              <span
+                className={`${
+                  isMobile ? 'text-sm' : 'text-xs md:text-sm'
+                } font-medium`}
+              >
                 Document Preview
               </span>
             </div>
 
-            <div className='text-xs md:text-sm text-gray-500 flex items-center'>
+            {/* Page indicator - On desktop, it stays in original position */}
+            {!isMobile && (
+              <div className='text-xs md:text-sm text-gray-500 flex items-center'>
+                <span className='bg-white px-2 py-1 rounded-md border border-gray-200'>
+                  Page {currentPage} of {totalPages}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Page indicator - On mobile, it's moved to top right */}
+          {isMobile && (
+            <div className='text-xs text-gray-500 flex items-center'>
               <span className='bg-white px-2 py-1 rounded-md border border-gray-200'>
                 Page {currentPage} of {totalPages}
               </span>
             </div>
-          </div>
+          )}
 
-          <div className='flex items-center gap-1 md:gap-3 ml-auto'>
+          <div className='flex items-center gap-1 md:gap-3 ml-auto flex-1 justify-end'>
             {/* Search bar (toggled by the search button) */}
             {showSearch && (
               <motion.div
                 initial={{ width: 0, opacity: 0 }}
                 animate={{ width: 'auto', opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
-                className='flex items-center bg-white border border-gray-200 rounded-md overflow-hidden'
+                className='flex flex-1 items-center bg-white border border-gray-200 rounded-md overflow-hidden md:ml-2' // Added md:ml-2
               >
                 <input
                   ref={searchInputRef}
@@ -365,7 +414,7 @@ const DocumentPreview = ({ content, onContentChange }) => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder='Search...'
-                  className='text-xs p-1.5 w-28 sm:w-32 md:w-40 focus:outline-none'
+                  className='text-xs p-1.5 w-full focus:outline-none flex-1'
                 />
                 {searchTerm && (
                   <div className='flex items-center px-1 text-gray-500 text-xs'>
@@ -381,7 +430,11 @@ const DocumentPreview = ({ content, onContentChange }) => {
                       }
                       className='p-1 hover:bg-gray-100 rounded disabled:opacity-50'
                     >
-                      <ChevronLeft className='h-3 w-3' />
+                      <ChevronLeft
+                        className={`h-${smallIconSize / 4} w-${
+                          smallIconSize / 4
+                        }`}
+                      />
                     </button>
                     <button
                       onClick={handleSearchNext}
@@ -391,57 +444,77 @@ const DocumentPreview = ({ content, onContentChange }) => {
                       }
                       className='p-1 hover:bg-gray-100 rounded disabled:opacity-50'
                     >
-                      <ChevronRight className='h-3 w-3' />
+                      <ChevronRight
+                        className={`h-${smallIconSize / 4} w-${
+                          smallIconSize / 4
+                        }`}
+                      />
                     </button>
                     <button
                       onClick={() => setSearchTerm('')}
                       className='p-1 hover:bg-gray-100 rounded'
                     >
-                      <X className='h-3 w-3' />
+                      <X
+                        className={`h-${smallIconSize / 4} w-${
+                          smallIconSize / 4
+                        }`}
+                      />
                     </button>
                   </div>
                 )}
               </motion.div>
             )}
 
-            {/* Primary action buttons */}
-            <div className='flex items-center gap-1 md:gap-2 sm:border-l sm:border-gray-200 sm:pl-2'>
+            {/* Primary action buttons - right aligned */}
+            <div className='flex items-center gap-1 md:gap-2 sm:border-l sm:border-gray-200 sm:pl-2 justify-end'>
               <button
                 onClick={handleSearchToggle}
-                className='p-1.5 rounded-md hover:bg-gray-200 transition-colors'
+                className={`p-${
+                  isMobile ? 2 : 1.5
+                } rounded-md hover:bg-gray-200 transition-colors`}
                 title={showSearch ? 'Close search' : 'Search document'}
               >
-                <Search className='h-4 w-4 text-gray-500' />
-              </button>
-
-              <button
-                onClick={handlePrint}
-                className='p-1.5 rounded-md hover:bg-gray-200 transition-colors'
-                title='Print document'
-              >
-                <Printer className='h-4 w-4 text-gray-500' />
+                <Search
+                  className={`h-${iconSize / 4} w-${
+                    iconSize / 4
+                  } text-gray-500`}
+                />
               </button>
 
               <button
                 onClick={handleEditToggle}
-                className={`p-1.5 rounded-md ${
+                className={`p-${isMobile ? 2 : 1.5} rounded-md ${
                   isEditing ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-200'
                 } transition-colors`}
                 title={isEditing ? 'Save changes' : 'Edit document'}
               >
                 {isEditing ? (
-                  <Save className='h-4 w-4 text-blue-600' />
+                  <Save
+                    className={`h-${iconSize / 4} w-${
+                      iconSize / 4
+                    } text-blue-600`}
+                  />
                 ) : (
-                  <Edit className='h-4 w-4 text-gray-500' />
+                  <Edit
+                    className={`h-${iconSize / 4} w-${
+                      iconSize / 4
+                    } text-gray-500`}
+                  />
                 )}
               </button>
 
               <button
                 onClick={handleCopy}
-                className='p-1.5 rounded-md hover:bg-gray-200 transition-colors relative'
+                className={`p-${
+                  isMobile ? 2 : 1.5
+                } rounded-md hover:bg-gray-200 transition-colors relative`}
                 title='Copy to clipboard'
               >
-                <Copy className='h-4 w-4 text-gray-500' />
+                <Copy
+                  className={`h-${iconSize / 4} w-${
+                    iconSize / 4
+                  } text-gray-500`}
+                />
                 {copied && (
                   <motion.div
                     initial={{ opacity: 0, y: 5 }}
@@ -456,13 +529,23 @@ const DocumentPreview = ({ content, onContentChange }) => {
 
               <button
                 onClick={() => setFullscreen(!fullscreen)}
-                className='p-1.5 rounded-md hover:bg-gray-200 transition-colors'
+                className={`p-${
+                  isMobile ? 2 : 1.5
+                } rounded-md hover:bg-gray-200 transition-colors`}
                 title={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
               >
                 {fullscreen ? (
-                  <Minimize className='h-4 w-4 text-gray-500' />
+                  <Minimize
+                    className={`h-${iconSize / 4} w-${
+                      iconSize / 4
+                    } text-gray-500`}
+                  />
                 ) : (
-                  <Maximize className='h-4 w-4 text-gray-500' />
+                  <Maximize
+                    className={`h-${iconSize / 4} w-${
+                      iconSize / 4
+                    } text-gray-500`}
+                  />
                 )}
               </button>
             </div>
@@ -472,56 +555,35 @@ const DocumentPreview = ({ content, onContentChange }) => {
         {/* Second toolbar row with pagination and zoom */}
         <div className='flex items-center justify-between mt-2 border-t border-gray-200 pt-2'>
           {/* Pagination controls */}
-          <div className='flex items-center space-x-1'>
+          <div className='flex items-center space-x-2'>
             <button
               onClick={handlePrevPage}
               disabled={currentPage === 1}
-              className='p-1.5 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:hover:bg-transparent'
+              className={`p-${
+                isMobile ? 2 : 1.5
+              } rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:hover:bg-transparent`}
               title='Previous page'
             >
-              <ChevronLeft className='h-4 w-4 text-gray-600' />
+              <ChevronLeft
+                className={`h-${iconSize / 4} w-${iconSize / 4} text-gray-600`}
+              />
             </button>
-
-            {/* Page number buttons - always show sequential pages from 1 */}
-            <div className='hidden md:flex space-x-1'>
-              {/* Logic to show first few pages (up to 5) */}
-              {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
-                const pageNum = idx + 1
-
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`w-7 h-7 flex items-center justify-center rounded-md text-xs font-medium transition-colors ${
-                      currentPage === pageNum
-                        ? 'bg-gray-800 text-white'
-                        : 'text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                )
-              })}
-
-              {/* If there are more pages, show ellipsis */}
-              {totalPages > 5 && (
-                <div className='w-7 h-7 flex items-center justify-center text-xs text-gray-500'>
-                  ...
-                </div>
-              )}
-            </div>
 
             <button
               onClick={handleNextPage}
               disabled={currentPage === totalPages}
-              className='p-1.5 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:hover:bg-transparent'
+              className={`p-${
+                isMobile ? 2 : 1.5
+              } rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:hover:bg-transparent`}
               title='Next page'
             >
-              <ChevronRight className='h-4 w-4 text-gray-600' />
+              <ChevronRight
+                className={`h-${iconSize / 4} w-${iconSize / 4} text-gray-600`}
+              />
             </button>
           </div>
 
-          {/* Zoom controls */}
+          {/* Zoom controls - now visible on mobile too */}
           <div className='flex items-center space-x-1'>
             <button
               onClick={handleZoomOut}
@@ -557,11 +619,7 @@ const DocumentPreview = ({ content, onContentChange }) => {
       </div>
 
       {/* Document content with improved rendering */}
-      <div
-        className={`bg-white overflow-auto relative ${
-          fullscreen ? 'h-[calc(100vh-160px)]' : 'max-h-96 md:max-h-[28rem]'
-        }`}
-      >
+      <div className={`bg-white overflow-auto relative ${getContentHeight()}`}>
         {isLoading ? (
           <div className='flex items-center justify-center h-full p-8'>
             <div className='text-center'>
@@ -679,28 +737,43 @@ const DocumentPreview = ({ content, onContentChange }) => {
         )}
       </div>
 
-      {/* Footer with improved actions */}
-      <div className='bg-gray-50 p-2 md:p-3 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-2'>
-        <span className='text-xs text-gray-500 text-center sm:text-left'>
-          {searchResults.length > 0 && (
-            <span className='mr-2 bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-md text-xs'>
-              {searchResults.length}{' '}
-              {searchResults.length === 1 ? 'match' : 'matches'} found
-            </span>
-          )}
-          <span className='hidden sm:inline'>
-            Preview Mode • Document will render differently when exported
-          </span>
-        </span>
-
-        <div className='self-end sm:self-auto'>
+      {/* Footer with improved actions - now with proper padding for mobile */}
+      <div className='bg-gray-50 p-2 md:p-3 border-t border-gray-200 pb-3 relative'>
+        {/* Mobile print button - positioned in the right and vertically centered */}
+        <div className='sm:hidden absolute top-1/2 right-2 -translate-y-1/2'>
           <button
-            className='bg-white border border-gray-300 text-gray-700 py-1.5 px-2.5 md:px-3 rounded-md text-xs font-medium hover:bg-gray-50 shadow-sm transition-colors flex items-center'
+            className='bg-gradient-to-br from-blue-600 to-blue-800 text-white py-1.5 px-4 rounded-md text-xs font-medium hover:opacity-90 shadow-sm transition-colors flex items-center'
             onClick={handlePrint}
           >
-            <Printer className='h-3 w-3 inline mr-1.5' />
+            <Printer className='h-4 w-4 inline mr-1.5' />
             Print
           </button>
+        </div>
+
+        {/* Desktop footer layout */}
+        <div className='flex flex-col sm:flex-row justify-between items-center gap-y-2 sm:items-center mt-10 sm:mt-0'>
+          <span className='text-xs text-gray-500 text-center sm:text-left'>
+            {searchResults.length > 0 && (
+              <span className='mr-2 bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-md text-xs'>
+                {searchResults.length}{' '}
+                {searchResults.length === 1 ? 'match' : 'matches'} found
+              </span>
+            )}
+            <span className='hidden sm:inline'>
+              Preview Mode • Document will render differently when exported
+            </span>
+          </span>
+
+          {/* Desktop print button */}
+          <div className='hidden sm:block'>
+            <button
+              className='bg-gradient-to-br from-blue-600 to-blue-800 text-white py-1.5 px-4 rounded-md text-xs font-medium hover:opacity-90 shadow-sm transition-colors flex items-center'
+              onClick={handlePrint}
+            >
+              <Printer className='h-4 w-4 inline mr-1.5' />
+              Print
+            </button>
+          </div>
         </div>
       </div>
     </motion.div>

@@ -498,7 +498,7 @@ const ExamplesPage = () => {
                           <span className='text-xs text-gray-500 capitalize py-1 px-2.5 bg-gray-100 rounded-full'>
                             {example.category}
                           </span>
-                          <button className='px-3 py-1 bg-gray-900 text-white text-xs rounded-md hover:bg-black transition-colors'>
+                          <button className='px-3 py-1 bg-gradient-to-br from-blue-600 to-blue-800 text-white text-xs rounded-md hover:bg-black transition-colors'>
                             View document
                           </button>
                         </div>

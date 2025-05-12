@@ -432,7 +432,7 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                 </div>
 
                 {/* Toggle view option */}
-                <div className='mt-2 text-center'>
+                <div className='mt-4 md:mt-2 text-center'>
                   <p className='text-sm text-gray-600'>
                     {view === 'signup'
                       ? 'Already have an account?'

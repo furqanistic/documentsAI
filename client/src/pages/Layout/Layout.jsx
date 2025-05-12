@@ -17,7 +17,7 @@ const navLinks = [
   {
     name: 'Interactive Tests',
     description: 'Auto-graded online assessments',
-    href: '/',
+    href: '/tests',
   },
   {
     name: 'Smart Templates',

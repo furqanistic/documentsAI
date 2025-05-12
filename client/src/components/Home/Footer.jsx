@@ -8,8 +8,8 @@ const Footer = () => {
     { name: 'Pricing', href: '#' },
     { name: 'About', href: '#' },
     { name: 'Support', href: '#' },
-    { name: 'Terms', href: '#' },
-    { name: 'Privacy', href: '#' },
+    { name: 'Terms', href: '/terms' },
+    { name: 'Privacy', href: '/privacy' },
   ]
 
   // Social Media links
@@ -25,13 +25,13 @@ const Footer = () => {
       <div className='container mx-auto px-2'>
         <div className='flex flex-wrap items-center justify-between'>
           {/* Logo and tagline - centered on mobile */}
-          <div className='flex items-center space-x-4 mb-2 md:mb-0 w-full md:w-1/4 justify-center md:justify-start'>
-            <div className='flex items-center'>
+          <div className='flex items-center mb-2 md:mb-0 w-full md:w-1/4 justify-center md:justify-start'>
+            <div className='flex items-center sm:space-x-4'>
               <img src='./logo.png' alt='Calani Logo' className='h-10' />
-            </div>
-            <div className='hidden sm:block text-xs text-gray-400'>
-              <p className='m-0'>AI-Powered Document Creation</p>
-              <p className='m-0'>& Interactive Testing</p>
+              <div className='hidden sm:block text-xs text-gray-400'>
+                <p className='m-0'>AI-Powered Document Creation</p>
+                <p className='m-0'>& Interactive Testing</p>
+              </div>
             </div>
           </div>
 

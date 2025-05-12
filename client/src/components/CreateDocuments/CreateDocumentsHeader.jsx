@@ -57,7 +57,7 @@ const CreateDocumentsHeader = () => {
                 Smart Documents
               </h2>
               <p className='text-gray-400 text-lg max-w-md'>
-                Create professional documents with intelligence.
+                Create professional docs with intelligence.
               </p>
             </div>
           </div>
@@ -82,10 +82,10 @@ const CreateDocumentsHeader = () => {
                 </div>
                 {/* Clean document content */}
                 <div className='absolute top-7 left-3 right-3 space-y-1.5'>
-                  <div className='h-1 bg-blue-700/40 rounded-full w-3/4'></div>
-                  <div className='h-1 bg-gray-700 rounded-full w-full'></div>
-                  <div className='h-1 bg-gray-700 rounded-full w-2/3'></div>
-                  <div className='h-1 bg-gray-700 rounded-full w-1/2'></div>
+                  <div className='h-1 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full w-3/4'></div>
+                  <div className='h-1 bg-gray-500 rounded-full w-full'></div>
+                  <div className='h-1 bg-gray-500 rounded-full w-2/3'></div>
+                  <div className='h-1 bg-gray-500 rounded-full w-1/2'></div>
                 </div>
               </div>
               {/* Subtle shadow effect */}

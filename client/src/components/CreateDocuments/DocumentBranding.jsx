@@ -8,9 +8,11 @@ import {
   Upload,
   X,
 } from 'lucide-react'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 
-const DocumentMetadataOptions = ({
+const DocumentBranding = ({
   metadata,
   onMetadataChange,
   enabled,
@@ -19,53 +21,76 @@ const DocumentMetadataOptions = ({
   const logoInputRef = useRef(null)
   const [previewLogo, setPreviewLogo] = useState(null)
 
-  // Handle logo upload
+  useEffect(() => {
+    if (!metadata.documentDate) {
+      handleDateChange(new Date())
+    }
+    if (!metadata.documentTime) {
+      handleTimeChange(new Date())
+    }
+  }, [])
+
   const handleLogoUpload = (event) => {
     const file = event.target.files[0]
     if (file) {
-      // Update metadata with the new file
-      onMetadataChange({
-        ...metadata,
-        logo: file,
-      })
-
-      // Create preview URL
+      onMetadataChange({ ...metadata, logo: file })
       const reader = new FileReader()
-      reader.onload = (e) => {
-        setPreviewLogo(e.target.result)
-      }
+      reader.onload = (e) => setPreviewLogo(e.target.result)
       reader.readAsDataURL(file)
     }
   }
 
-  // Handle text input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    onMetadataChange({
-      ...metadata,
-      [name]: value,
-    })
+    onMetadataChange({ ...metadata, [name]: value })
   }
 
-  // Remove logo
+  const handleDateChange = (date) => {
+    onMetadataChange({ ...metadata, documentDate: date })
+  }
+
+  const handleTimeChange = (time) => {
+    onMetadataChange({ ...metadata, documentTime: time })
+  }
+
   const handleRemoveLogo = (e) => {
     e.stopPropagation()
-    onMetadataChange({
-      ...metadata,
-      logo: null,
-    })
+    onMetadataChange({ ...metadata, logo: null })
     setPreviewLogo(null)
   }
 
-  // Animation variants
   const itemVariant = {
     hidden: { opacity: 0, y: 10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.3 },
-    },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
   }
+
+  const CustomDateInput = React.forwardRef(({ value, onClick }, ref) => (
+    <div className='relative w-full'>
+      <input
+        value={value}
+        onClick={onClick}
+        readOnly
+        ref={ref}
+        className='w-full p-3 border border-gray-300 rounded-lg bg-white text-sm' // Removed pl-10 and icon-related padding
+        style={{ minWidth: 0, overflow: 'visible' }} // Ensure full text is visible
+        placeholder='Select date'
+      />
+    </div>
+  ))
+
+  const CustomTimeInput = React.forwardRef(({ value, onClick }, ref) => (
+    <div className='relative w-full'>
+      <input
+        value={value}
+        onClick={onClick}
+        readOnly
+        ref={ref}
+        className='w-full p-3 border border-gray-300 rounded-lg bg-white text-sm' // Removed pl-10 and icon-related padding
+        style={{ minWidth: 0, overflow: 'visible' }} // Ensure full text is visible
+        placeholder='Select time'
+      />
+    </div>
+  ))
 
   return (
     <motion.div
@@ -76,7 +101,6 @@ const DocumentMetadataOptions = ({
     >
       <div className='flex items-center justify-between mb-4'>
         <div className='flex items-center'>
-          <Building className='h-5 w-5 text-gray-600 mr-2' />
           <h3 className='text-base font-medium text-gray-800'>
             Document Branding
           </h3>
@@ -88,13 +112,11 @@ const DocumentMetadataOptions = ({
             </div>
           </div>
         </div>
-
-        {/* Toggle switch */}
-        <div className='bg-gray-200 rounded-full p-1 flex items-center'>
+        <div className='bg-gradient-to-br from-blue-600 to-blue-800 rounded-full p-1 flex items-center'>
           <button
             onClick={() => onToggleEnabled(false)}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-              !enabled ? 'bg-white text-gray-800 shadow' : 'text-gray-500'
+              !enabled ? 'bg-white text-blue-800 shadow' : 'text-white'
             }`}
           >
             Off
@@ -102,7 +124,7 @@ const DocumentMetadataOptions = ({
           <button
             onClick={() => onToggleEnabled(true)}
             className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-              enabled ? 'bg-white text-gray-800 shadow' : 'text-gray-500'
+              enabled ? 'bg-white text-blue-800 shadow' : 'text-white'
             }`}
           >
             On
@@ -112,7 +134,6 @@ const DocumentMetadataOptions = ({
 
       {enabled && (
         <div className='space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200'>
-          {/* Logo Upload */}
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-2'>
               Organization Logo
@@ -128,7 +149,6 @@ const DocumentMetadataOptions = ({
                 className='hidden'
                 accept='image/*'
               />
-
               {previewLogo ? (
                 <div className='flex justify-between items-center'>
                   <div className='flex items-center'>
@@ -165,7 +185,6 @@ const DocumentMetadataOptions = ({
             </div>
           </div>
 
-          {/* Organization Name */}
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-2'>
               Organization Name
@@ -176,41 +195,43 @@ const DocumentMetadataOptions = ({
               value={metadata.orgName || ''}
               onChange={handleInputChange}
               placeholder='Enter organization name'
-              className='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none text-sm'
+              className='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none text-sm bg-white'
             />
           </div>
 
-          {/* Date and Time Row */}
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2 flex items-center'>
-                <Calendar className='h-4 w-4 mr-1 text-gray-500' />
+          <div className='grid grid-cols-2 gap-4 w-full'>
+            <div className='w-full'>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
                 Date
               </label>
-              <input
-                type='date'
-                name='date'
-                value={metadata.date || ''}
-                onChange={handleInputChange}
-                className='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none text-sm'
+              <DatePicker
+                selected={metadata.documentDate}
+                onChange={handleDateChange}
+                customInput={<CustomDateInput />}
+                dateFormat='MMM d, yyyy' // Changed from 'MMMM d, yyyy' to 'MMM d, yyyy'
+                calendarClassName='bg-white shadow-lg rounded-lg border border-gray-200'
+                wrapperClassName='w-full'
               />
             </div>
-            <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2 flex items-center'>
-                <Clock className='h-4 w-4 mr-1 text-gray-500' />
+            <div className='w-full'>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
                 Time
               </label>
-              <input
-                type='time'
-                name='time'
-                value={metadata.time || ''}
-                onChange={handleInputChange}
-                className='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none text-sm'
+              <DatePicker
+                selected={metadata.documentTime}
+                onChange={handleTimeChange}
+                showTimeSelect
+                showTimeSelectOnly
+                timeIntervals={15}
+                timeCaption='Time'
+                dateFormat='h:mm aa'
+                customInput={<CustomTimeInput />}
+                calendarClassName='bg-white shadow-lg rounded-lg border border-gray-200'
+                wrapperClassName='w-full'
               />
             </div>
           </div>
 
-          {/* Additional Info */}
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-2'>
               Additional Information
@@ -220,7 +241,7 @@ const DocumentMetadataOptions = ({
               value={metadata.additionalInfo || ''}
               onChange={handleInputChange}
               placeholder='Any additional information to include in the header (e.g., department, course code)'
-              className='w-full h-20 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none resize-none text-sm'
+              className='w-full h-20 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none resize-none text-sm bg-white'
             />
           </div>
         </div>
@@ -229,4 +250,4 @@ const DocumentMetadataOptions = ({
   )
 }
 
-export default DocumentMetadataOptions
+export default DocumentBranding
