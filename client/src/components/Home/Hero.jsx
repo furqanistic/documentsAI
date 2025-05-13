@@ -520,20 +520,20 @@ const EnhancedDocumentInterface = () => {
                     {/* Test settings */}
                     <div className='grid grid-cols-2 gap-2 p-2 mb-3 text-xs bg-gray-50 rounded-md'>
                       <div className='flex items-center text-gray-600'>
-                        <Shield size={12} className='mr-1 text-blue-500' />
-                        Anti-cheating
-                      </div>
-                      <div className='flex items-center text-gray-600'>
                         <LineChart size={12} className='mr-1 text-blue-500' />
                         Analytics
                       </div>
                       <div className='flex items-center text-gray-600'>
-                        <Smartphone size={12} className='mr-1 text-blue-500' />
-                        Mobile
+                        <Shield size={12} className='mr-1 text-blue-500' />
+                        Anti-cheating
                       </div>
                       <div className='flex items-center text-gray-600'>
                         <CheckCircle size={12} className='mr-1 text-blue-500' />
                         Auto-grading
+                      </div>
+                      <div className='flex items-center text-gray-600'>
+                        <Smartphone size={12} className='mr-1 text-blue-500' />
+                        Mobile
                       </div>
                     </div>
 
@@ -555,7 +555,7 @@ const EnhancedDocumentInterface = () => {
                         ].map((option, i) => (
                           <div key={i} className='flex items-center'>
                             <div
-                              className={`w-3 h-3 mr-2 border rounded-full ${
+                              className={`flex-shrink-0 w-3 h-3 mr-2 border rounded-full ${
                                 i === 0
                                   ? 'bg-blue-50 border-blue-400'
                                   : 'border-gray-300'
@@ -588,9 +588,6 @@ const EnhancedDocumentInterface = () => {
                         <div className='px-2 py-1 text-xs bg-gray-100 rounded truncate'>
                           exam.calani.ai/sci10-28fj3
                         </div>
-                        <button className='p-1 text-xs text-gray-500 bg-gray-100 rounded'>
-                          <FileSymlink size={10} />
-                        </button>
                       </div>
                     </div>
 

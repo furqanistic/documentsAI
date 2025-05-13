@@ -21,16 +21,15 @@ const AiPromptSuggestions = ({ suggestions, onSuggestionClick }) => {
 
   return (
     <motion.div variants={aiSuggestionItem} className='mt-3'>
-      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2'>
+      <div className='flex flex-col mb-2'>
         <h4 className='text-base font-medium text-gray-700 flex items-center'>
+          <Sparkles className='h-4 w-4 mr-1.5 text-amber-500' />
           AI SUGGESTED PROMPTS
-          <Sparkles className='h-4 w-4 ml-1.5 text-amber-500' />
         </h4>
-        <div className='text-xs text-gray-500 italic mt-1 sm:mt-0'>
+        <div className='text-xs text-gray-500 italic mt-1'>
           Click any suggestion to apply it to your prompt
         </div>
       </div>
-
       <motion.div
         className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2'
         variants={aiSuggestionContainer}

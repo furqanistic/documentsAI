@@ -511,8 +511,8 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                   {/* Introduction Help Text */}
 
                   <motion.div variants={itemVariant} className='mb-5'>
-                    <div className='p-3 md:p-4 bg-blue-50 rounded-lg border border-blue-200 flex items-start'>
-                      <HelpCircle className='h-5 w-5 text-blue-500 mr-2 md:mr-3 flex-shrink-0 mt-0.5' />
+                    <div className='p-3 md:p-4 bg-blue-50 rounded-lg border border-blue-200 flex items-center'>
+                      <HelpCircle className='h-5 w-5 text-blue-500 mr-2 md:mr-3 flex-shrink-0' />
                       <p className='text-xs md:text-sm text-gray-700'>
                         You can create documents in two ways: upload a file or
                         describe what you need in the text prompt below.
@@ -750,8 +750,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                                   Make this an interactive online test
                                 </h3>
                                 <p className='text-sm text-white text-opacity-80 mt-1'>
-                                  Add time limits, automatic grading, and
-                                  shareable link
+                                  Time limits • Auto-grading • Share links
                                 </p>
                               </div>
                             </div>
@@ -806,38 +805,62 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className='mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex flex-col sm:flex-row items-center justify-between'
+                          transition={{ duration: 0.3, ease: 'easeOut' }}
+                          className='mt-6'
                         >
-                          <div className='flex items-center mb-3 sm:mb-0'>
-                            <div className='bg-green-100 p-2 rounded-full mr-3'>
-                              <Check className='h-5 w-5 text-green-600' />
+                          <div className='bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 p-5'>
+                            <p className='text-sm font-medium text-gray-700 mb-3'>
+                              Your generated link:
+                            </p>
+                            <div className='flex flex-col sm:flex-row items-center gap-4'>
+                              <div className='relative flex-1 w-full'>
+                                <input
+                                  type='text'
+                                  value={interactiveLink}
+                                  readOnly
+                                  className='w-full bg-gray-50 border border-gray-200 rounded-md px-4 py-2 text-sm text-gray-800 pr-10 font-mono hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                                  onClick={(e) => e.target.select()}
+                                />
+                                <div className='absolute right-3 top-1/2 transform -translate-y-1/2'>
+                                  <svg
+                                    className='w-4 h-4 text-gray-400'
+                                    fill='none'
+                                    viewBox='0 0 24 24'
+                                    stroke='currentColor'
+                                  >
+                                    <path
+                                      strokeLinecap='round'
+                                      strokeLinejoin='round'
+                                      strokeWidth={2}
+                                      d='M13 7l5 5m0 0l-5 5m5-5H6'
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
+                              <div className='flex gap-2 w-full sm:w-auto'>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(
+                                      interactiveLink
+                                    )
+                                    // You could add a toast notification here
+                                  }}
+                                  className='flex-1 sm:flex-initial flex items-center justify-center py-2 px-4 bg-white border border-gray-200 rounded-md text-gray-700 hover:bg-gray-200 hover:border-gray-300 transition-all text-sm font-medium'
+                                >
+                                  <Copy className='h-4 w-4 mr-2' />
+                                  Copy
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    window.open(interactiveLink, '_blank')
+                                  }
+                                  className='flex-1 sm:flex-initial flex items-center justify-center py-2 px-4 bg-blue-600 rounded-md text-white hover:bg-blue-700 transition-all text-sm font-medium shadow-sm hover:shadow-md'
+                                >
+                                  <ArrowRight className='h-4 w-4 mr-2' />
+                                  Open
+                                </button>
+                              </div>
                             </div>
-                            <input
-                              type='text'
-                              value={interactiveLink}
-                              readOnly
-                              className='bg-white border border-green-200 rounded px-3 py-2 text-sm w-full sm:w-auto'
-                            />
-                          </div>
-                          <div className='flex space-x-2'>
-                            <button
-                              onClick={() =>
-                                navigator.clipboard.writeText(interactiveLink)
-                              }
-                              className='flex items-center justify-center px-3 py-2 bg-white border border-gray-200 rounded-md text-gray-700 hover:bg-gray-50 transition-colors text-sm'
-                            >
-                              <Copy className='h-4 w-4 mr-1.5' />
-                              Copy
-                            </button>
-                            <button
-                              onClick={() =>
-                                window.open(interactiveLink, '_blank')
-                              }
-                              className='flex items-center justify-center px-3 py-2 bg-blue-600 rounded-md text-white hover:bg-blue-700 transition-colors text-sm'
-                            >
-                              <ArrowRight className='h-4 w-4 mr-1.5' />
-                              Open
-                            </button>
                           </div>
                         </motion.div>
                       )}
@@ -852,7 +875,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                       transition={{ duration: 0.3 }}
                       className='mt-5 pt-4 border-t border-gray-100'
                     >
-                      <h3 className='text-base font-medium text-gray-800 mb-3'>
+                      <h3 className='text-base md:text-lg font-medium text-black mb-3'>
                         Export Options
                       </h3>
 

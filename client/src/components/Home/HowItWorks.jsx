@@ -72,68 +72,124 @@ const tabs = [
 const features = {
   educator: [
     {
-      icon: <AlertTriangle size={18} className='sm:w-7 sm:h-7' />,
+      icon: (
+        <AlertTriangle
+          size={18}
+          color='#ff6b6b'
+          className='w-6 h-6 sm:w-7 sm:h-7'
+        />
+      ),
       title: 'Anti-Cheating Measures',
       description: 'Time limits, randomized questions, and browser monitoring',
     },
     {
-      icon: <MousePointerClick size={18} className='sm:w-7 sm:h-7' />,
+      icon: (
+        <MousePointerClick
+          size={18}
+          color='#4ecdc4'
+          className='w-6 h-6 sm:w-7 sm:h-7'
+        />
+      ),
       title: 'Convenient Drag & Drop',
       description:
         'Easily organize and arrange content with intuitive controls',
     },
     {
-      icon: <BarChart3 size={18} className='sm:w-7 sm:h-7' />,
+      icon: (
+        <BarChart3
+          size={18}
+          color='#fb3895'
+          className='w-6 h-6 sm:w-7 sm:h-7'
+        />
+      ),
       title: 'Instant Analytics',
       description: 'Get real-time performance insights and detailed reports',
     },
     {
-      icon: <LinkIcon size={18} className='sm:w-7 sm:h-7' />,
+      icon: (
+        <LinkIcon size={18} color='#748ffc' className='w-6 h-6 sm:w-7 sm:h-7' />
+      ),
       title: 'Secure Sharing',
       description: 'Share access via secure links or integration with your LMS',
     },
   ],
   student: [
     {
-      icon: <Smartphone size={18} className='sm:w-7 sm:h-7' />,
+      icon: (
+        <Smartphone
+          size={18}
+          color='#12b886'
+          className='w-6 h-6 sm:w-7 sm:h-7'
+        />
+      ),
       title: 'Device Flexibility',
       description: 'Take tests from any device - desktop, tablet, or mobile',
     },
     {
-      icon: <CheckCircle2 size={18} className='sm:w-7 sm:h-7' />,
+      icon: (
+        <CheckCircle2
+          size={18}
+          color='#51cf66'
+          className='w-6 h-6 sm:w-7 sm:h-7'
+        />
+      ),
       title: 'Instant Feedback',
       description: 'See results and explanations immediately after submission',
     },
     {
-      icon: <LineChart size={18} className='sm:w-7 sm:h-7' />,
+      icon: (
+        <LineChart
+          size={18}
+          color='#ff6348'
+          className='w-6 h-6 sm:w-7 sm:h-7'
+        />
+      ),
       title: 'Progress Tracking',
       description: 'Monitor performance and identify areas for improvement',
     },
     {
-      icon: <Clock size={18} className='sm:w-7 sm:h-7' />,
+      icon: (
+        <Clock size={18} color='#feca57' className='w-6 h-6 sm:w-7 sm:h-7' />
+      ),
       title: 'Time Management',
       description: 'Clear timing information helps pace through questions',
     },
   ],
   professional: [
     {
-      icon: <FileSearch size={18} className='sm:w-7 sm:h-7' />,
+      icon: (
+        <FileSearch
+          size={18}
+          color='#2d98da'
+          className='w-6 h-6 sm:w-7 sm:h-7'
+        />
+      ),
       title: 'Customizable Templates',
       description: 'Personalize industry-specific templates always your way',
     },
     {
-      icon: <Briefcase size={18} className='sm:w-7 sm:h-7' />,
+      icon: (
+        <Briefcase
+          size={18}
+          color='#a55eea'
+          className='w-6 h-6 sm:w-7 sm:h-7'
+        />
+      ),
       title: 'Professional Polish',
       description:
         'Ensure consistent branding and formatting across all materials',
     },
     {
-      icon: <Share2 size={18} className='sm:w-7 sm:h-7' />,
+      icon: (
+        <Share2 size={18} color='#20bf6b' className='w-6 h-6 sm:w-7 sm:h-7' />
+      ),
       title: 'Seamless Collaboration',
       description: 'Share and co-edit documents with team members in real-time',
     },
     {
-      icon: <Star size={18} className='sm:w-7 sm:h-7' />,
+      icon: (
+        <Star size={18} color='#fed330' className='w-6 h-6 sm:w-7 sm:h-7' />
+      ),
       title: 'Tailored Solutions',
       description:
         'Specialized tools and features designed for your industry needs',
@@ -151,7 +207,7 @@ const stats = [
 // Header badges data
 const headerContent = {
   badge: {
-    icon: <BrainCircuit size={16} className='text-gray-600' />,
+    icon: <BrainCircuit size={16} color='#9333ea' />,
     text: 'Quick & Easy Conversion',
   },
   title: 'One-Click Digital Assessment',
@@ -241,13 +297,11 @@ const FeatureCard = ({ icon, title, description }) => (
   >
     <div className='flex-shrink-0 mt-0.5 sm:mt-0.5 md:mt-0'>
       <div className='flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 mr-2 sm:mr-3 md:mr-4 rounded-lg'>
-        <div className='text-gray-700 flex items-center justify-center'>
-          {icon}
-        </div>
+        <div className='flex items-center justify-center'>{icon}</div>
       </div>
     </div>
     <div>
-      <h4 className='text-2xs xs:text-sm sm:text-base font-bold text-gray-800'>
+      <h4 className='text-2xs xs:text-sm sm:text-base md:text-lg lg:text-lg font-bold text-gray-800'>
         {title}
       </h4>
       <p className='text-xs sm:text-sm md:text-base text-gray-600'>
@@ -399,9 +453,18 @@ const EducatorDemo = () => (
 
           <div className='grid grid-cols-2 gap-2 sm:gap-3 md:gap-4'>
             {[
-              { icon: <Clock size={14} />, text: '45 min time limit' },
-              { icon: <Shuffle size={14} />, text: 'Randomize questions' },
-              { icon: <CheckCircle2 size={14} />, text: 'Auto grading' },
+              {
+                icon: <Clock size={14} />,
+                text: '45 min time limit',
+              },
+              {
+                icon: <Shuffle size={14} />,
+                text: 'Randomize questions',
+              },
+              {
+                icon: <CheckCircle2 size={14} />,
+                text: 'Auto grading',
+              },
               {
                 icon: <LockKeyhole size={14} />,
                 text: 'Prevent tab switching',
@@ -412,7 +475,7 @@ const EducatorDemo = () => (
                 className='flex items-center bg-gray-50 p-2 rounded-md border border-gray-300'
               >
                 {React.cloneElement(item.icon, {
-                  className: 'text-gray-500 mr-2 flex-shrink-0 sm:w-4 sm:h-4',
+                  className: 'mr-2 flex-shrink-0 sm:w-4 sm:h-4',
                 })}
                 <span className='text-xs sm:text-sm text-gray-600 truncate'>
                   {item.text}
@@ -475,7 +538,7 @@ const EducatorDemo = () => (
             <div className='text-xs sm:text-sm font-medium text-gray-700'>
               Share with students
             </div>
-            <ChevronDown size={14} className='text-gray-500 sm:w-4 sm:h-4' />
+            <ChevronDown size={14} color='#6b7280' className='sm:w-4 sm:h-4' />
           </div>
         </div>
       </div>
@@ -501,7 +564,11 @@ const StudentDemo = () => (
         </div>
         <div className='flex items-center space-x-1 sm:space-x-3 flex-shrink-0'>
           <div className='flex items-center text-xs'>
-            <Clock size={10} className='mr-1 flex-shrink-0 sm:w-3 sm:h-3' />
+            <Clock
+              size={10}
+              color='#feca57'
+              className='mr-1 flex-shrink-0 sm:w-3 sm:h-3'
+            />
             <span className='text-xs whitespace-nowrap'>32:15 remaining</span>
           </div>
           <motion.div
@@ -737,7 +804,8 @@ const ProfessionalDemo = () => (
                   <div className='w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-1.5 sm:mr-2rounded-md flex items-center justify-center'>
                     <FileText
                       size={10}
-                      className='text-gray-600 sm:w-3 sm:h-3'
+                      color='#4299e1'
+                      className='sm:w-3 sm:h-3'
                     />
                   </div>
                   {format}

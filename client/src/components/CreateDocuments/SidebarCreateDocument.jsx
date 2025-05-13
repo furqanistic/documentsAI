@@ -93,7 +93,7 @@ const SidebarCreateDocument = () => {
           Interactive Testing
         </h3>
         <div className='space-y-4'>
-          <p className='text-xs text-gray-700 leading-tight'>
+          <p className='text-sm text-black leading-tight'>
             Turn exams into interactive tests with one click:
           </p>
           <ul className='space-y-1.5'>

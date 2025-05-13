@@ -20,6 +20,8 @@ const DocumentBranding = ({
 }) => {
   const logoInputRef = useRef(null)
   const [previewLogo, setPreviewLogo] = useState(null)
+  const [isTimePickerOpen, setIsTimePickerOpen] = useState(false)
+  const timeInputRef = useRef(null)
 
   useEffect(() => {
     if (!metadata.documentDate) {
@@ -29,6 +31,16 @@ const DocumentBranding = ({
       handleTimeChange(new Date())
     }
   }, [])
+
+  // Format time for display
+  const formatTime = (date) => {
+    if (!date) return ''
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+  }
 
   const handleLogoUpload = (event) => {
     const file = event.target.files[0]
@@ -59,6 +71,69 @@ const DocumentBranding = ({
     setPreviewLogo(null)
   }
 
+  // Parse time string and convert to Date object
+  const parseTime = (timeString) => {
+    const time = timeString.trim()
+    const result = new Date()
+
+    // Try to parse various time formats
+    const timeRegex12Hr = /^(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)$/
+    const timeRegex24Hr = /^(\d{1,2}):(\d{2})$/
+
+    let match = time.match(timeRegex12Hr)
+    if (match) {
+      let hours = parseInt(match[1])
+      const minutes = parseInt(match[2])
+      const meridiem = match[3].toUpperCase()
+
+      if (meridiem === 'PM' && hours !== 12) {
+        hours += 12
+      } else if (meridiem === 'AM' && hours === 12) {
+        hours = 0
+      }
+
+      result.setHours(hours, minutes, 0, 0)
+      return result
+    }
+
+    match = time.match(timeRegex24Hr)
+    if (match) {
+      const hours = parseInt(match[1])
+      const minutes = parseInt(match[2])
+
+      if (hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60) {
+        result.setHours(hours, minutes, 0, 0)
+        return result
+      }
+    }
+
+    return null
+  }
+
+  const handleTimeInputChange = (e) => {
+    // Just let the user type without updating state immediately
+    // This prevents re-renders and focus loss
+  }
+
+  const handleTimeInputBlur = (e) => {
+    const value = e.target.value
+    const parsedTime = parseTime(value)
+    if (parsedTime) {
+      handleTimeChange(parsedTime)
+    } else {
+      // Reset to previous valid time if parsing fails
+      if (metadata.documentTime) {
+        e.target.value = formatTime(metadata.documentTime)
+      }
+    }
+  }
+
+  const handleTimeInputKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.target.blur()
+    }
+  }
+
   const itemVariant = {
     hidden: { opacity: 0, y: 10 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
@@ -71,26 +146,64 @@ const DocumentBranding = ({
         onClick={onClick}
         readOnly
         ref={ref}
-        className='w-full p-3 border border-gray-300 rounded-lg bg-white text-sm' // Removed pl-10 and icon-related padding
-        style={{ minWidth: 0, overflow: 'visible' }} // Ensure full text is visible
-        placeholder='Select date'
+        className='w-full p-3 border border-gray-300 rounded-lg bg-white text-sm'
+        style={{ minWidth: 0, overflow: 'visible' }}
       />
     </div>
   ))
 
-  const CustomTimeInput = React.forwardRef(({ value, onClick }, ref) => (
-    <div className='relative w-full'>
-      <input
-        value={value}
-        onClick={onClick}
-        readOnly
-        ref={ref}
-        className='w-full p-3 border border-gray-300 rounded-lg bg-white text-sm' // Removed pl-10 and icon-related padding
-        style={{ minWidth: 0, overflow: 'visible' }} // Ensure full text is visible
-        placeholder='Select time'
-      />
-    </div>
-  ))
+  const CustomTimeInput = React.forwardRef(({ value, onClick }, ref) => {
+    // Use local state for the input value to prevent focus loss
+    const [localValue, setLocalValue] = useState(
+      formatTime(metadata.documentTime)
+    )
+
+    // Update local value when metadata changes from picker
+    useEffect(() => {
+      if (metadata.documentTime && !timeInputRef.current?.matches(':focus')) {
+        setLocalValue(formatTime(metadata.documentTime))
+      }
+    }, [metadata.documentTime])
+
+    return (
+      <div className='relative w-full'>
+        <input
+          ref={(el) => {
+            timeInputRef.current = el
+            if (ref) {
+              if (typeof ref === 'function') ref(el)
+              else ref.current = el
+            }
+          }}
+          value={localValue}
+          onChange={(e) => setLocalValue(e.target.value)}
+          onBlur={(e) => {
+            const parsedTime = parseTime(e.target.value)
+            if (parsedTime) {
+              handleTimeChange(parsedTime)
+            } else {
+              // Reset to previous valid time if parsing fails
+              setLocalValue(formatTime(metadata.documentTime))
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.target.blur()
+            }
+          }}
+          onClick={(e) => {
+            // Only open picker if clicking on an empty area or if already focused
+            if (e.target.selectionStart === e.target.selectionEnd) {
+              onClick(e)
+            }
+          }}
+          className='w-full p-3 border border-gray-300 rounded-lg bg-white text-sm'
+          style={{ minWidth: 0, overflow: 'visible' }}
+          placeholder='Type time (e.g., 3:30 PM)'
+        />
+      </div>
+    )
+  })
 
   return (
     <motion.div
@@ -194,7 +307,6 @@ const DocumentBranding = ({
               name='orgName'
               value={metadata.orgName || ''}
               onChange={handleInputChange}
-              placeholder='Enter organization name'
               className='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none text-sm bg-white'
             />
           </div>
@@ -208,7 +320,7 @@ const DocumentBranding = ({
                 selected={metadata.documentDate}
                 onChange={handleDateChange}
                 customInput={<CustomDateInput />}
-                dateFormat='MMM d, yyyy' // Changed from 'MMMM d, yyyy' to 'MMM d, yyyy'
+                dateFormat='MMM d, yyyy'
                 calendarClassName='bg-white shadow-lg rounded-lg border border-gray-200'
                 wrapperClassName='w-full'
               />
@@ -228,6 +340,8 @@ const DocumentBranding = ({
                 customInput={<CustomTimeInput />}
                 calendarClassName='bg-white shadow-lg rounded-lg border border-gray-200'
                 wrapperClassName='w-full'
+                onOpen={() => setIsTimePickerOpen(true)}
+                onClose={() => setIsTimePickerOpen(false)}
               />
             </div>
           </div>
@@ -240,7 +354,7 @@ const DocumentBranding = ({
               name='additionalInfo'
               value={metadata.additionalInfo || ''}
               onChange={handleInputChange}
-              placeholder='Any additional information to include in the header (e.g., department, course code)'
+              placeholder='Any additional information to include in the header ( department, course code, etc.)'
               className='w-full h-20 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none resize-none text-sm bg-white'
             />
           </div>

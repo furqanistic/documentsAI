@@ -132,7 +132,7 @@ const SidebarCreateTest = () => {
           Pro Tips
         </h3>
         <div className='space-y-4'>
-          <p className='text-xs text-gray-700 leading-tight'>
+          <p className='text-sm text-black leading-tight'>
             Follow these guidelines for the best test creation results:
           </p>
           <ul className='space-y-1.5'>
