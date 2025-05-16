@@ -225,9 +225,9 @@ const PricingPage = () => {
 
   return (
     <Layout>
-      <div className='bg-gray-50  min-h-screen'>
+      <div className='bg-gray-50 min-h-screen'>
         {/* Hero section with animated background */}
-        <div className='relative overflow-hidden py-10 md:py-12 bg-white dark:bg-gray-950'>
+        <div className='relative overflow-hidden py-10  bg-white dark:bg-gray-950'>
           <div className='absolute inset-0 z-0'>
             {/* Animated background elements */}
             <motion.div

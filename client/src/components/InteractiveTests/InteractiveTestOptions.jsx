@@ -1,4 +1,3 @@
-// file 2
 import {
   ChevronDown,
   ChevronUp,
@@ -10,11 +9,11 @@ import {
   Link,
   Lock,
   Mail,
+  Paintbrush,
   Palette,
   Percent,
   Shield,
   Upload,
-  UserCog,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -41,7 +40,7 @@ const STYLES = {
   button: {
     base: 'px-4 py-2 rounded-md text-sm font-medium flex items-center transition-colors shadow-sm',
     primary: 'bg-blue-600 text-white hover:bg-blue-700',
-    success: 'bg-red-500 text-white hover:bg-red-700',
+    success: 'bg-[#ffe772]  text-black hover:bg-yellow-500',
   },
 }
 
@@ -95,7 +94,7 @@ const DROPDOWN_OPTIONS = {
     { value: 45, label: '45 minutes' },
     { value: 60, label: '60 minutes' },
     { value: 0, label: 'No time limit' },
-    { value: 'custom', label: 'Custom time' },
+    { value: 'custom', label: 'Custom' },
   ],
   theme: [
     { value: 'default', label: 'Default' },
@@ -126,13 +125,6 @@ const DROPDOWN_OPTIONS = {
     { value: 'basic', label: 'Basic Correct/Incorrect' },
     { value: 'endOnly', label: 'Only at End of Test' },
   ],
-}
-
-// Time conversion helper functions
-const formatTimeDisplay = (minutes) => {
-  if (minutes === 0) return 'No time limit'
-  // Always display in minutes format
-  return `${minutes} minutes`
 }
 
 // Reusable components
@@ -196,11 +188,11 @@ const SectionHeader = ({ icon: Icon, title, isExpanded, onToggle }) => (
 
 const SettingsGroup = ({ icon: Icon, title, children, className = '' }) => (
   <div className={`${STYLES.settingsGroup} ${className}`}>
-    <div className='flex items-center pb-2 border-b border-gray-100 mb-3'>
+    <div className='flex items-center pb-3 border-b border-gray-100 mb-4'>
       <Icon className='h-4 w-4 text-gray-700 mr-2' />
       <span className='text-sm font-semibold text-gray-800'>{title}</span>
     </div>
-    <div className='flex-1 flex flex-col justify-between'>{children}</div>
+    <div className='flex-1 flex flex-col'>{children}</div>
   </div>
 )
 
@@ -256,7 +248,9 @@ const FormInput = ({
         {label}
       </label>
     )}
-    <div className='relative'>
+    <div
+      className={`relative ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
+    >
       <input
         type={type}
         value={value}
@@ -330,17 +324,17 @@ const ImageUploader = ({ onImageChange, disabled, currentImage }) => {
   if (isMobile) {
     return (
       <div className={disabled ? 'opacity-50 pointer-events-none' : ''}>
-        <label className='block text-xs font-medium text-gray-700 mb-1.5'>
+        <label className='block text-sm font-medium text-gray-700 mb-1.5'>
           Organization Logo
         </label>
         {fileInput}
-        <button
-          onClick={handlers.click}
-          type='button'
-          className='w-full flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white'
-        >
-          <Upload className='h-3 w-3 mr-1' />
-          {currentImage ? 'Change logo' : 'Upload logo'}
+        <button onClick={handlers.click} type='button' className={STYLES.input}>
+          <div className='flex items-center justify-center'>
+            <Upload className='h-3 w-3 mr-1' />
+            <span className='text-sm'>
+              {currentImage ? 'Change logo' : 'Upload logo'}
+            </span>
+          </div>
         </button>
         {currentImage && (
           <div className='mt-1 flex justify-center'>
@@ -422,7 +416,16 @@ const ImageUploader = ({ onImageChange, disabled, currentImage }) => {
 // Section content components
 const TestSetupSection = ({ settings, onSettingsChange }) => {
   const [isCustomTime, setIsCustomTime] = useState(false)
-  const [customTime, setCustomTime] = useState(null)
+  const [customTime, setCustomTime] = useState(null) // Default to 30 minutes
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Check mobile screen size
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Initialize custom time state if needed
   useEffect(() => {
@@ -439,8 +442,7 @@ const TestSetupSection = ({ settings, onSettingsChange }) => {
   const handleTimeChange = (value) => {
     if (value === 'custom') {
       setIsCustomTime(true)
-      // If we already have a custom time, keep it, otherwise default to 30
-      onSettingsChange('timeLimit', customTime || 30)
+      onSettingsChange('timeLimit', customTime || null)
     } else {
       setIsCustomTime(false)
       onSettingsChange('timeLimit', parseInt(value, 10))
@@ -449,7 +451,9 @@ const TestSetupSection = ({ settings, onSettingsChange }) => {
 
   const handleCustomTimeChange = (value) => {
     setCustomTime(value)
-    onSettingsChange('timeLimit', value)
+    if (isCustomTime) {
+      onSettingsChange('timeLimit', value)
+    }
   }
 
   return (
@@ -458,8 +462,9 @@ const TestSetupSection = ({ settings, onSettingsChange }) => {
       <div className='md:hidden flex flex-col gap-5'>
         <SettingsGroup icon={Clock} title='Time Controls'>
           <div className='flex flex-col h-full'>
-            <div className='grid grid-cols-1 gap-4'>
-              <div className='flex flex-col space-y-2'>
+            <div className='space-y-4'>
+              {/* Modified: Changed grid-cols-2 to flex-col on mobile */}
+              <div className='flex flex-col gap-4'>
                 <FormSelect
                   label='Test Duration'
                   value={isCustomTime ? 'custom' : settings.timeLimit}
@@ -467,111 +472,59 @@ const TestSetupSection = ({ settings, onSettingsChange }) => {
                   options={DROPDOWN_OPTIONS.duration}
                   ariaLabel='Select test duration'
                 />
-                {isCustomTime && (
-                  <FormInput
-                    label='Custom Duration'
-                    type='number'
-                    min='1'
-                    value={customTime || settings.timeLimit}
-                    onChange={handleCustomTimeChange}
-                    ariaLabel='Enter custom test duration in minutes'
-                    suffix='minutes'
-                  />
-                )}
+                <FormInput
+                  label='Custom Duration'
+                  type='number'
+                  min='1'
+                  value={
+                    isCustomTime ? customTime || settings.timeLimit : customTime
+                  }
+                  onChange={handleCustomTimeChange}
+                  ariaLabel='Enter custom test duration in minutes'
+                  suffix='minutes'
+                  disabled={!isCustomTime}
+                />
               </div>
             </div>
-          </div>
-          <div className='mt-auto pt-4'>
-            <ToggleSwitch
-              isChecked={settings.questionTimeLimit}
-              onChange={() =>
-                onSettingsChange(
-                  'questionTimeLimit',
-                  !settings.questionTimeLimit
-                )
-              }
-              activeLabel='Per-question timer'
-              inactiveLabel='No question timer'
-            />
-          </div>
-        </SettingsGroup>
-
-        <SettingsGroup icon={Globe} title='Access & Attempts'>
-          <div className='flex items-center h-full'>
-            <div className='space-y-4 w-full'>
-              <div className='flex items-center'>
-                <ToggleSwitch
-                  isChecked={settings.isPublic}
-                  onChange={() =>
-                    onSettingsChange('isPublic', !settings.isPublic)
-                  }
-                  activeLabel='Public access'
-                  inactiveLabel='Private access'
-                />
-              </div>
-
-              <div className='flex items-center'>
-                <ToggleSwitch
-                  isChecked={settings.allowRetry}
-                  onChange={() =>
-                    onSettingsChange('allowRetry', !settings.allowRetry)
-                  }
-                  activeLabel='Multiple attempts'
-                  inactiveLabel='Single attempt'
-                />
-              </div>
-
-              <div className='flex items-center'>
-                <ToggleSwitch
-                  isChecked={settings.allowSaving}
-                  onChange={() =>
-                    onSettingsChange('allowSaving', !settings.allowSaving)
-                  }
-                  activeLabel='Save progress'
-                  inactiveLabel='No progress saving'
-                />
-              </div>
-
-              <div className='flex items-center'>
-                <ToggleSwitch
-                  isChecked={settings.randomizeQuestions}
-                  onChange={() =>
-                    onSettingsChange(
-                      'randomizeQuestions',
-                      !settings.randomizeQuestions
-                    )
-                  }
-                  activeLabel='Randomize questions'
-                  inactiveLabel='Fixed order'
-                />
-              </div>
+            <div className='mt-auto pt-4'>
+              <ToggleSwitch
+                isChecked={settings.questionTimeLimit}
+                onChange={() =>
+                  onSettingsChange(
+                    'questionTimeLimit',
+                    !settings.questionTimeLimit
+                  )
+                }
+                activeLabel='Per-question timer'
+                inactiveLabel='No question timer'
+              />
             </div>
           </div>
         </SettingsGroup>
 
         <SettingsGroup icon={Percent} title='Scoring & Grading'>
-          <div>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
-              <FormInput
-                label='Passing Score (%)'
-                type='number'
-                min='0'
-                max='100'
-                value={settings.passingScore}
-                onChange={(value) => onSettingsChange('passingScore', value)}
-                ariaLabel='Enter passing score percentage'
-              />
-              <FormSelect
-                label='Grading Scheme'
-                value={settings.gradingScheme}
-                onChange={(value) => onSettingsChange('gradingScheme', value)}
-                options={DROPDOWN_OPTIONS.gradingScheme}
-                ariaLabel='Select grading scheme'
-              />
+          <div className='flex flex-col h-full'>
+            <div className='space-y-3'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <FormInput
+                  label='Passing Score (%)'
+                  type='number'
+                  min='0'
+                  max='100'
+                  value={settings.passingScore}
+                  onChange={(value) => onSettingsChange('passingScore', value)}
+                  ariaLabel='Enter passing score percentage'
+                />
+                <FormSelect
+                  label='Grading Scheme'
+                  value={settings.gradingScheme}
+                  onChange={(value) => onSettingsChange('gradingScheme', value)}
+                  options={DROPDOWN_OPTIONS.gradingScheme}
+                  ariaLabel='Select grading scheme'
+                />
+              </div>
             </div>
-          </div>
-          <div className='mt-auto pt-4'>
-            <div className='space-y-4'>
+            <div className='mt-auto pt-4 space-y-4'>
               <ToggleSwitch
                 isChecked={settings.enablePartialCredit}
                 onChange={() =>
@@ -595,9 +548,49 @@ const TestSetupSection = ({ settings, onSettingsChange }) => {
           </div>
         </SettingsGroup>
 
+        <SettingsGroup icon={Globe} title='Access & Attempts'>
+          {/* Added padding to match form spacing */}
+          <div className='pt-[3px] space-y-4'>
+            <ToggleSwitch
+              isChecked={settings.isPublic}
+              onChange={() => onSettingsChange('isPublic', !settings.isPublic)}
+              activeLabel='Public access'
+              inactiveLabel='Private access'
+            />
+            <ToggleSwitch
+              isChecked={settings.allowRetry}
+              onChange={() =>
+                onSettingsChange('allowRetry', !settings.allowRetry)
+              }
+              activeLabel='Multiple attempts'
+              inactiveLabel='Single attempt'
+            />
+            <ToggleSwitch
+              isChecked={settings.allowSaving}
+              onChange={() =>
+                onSettingsChange('allowSaving', !settings.allowSaving)
+              }
+              activeLabel='Save progress'
+              inactiveLabel='No progress saving'
+            />
+            <ToggleSwitch
+              isChecked={settings.randomizeQuestions}
+              onChange={() =>
+                onSettingsChange(
+                  'randomizeQuestions',
+                  !settings.randomizeQuestions
+                )
+              }
+              activeLabel='Randomize questions'
+              inactiveLabel='Fixed order'
+            />
+          </div>
+        </SettingsGroup>
+
         <SettingsGroup icon={Eye} title='Results & Feedback'>
-          <div>
-            <div className='space-y-4'>
+          <div className='flex flex-col h-full'>
+            {/* Added padding to match form spacing */}
+            <div className='pt-[3px] space-y-4'>
               <ToggleSwitch
                 isChecked={settings.showResults}
                 onChange={() =>
@@ -617,28 +610,30 @@ const TestSetupSection = ({ settings, onSettingsChange }) => {
                 activeLabel='Show answers'
                 inactiveLabel='Hide answers'
               />
-              <ToggleSwitch
-                isChecked={settings.showFeedback}
-                onChange={() =>
-                  onSettingsChange('showFeedback', !settings.showFeedback)
+              <div>
+                <ToggleSwitch
+                  isChecked={settings.showFeedback}
+                  onChange={() =>
+                    onSettingsChange('showFeedback', !settings.showFeedback)
+                  }
+                  activeLabel='Show feedback'
+                  inactiveLabel='No feedback'
+                />
+              </div>
+            </div>
+            <div className='mt-auto pt-4'>
+              <FormSelect
+                value={settings.feedbackType}
+                onChange={(value) => onSettingsChange('feedbackType', value)}
+                options={DROPDOWN_OPTIONS.feedbackType}
+                label='Feedback Type'
+                ariaLabel='Select feedback type'
+                disabled={!settings.showFeedback}
+                className={
+                  settings.showFeedback ? '' : 'opacity-50 pointer-events-none'
                 }
-                activeLabel='Show feedback'
-                inactiveLabel='No feedback'
               />
             </div>
-          </div>
-          <div className='mt-auto pt-4'>
-            <FormSelect
-              value={settings.feedbackType}
-              onChange={(value) => onSettingsChange('feedbackType', value)}
-              options={DROPDOWN_OPTIONS.feedbackType}
-              label='Feedback Type'
-              ariaLabel='Select feedback type'
-              disabled={!settings.showFeedback}
-              className={
-                settings.showFeedback ? '' : 'opacity-50 pointer-events-none'
-              }
-            />
           </div>
         </SettingsGroup>
       </div>
@@ -649,8 +644,8 @@ const TestSetupSection = ({ settings, onSettingsChange }) => {
         <div className='flex flex-col gap-5'>
           <SettingsGroup icon={Clock} title='Time Controls'>
             <div className='flex flex-col h-full'>
-              <div className='grid grid-cols-1 gap-4'>
-                <div className={isCustomTime ? 'grid grid-cols-2 gap-4' : ''}>
+              <div className='space-y-4'>
+                <div className='grid grid-cols-2 gap-4'>
                   <FormSelect
                     label='Test Duration'
                     value={isCustomTime ? 'custom' : settings.timeLimit}
@@ -658,82 +653,76 @@ const TestSetupSection = ({ settings, onSettingsChange }) => {
                     options={DROPDOWN_OPTIONS.duration}
                     ariaLabel='Select test duration'
                   />
-                  {isCustomTime && (
-                    <FormInput
-                      label='Custom Duration'
-                      type='number'
-                      min='1'
-                      value={customTime || settings.timeLimit}
-                      onChange={handleCustomTimeChange}
-                      ariaLabel='Enter custom test duration in minutes'
-                      suffix='minutes'
-                    />
-                  )}
+                  <FormInput
+                    label='Custom Duration'
+                    type='number'
+                    min='1'
+                    value={
+                      isCustomTime
+                        ? customTime || settings.timeLimit
+                        : customTime
+                    }
+                    onChange={handleCustomTimeChange}
+                    ariaLabel='Enter custom test duration in minutes'
+                    suffix='minutes'
+                    disabled={!isCustomTime}
+                  />
                 </div>
               </div>
-            </div>
-            <div className='mt-auto pt-4'>
-              <ToggleSwitch
-                isChecked={settings.questionTimeLimit}
-                onChange={() =>
-                  onSettingsChange(
-                    'questionTimeLimit',
-                    !settings.questionTimeLimit
-                  )
-                }
-                activeLabel='Per-question timer'
-                inactiveLabel='No question timer'
-              />
+              <div className='mt-auto pt-4'>
+                <ToggleSwitch
+                  isChecked={settings.questionTimeLimit}
+                  onChange={() =>
+                    onSettingsChange(
+                      'questionTimeLimit',
+                      !settings.questionTimeLimit
+                    )
+                  }
+                  activeLabel='Per-question timer'
+                  inactiveLabel='No question timer'
+                />
+              </div>
             </div>
           </SettingsGroup>
 
           <SettingsGroup icon={Globe} title='Access & Attempts'>
-            <div className='flex items-center h-full'>
-              <div className='space-y-4 w-full'>
-                <div className='flex items-center'>
-                  <ToggleSwitch
-                    isChecked={settings.isPublic}
-                    onChange={() =>
-                      onSettingsChange('isPublic', !settings.isPublic)
-                    }
-                    activeLabel='Public access'
-                    inactiveLabel='Private access'
-                  />
-                </div>
-                <div className='flex items-center'>
-                  <ToggleSwitch
-                    isChecked={settings.allowRetry}
-                    onChange={() =>
-                      onSettingsChange('allowRetry', !settings.allowRetry)
-                    }
-                    activeLabel='Multiple attempts'
-                    inactiveLabel='Single attempt'
-                  />
-                </div>
-                <div className='flex items-center'>
-                  <ToggleSwitch
-                    isChecked={settings.allowSaving}
-                    onChange={() =>
-                      onSettingsChange('allowSaving', !settings.allowSaving)
-                    }
-                    activeLabel='Save progress'
-                    inactiveLabel='No progress saving'
-                  />
-                </div>
-                <div className='flex items-center'>
-                  <ToggleSwitch
-                    isChecked={settings.randomizeQuestions}
-                    onChange={() =>
-                      onSettingsChange(
-                        'randomizeQuestions',
-                        !settings.randomizeQuestions
-                      )
-                    }
-                    activeLabel='Randomize questions'
-                    inactiveLabel='Fixed order'
-                  />
-                </div>
-              </div>
+            {/* Added padding to match form spacing */}
+            <div className='pt-[3px] space-y-4'>
+              <ToggleSwitch
+                isChecked={settings.isPublic}
+                onChange={() =>
+                  onSettingsChange('isPublic', !settings.isPublic)
+                }
+                activeLabel='Public access'
+                inactiveLabel='Private access'
+              />
+              <ToggleSwitch
+                isChecked={settings.allowRetry}
+                onChange={() =>
+                  onSettingsChange('allowRetry', !settings.allowRetry)
+                }
+                activeLabel='Multiple attempts'
+                inactiveLabel='Single attempt'
+              />
+              <ToggleSwitch
+                isChecked={settings.allowSaving}
+                onChange={() =>
+                  onSettingsChange('allowSaving', !settings.allowSaving)
+                }
+                activeLabel='Save progress'
+                inactiveLabel='No progress saving'
+              />
+              <ToggleSwitch
+                isChecked={settings.randomizeQuestions}
+                onChange={() =>
+                  onSettingsChange(
+                    'randomizeQuestions',
+                    !settings.randomizeQuestions
+                  )
+                }
+                activeLabel='Randomize questions'
+                inactiveLabel='Fixed order'
+              />
             </div>
           </SettingsGroup>
         </div>
@@ -741,28 +730,32 @@ const TestSetupSection = ({ settings, onSettingsChange }) => {
         {/* Right Column - Grading Settings */}
         <div className='flex flex-col gap-5'>
           <SettingsGroup icon={Percent} title='Scoring & Grading'>
-            <div>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
-                <FormInput
-                  label='Passing Score (%)'
-                  type='number'
-                  min='0'
-                  max='100'
-                  value={settings.passingScore}
-                  onChange={(value) => onSettingsChange('passingScore', value)}
-                  ariaLabel='Enter passing score percentage'
-                />
-                <FormSelect
-                  label='Grading Scheme'
-                  value={settings.gradingScheme}
-                  onChange={(value) => onSettingsChange('gradingScheme', value)}
-                  options={DROPDOWN_OPTIONS.gradingScheme}
-                  ariaLabel='Select grading scheme'
-                />
-              </div>
-            </div>
-            <div className='mt-auto pt-4'>
+            <div className='flex flex-col h-full'>
               <div className='space-y-4'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <FormInput
+                    label='Passing Score (%)'
+                    type='number'
+                    min='0'
+                    max='100'
+                    value={settings.passingScore}
+                    onChange={(value) =>
+                      onSettingsChange('passingScore', value)
+                    }
+                    ariaLabel='Enter passing score percentage'
+                  />
+                  <FormSelect
+                    label='Grading Scheme'
+                    value={settings.gradingScheme}
+                    onChange={(value) =>
+                      onSettingsChange('gradingScheme', value)
+                    }
+                    options={DROPDOWN_OPTIONS.gradingScheme}
+                    ariaLabel='Select grading scheme'
+                  />
+                </div>
+              </div>
+              <div className='mt-auto pt-4 space-y-4'>
                 <ToggleSwitch
                   isChecked={settings.enablePartialCredit}
                   onChange={() =>
@@ -787,8 +780,9 @@ const TestSetupSection = ({ settings, onSettingsChange }) => {
           </SettingsGroup>
 
           <SettingsGroup icon={Eye} title='Results & Feedback'>
-            <div>
-              <div className='space-y-4'>
+            <div className='flex flex-col h-full'>
+              {/* Added padding to match form spacing */}
+              <div className='pt-[3px] space-y-4'>
                 <ToggleSwitch
                   isChecked={settings.showResults}
                   onChange={() =>
@@ -817,19 +811,21 @@ const TestSetupSection = ({ settings, onSettingsChange }) => {
                   inactiveLabel='No feedback'
                 />
               </div>
-            </div>
-            <div className='mt-auto pt-4'>
-              <FormSelect
-                value={settings.feedbackType}
-                onChange={(value) => onSettingsChange('feedbackType', value)}
-                options={DROPDOWN_OPTIONS.feedbackType}
-                label='Feedback Type'
-                ariaLabel='Select feedback type'
-                disabled={!settings.showFeedback}
-                className={
-                  settings.showFeedback ? '' : 'opacity-50 pointer-events-none'
-                }
-              />
+              <div className='mt-auto pt-4'>
+                <FormSelect
+                  value={settings.feedbackType}
+                  onChange={(value) => onSettingsChange('feedbackType', value)}
+                  options={DROPDOWN_OPTIONS.feedbackType}
+                  label='Feedback Type'
+                  ariaLabel='Select feedback type'
+                  disabled={!settings.showFeedback}
+                  className={
+                    settings.showFeedback
+                      ? ''
+                      : 'opacity-50 pointer-events-none'
+                  }
+                />
+              </div>
             </div>
           </SettingsGroup>
         </div>
@@ -843,16 +839,15 @@ const AppearanceSection = ({ settings, onSettingsChange }) => (
     {/* Mobile layout with single column */}
     <div className='md:hidden flex flex-col gap-5'>
       <SettingsGroup icon={Image} title='Visual Style'>
-        <div className='flex items-center h-full'>
-          <div className='w-full'>
-            <FormSelect
-              label='Theme'
-              value={settings.customTheme}
-              onChange={(value) => onSettingsChange('customTheme', value)}
-              options={DROPDOWN_OPTIONS.theme}
-              ariaLabel='Select theme'
-              className='mb-4'
-            />
+        <div className='space-y-3'>
+          <FormSelect
+            label='Theme'
+            value={settings.customTheme}
+            onChange={(value) => onSettingsChange('customTheme', value)}
+            options={DROPDOWN_OPTIONS.theme}
+            ariaLabel='Select theme'
+          />
+          <div className='pt-1'>
             <FormSelect
               label='Question Layout'
               value={settings.questionLayout}
@@ -865,8 +860,9 @@ const AppearanceSection = ({ settings, onSettingsChange }) => (
       </SettingsGroup>
 
       <SettingsGroup icon={Palette} title='Custom Branding'>
-        <div>
-          <div className='mb-3'>
+        {/* Added padding to match form spacing */}
+        <div className='pt-[3px] space-y-4'>
+          <div className='pb-1'>
             <ToggleSwitch
               isChecked={settings.showBranding}
               onChange={() =>
@@ -891,32 +887,30 @@ const AppearanceSection = ({ settings, onSettingsChange }) => (
     <div className='hidden md:grid md:grid-cols-2 gap-5'>
       <div className='flex flex-col gap-5'>
         <SettingsGroup icon={Image} title='Visual Style'>
-          <div className='flex items-center h-full'>
-            <div className='w-full'>
-              <FormSelect
-                label='Theme'
-                value={settings.customTheme}
-                onChange={(value) => onSettingsChange('customTheme', value)}
-                options={DROPDOWN_OPTIONS.theme}
-                ariaLabel='Select theme'
-                className='mb-4'
-              />
-              <FormSelect
-                label='Question Layout'
-                value={settings.questionLayout}
-                onChange={(value) => onSettingsChange('questionLayout', value)}
-                options={DROPDOWN_OPTIONS.questionLayout}
-                ariaLabel='Select question layout'
-              />
-            </div>
+          <div className='space-y-4'>
+            <FormSelect
+              label='Theme'
+              value={settings.customTheme}
+              onChange={(value) => onSettingsChange('customTheme', value)}
+              options={DROPDOWN_OPTIONS.theme}
+              ariaLabel='Select theme'
+            />
+            <FormSelect
+              label='Question Layout'
+              value={settings.questionLayout}
+              onChange={(value) => onSettingsChange('questionLayout', value)}
+              options={DROPDOWN_OPTIONS.questionLayout}
+              ariaLabel='Select question layout'
+            />
           </div>
         </SettingsGroup>
       </div>
 
       <div className='flex flex-col gap-5'>
         <SettingsGroup icon={Palette} title='Custom Branding'>
-          <div>
-            <div className='mb-3'>
+          <div className='flex flex-col h-full'>
+            {/* Added padding to match form spacing */}
+            <div className='pt-[3px]'>
               <ToggleSwitch
                 isChecked={settings.showBranding}
                 onChange={() =>
@@ -926,13 +920,15 @@ const AppearanceSection = ({ settings, onSettingsChange }) => (
                 inactiveLabel='No custom branding'
               />
             </div>
-            <ImageUploader
-              onImageChange={(imageData) =>
-                onSettingsChange('logoUrl', imageData)
-              }
-              disabled={!settings.showBranding}
-              currentImage={settings.logoUrl}
-            />
+            <div className='mt-auto pt-4'>
+              <ImageUploader
+                onImageChange={(imageData) =>
+                  onSettingsChange('logoUrl', imageData)
+                }
+                disabled={!settings.showBranding}
+                currentImage={settings.logoUrl}
+              />
+            </div>
           </div>
         </SettingsGroup>
       </div>
@@ -945,61 +941,50 @@ const SecuritySection = ({ settings, onSettingsChange }) => (
     {/* Mobile layout with single column */}
     <div className='md:hidden flex flex-col gap-5'>
       <SettingsGroup icon={Shield} title='Proctoring Controls'>
-        <div className='flex items-center h-full'>
-          <div className='space-y-4 w-full'>
-            <div className='flex items-center'>
-              <ToggleSwitch
-                isChecked={settings.requireLogin}
-                onChange={() =>
-                  onSettingsChange('requireLogin', !settings.requireLogin)
-                }
-                activeLabel='Require user login'
-                inactiveLabel='No login required'
-              />
-            </div>
-            <div className='flex items-center'>
-              <ToggleSwitch
-                isChecked={settings.ipRestriction}
-                onChange={() =>
-                  onSettingsChange('ipRestriction', !settings.ipRestriction)
-                }
-                activeLabel='IP address restrictions'
-                inactiveLabel='No IP restrictions'
-              />
-            </div>
-            <div className='flex items-center'>
-              <ToggleSwitch
-                isChecked={settings.preventTabSwitching}
-                onChange={() =>
-                  onSettingsChange(
-                    'preventTabSwitching',
-                    !settings.preventTabSwitching
-                  )
-                }
-                activeLabel='Prevent tab switching'
-                inactiveLabel='Allow tab switching'
-              />
-            </div>
-            <div className='flex items-center'>
-              <ToggleSwitch
-                isChecked={settings.disableCopyPaste}
-                onChange={() =>
-                  onSettingsChange(
-                    'disableCopyPaste',
-                    !settings.disableCopyPaste
-                  )
-                }
-                activeLabel='Disable copy/paste'
-                inactiveLabel='Allow copy/paste'
-              />
-            </div>
-          </div>
+        {/* Added padding to match form spacing */}
+        <div className='pt-[3px] space-y-4'>
+          <ToggleSwitch
+            isChecked={settings.requireLogin}
+            onChange={() =>
+              onSettingsChange('requireLogin', !settings.requireLogin)
+            }
+            activeLabel='Require user login'
+            inactiveLabel='No login required'
+          />
+          <ToggleSwitch
+            isChecked={settings.ipRestriction}
+            onChange={() =>
+              onSettingsChange('ipRestriction', !settings.ipRestriction)
+            }
+            activeLabel='IP address restrictions'
+            inactiveLabel='No IP restrictions'
+          />
+          <ToggleSwitch
+            isChecked={settings.preventTabSwitching}
+            onChange={() =>
+              onSettingsChange(
+                'preventTabSwitching',
+                !settings.preventTabSwitching
+              )
+            }
+            activeLabel='Prevent tab switching'
+            inactiveLabel='Allow tab switching'
+          />
+          <ToggleSwitch
+            isChecked={settings.disableCopyPaste}
+            onChange={() =>
+              onSettingsChange('disableCopyPaste', !settings.disableCopyPaste)
+            }
+            activeLabel='Disable copy/paste'
+            inactiveLabel='Allow copy/paste'
+          />
         </div>
       </SettingsGroup>
 
       <SettingsGroup icon={Mail} title='Email Notifications'>
-        <div>
-          <div className='space-y-4'>
+        <div className='flex flex-col h-full'>
+          {/* Added padding to match form spacing */}
+          <div className='pt-[3px] space-y-4'>
             <ToggleSwitch
               isChecked={settings.sendResultsEmail}
               onChange={() =>
@@ -1008,104 +993,7 @@ const SecuritySection = ({ settings, onSettingsChange }) => (
               activeLabel='Email results to participants'
               inactiveLabel="Don't email results to participants"
             />
-            <ToggleSwitch
-              isChecked={settings.notifyInstructor}
-              onChange={() =>
-                onSettingsChange('notifyInstructor', !settings.notifyInstructor)
-              }
-              activeLabel='Notify instructor'
-              inactiveLabel="Don't notify instructor"
-            />
-          </div>
-        </div>
-        <div className='mt-auto pt-4'>
-          <FormSelect
-            label='Email Template'
-            value={settings.emailTemplate}
-            onChange={(value) => onSettingsChange('emailTemplate', value)}
-            options={DROPDOWN_OPTIONS.emailTemplate}
-            ariaLabel='Select email template'
-            disabled={!settings.sendResultsEmail}
-            className={
-              settings.sendResultsEmail ? '' : 'opacity-50 pointer-events-none'
-            }
-          />
-        </div>
-      </SettingsGroup>
-    </div>
-
-    {/* Desktop layout with two columns */}
-    <div className='hidden md:grid md:grid-cols-2 gap-5'>
-      <div className='flex flex-col gap-5'>
-        <SettingsGroup icon={Shield} title='Proctoring Controls'>
-          <div className='flex items-center h-full'>
-            <div className='space-y-4 w-full'>
-              <div className='flex items-center'>
-                <ToggleSwitch
-                  isChecked={settings.requireLogin}
-                  onChange={() =>
-                    onSettingsChange('requireLogin', !settings.requireLogin)
-                  }
-                  activeLabel='Require user login'
-                  inactiveLabel='No login required'
-                />
-              </div>
-              <div className='flex items-center'>
-                <ToggleSwitch
-                  isChecked={settings.ipRestriction}
-                  onChange={() =>
-                    onSettingsChange('ipRestriction', !settings.ipRestriction)
-                  }
-                  activeLabel='IP address restrictions'
-                  inactiveLabel='No IP restrictions'
-                />
-              </div>
-              <div className='flex items-center'>
-                <ToggleSwitch
-                  isChecked={settings.preventTabSwitching}
-                  onChange={() =>
-                    onSettingsChange(
-                      'preventTabSwitching',
-                      !settings.preventTabSwitching
-                    )
-                  }
-                  activeLabel='Prevent tab switching'
-                  inactiveLabel='Allow tab switching'
-                />
-              </div>
-              <div className='flex items-center'>
-                <ToggleSwitch
-                  isChecked={settings.disableCopyPaste}
-                  onChange={() =>
-                    onSettingsChange(
-                      'disableCopyPaste',
-                      !settings.disableCopyPaste
-                    )
-                  }
-                  activeLabel='Disable copy/paste'
-                  inactiveLabel='Allow copy/paste'
-                />
-              </div>
-            </div>
-          </div>
-        </SettingsGroup>
-      </div>
-
-      <div className='flex flex-col gap-5'>
-        <SettingsGroup icon={Mail} title='Email Notifications'>
-          <div>
-            <div className='space-y-4'>
-              <ToggleSwitch
-                isChecked={settings.sendResultsEmail}
-                onChange={() =>
-                  onSettingsChange(
-                    'sendResultsEmail',
-                    !settings.sendResultsEmail
-                  )
-                }
-                activeLabel='Email results to participants'
-                inactiveLabel="Don't email results to participants"
-              />
+            <div className='pb-1'>
               <ToggleSwitch
                 isChecked={settings.notifyInstructor}
                 onChange={() =>
@@ -1133,6 +1021,99 @@ const SecuritySection = ({ settings, onSettingsChange }) => (
                   : 'opacity-50 pointer-events-none'
               }
             />
+          </div>
+        </div>
+      </SettingsGroup>
+    </div>
+
+    {/* Desktop layout with two columns */}
+    <div className='hidden md:grid md:grid-cols-2 gap-5'>
+      <div className='flex flex-col gap-5'>
+        <SettingsGroup icon={Shield} title='Proctoring Controls'>
+          {/* Added padding to match form spacing */}
+          <div className='pt-[3px] space-y-4'>
+            <ToggleSwitch
+              isChecked={settings.requireLogin}
+              onChange={() =>
+                onSettingsChange('requireLogin', !settings.requireLogin)
+              }
+              activeLabel='Require user login'
+              inactiveLabel='No login required'
+            />
+            <ToggleSwitch
+              isChecked={settings.ipRestriction}
+              onChange={() =>
+                onSettingsChange('ipRestriction', !settings.ipRestriction)
+              }
+              activeLabel='IP address restrictions'
+              inactiveLabel='No IP restrictions'
+            />
+            <ToggleSwitch
+              isChecked={settings.preventTabSwitching}
+              onChange={() =>
+                onSettingsChange(
+                  'preventTabSwitching',
+                  !settings.preventTabSwitching
+                )
+              }
+              activeLabel='Prevent tab switching'
+              inactiveLabel='Allow tab switching'
+            />
+            <ToggleSwitch
+              isChecked={settings.disableCopyPaste}
+              onChange={() =>
+                onSettingsChange('disableCopyPaste', !settings.disableCopyPaste)
+              }
+              activeLabel='Disable copy/paste'
+              inactiveLabel='Allow copy/paste'
+            />
+          </div>
+        </SettingsGroup>
+      </div>
+
+      <div className='flex flex-col gap-5'>
+        <SettingsGroup icon={Mail} title='Email Notifications'>
+          <div className='flex flex-col h-full'>
+            {/* Added padding to match form spacing */}
+            <div className='pt-[3px] space-y-4'>
+              <ToggleSwitch
+                isChecked={settings.sendResultsEmail}
+                onChange={() =>
+                  onSettingsChange(
+                    'sendResultsEmail',
+                    !settings.sendResultsEmail
+                  )
+                }
+                activeLabel='Email results to participants'
+                inactiveLabel="Don't email results to participants"
+              />
+              <ToggleSwitch
+                isChecked={settings.notifyInstructor}
+                onChange={() =>
+                  onSettingsChange(
+                    'notifyInstructor',
+                    !settings.notifyInstructor
+                  )
+                }
+                activeLabel='Notify instructor'
+                inactiveLabel="Don't notify instructor"
+              />
+            </div>
+            <div className=' mt-9 pt-4'>
+              <FormSelect
+                label='Email Template'
+                value={settings.emailTemplate}
+                onChange={(value) => onSettingsChange('emailTemplate', value)}
+                options={DROPDOWN_OPTIONS.emailTemplate}
+                ariaLabel='Select email template'
+                disabled={!settings.sendResultsEmail}
+                className={
+                  settings.sendResultsEmail
+                    ? ''
+                    : 'opacity-50 pointer-events-none'
+                }
+              />
+            </div>
           </div>
         </SettingsGroup>
       </div>
@@ -1235,7 +1216,7 @@ const InteractiveTestOptions = ({
   // Mapping between section IDs and their metadata
   const sections = [
     { id: 'test-setup', title: 'Test Setup', icon: FileText },
-    { id: 'appearance', title: 'Appearance & Layout', icon: Image },
+    { id: 'appearance', title: 'Appearance & Layout', icon: Paintbrush },
     { id: 'security', title: 'Security & Privacy', icon: Lock },
   ]
 

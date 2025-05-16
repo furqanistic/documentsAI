@@ -33,6 +33,7 @@ const DocumentPreview = ({ content, onContentChange }) => {
   const searchInputRef = useRef(null)
   const contentRef = useRef(null)
   const editRef = useRef(null)
+
   const [isMobile, setIsMobile] = useState(false)
 
   // Check if viewport is mobile-sized
@@ -335,27 +336,21 @@ const DocumentPreview = ({ content, onContentChange }) => {
     exit: { opacity: 0, x: -20 },
   }
 
-  // Determine icon size based on screen size
-  const iconSize = isMobile ? 20 : 16 // Bigger icons on mobile
-  const smallIconSize = isMobile ? 16 : 14
-
   // Calculate appropriate height for content area in fullscreen
   // Adjusted to ensure footer is visible on small screens
   const getContentHeight = () => {
     if (!fullscreen) return 'max-h-96 md:max-h-[28rem]'
 
-    // On mobile, especially small screens like iPhone SE, we need to reserve more space
-    if (isMobile) {
-      return 'h-[calc(100vh-200px)]' // Increased from 160px to 200px for mobile
-    }
-
-    return 'h-[calc(100vh-160px)]'
+    // Use flex-grow for fullscreen mode to ensure it takes all available space
+    return 'flex-grow overflow-auto'
   }
 
   return (
     <motion.div
-      className={`border rounded-lg border-gray-200 overflow-hidden shadow-sm ${
-        fullscreen ? 'fixed inset-0 z-50 bg-white' : ''
+      className={`border ${
+        fullscreen ? 'rounded-none' : 'rounded-lg'
+      } border-gray-200 overflow-hidden shadow-sm ${
+        fullscreen ? 'fixed inset-0 z-50 bg-white flex flex-col' : ''
       }`}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -399,7 +394,7 @@ const DocumentPreview = ({ content, onContentChange }) => {
             </div>
           )}
 
-          <div className='flex items-center gap-1 md:gap-3 ml-auto flex-1 justify-end'>
+          <div className='flex items-center gap-1 md:gap-2 ml-auto flex-1 justify-end'>
             {/* Search bar (toggled by the search button) */}
             {showSearch && (
               <motion.div
@@ -430,11 +425,7 @@ const DocumentPreview = ({ content, onContentChange }) => {
                       }
                       className='p-1 hover:bg-gray-100 rounded disabled:opacity-50'
                     >
-                      <ChevronLeft
-                        className={`h-${smallIconSize / 4} w-${
-                          smallIconSize / 4
-                        }`}
-                      />
+                      <ChevronLeft className={`h-3 w-3`} />
                     </button>
                     <button
                       onClick={handleSearchNext}
@@ -444,77 +435,49 @@ const DocumentPreview = ({ content, onContentChange }) => {
                       }
                       className='p-1 hover:bg-gray-100 rounded disabled:opacity-50'
                     >
-                      <ChevronRight
-                        className={`h-${smallIconSize / 4} w-${
-                          smallIconSize / 4
-                        }`}
-                      />
+                      <ChevronRight className={`h-3 w-3`} />
                     </button>
                     <button
                       onClick={() => setSearchTerm('')}
                       className='p-1 hover:bg-gray-100 rounded'
                     >
-                      <X
-                        className={`h-${smallIconSize / 4} w-${
-                          smallIconSize / 4
-                        }`}
-                      />
+                      <X className={`h-3 w-3`} />
                     </button>
                   </div>
                 )}
               </motion.div>
             )}
 
-            {/* Primary action buttons - right aligned */}
-            <div className='flex items-center gap-1 md:gap-2 sm:border-l sm:border-gray-200 sm:pl-2 justify-end'>
+            {/* Primary action buttons - right aligned with same spacing as bottom row */}
+            <div className='flex items-center space-x-2.5 md:space-x-3 sm:border-l sm:border-gray-200 sm:pl-2 justify-end'>
               <button
                 onClick={handleSearchToggle}
-                className={`p-${
-                  isMobile ? 2 : 1.5
-                } rounded-md hover:bg-gray-200 transition-colors`}
+                className={`p-1.5 rounded-md hover:bg-gray-200 transition-colors`}
                 title={showSearch ? 'Close search' : 'Search document'}
               >
-                <Search
-                  className={`h-${iconSize / 4} w-${
-                    iconSize / 4
-                  } text-gray-500`}
-                />
+                <Search className={`h-5 w-5 md:h-4.5 md:w-4.5 text-gray-500`} />
               </button>
 
               <button
                 onClick={handleEditToggle}
-                className={`p-${isMobile ? 2 : 1.5} rounded-md ${
+                className={`p-1.5 rounded-md ${
                   isEditing ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-200'
                 } transition-colors`}
                 title={isEditing ? 'Save changes' : 'Edit document'}
               >
                 {isEditing ? (
-                  <Save
-                    className={`h-${iconSize / 4} w-${
-                      iconSize / 4
-                    } text-blue-600`}
-                  />
+                  <Save className={`h-5 w-5 md:h-4.5 md:w-4.5 text-blue-600`} />
                 ) : (
-                  <Edit
-                    className={`h-${iconSize / 4} w-${
-                      iconSize / 4
-                    } text-gray-500`}
-                  />
+                  <Edit className={`h-5 w-5 md:h-4.5 md:w-4.5 text-gray-500`} />
                 )}
               </button>
 
               <button
                 onClick={handleCopy}
-                className={`p-${
-                  isMobile ? 2 : 1.5
-                } rounded-md hover:bg-gray-200 transition-colors relative`}
+                className={`p-1.5 rounded-md hover:bg-gray-200 transition-colors relative`}
                 title='Copy to clipboard'
               >
-                <Copy
-                  className={`h-${iconSize / 4} w-${
-                    iconSize / 4
-                  } text-gray-500`}
-                />
+                <Copy className={`h-5 w-5 md:h-4.5 md:w-4.5 text-gray-500`} />
                 {copied && (
                   <motion.div
                     initial={{ opacity: 0, y: 5 }}
@@ -527,24 +490,29 @@ const DocumentPreview = ({ content, onContentChange }) => {
                 )}
               </button>
 
+              {/* Added Print button to header icons */}
+              <button
+                onClick={handlePrint}
+                className={`p-1.5 rounded-md hover:bg-gray-200 transition-colors`}
+                title='Print document'
+              >
+                <Printer
+                  className={`h-5 w-5 md:h-4.5 md:w-4.5 text-gray-500`}
+                />
+              </button>
+
               <button
                 onClick={() => setFullscreen(!fullscreen)}
-                className={`p-${
-                  isMobile ? 2 : 1.5
-                } rounded-md hover:bg-gray-200 transition-colors`}
+                className={`p-1.5 rounded-md hover:bg-gray-200 transition-colors`}
                 title={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
               >
                 {fullscreen ? (
                   <Minimize
-                    className={`h-${iconSize / 4} w-${
-                      iconSize / 4
-                    } text-gray-500`}
+                    className={`h-5 w-5 md:h-4.5 md:w-4.5 text-gray-500`}
                   />
                 ) : (
                   <Maximize
-                    className={`h-${iconSize / 4} w-${
-                      iconSize / 4
-                    } text-gray-500`}
+                    className={`h-5 w-5 md:h-4.5 md:w-4.5 text-gray-500`}
                   />
                 )}
               </button>
@@ -555,35 +523,27 @@ const DocumentPreview = ({ content, onContentChange }) => {
         {/* Second toolbar row with pagination and zoom */}
         <div className='flex items-center justify-between mt-2 border-t border-gray-200 pt-2'>
           {/* Pagination controls */}
-          <div className='flex items-center space-x-2'>
+          <div className='flex items-center space-x-1'>
             <button
               onClick={handlePrevPage}
               disabled={currentPage === 1}
-              className={`p-${
-                isMobile ? 2 : 1.5
-              } rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:hover:bg-transparent`}
+              className={`p-1.5 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:hover:bg-transparent`}
               title='Previous page'
             >
-              <ChevronLeft
-                className={`h-${iconSize / 4} w-${iconSize / 4} text-gray-600`}
-              />
+              <ChevronLeft className={`h-4 w-4 text-gray-600`} />
             </button>
 
             <button
               onClick={handleNextPage}
               disabled={currentPage === totalPages}
-              className={`p-${
-                isMobile ? 2 : 1.5
-              } rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:hover:bg-transparent`}
+              className={`p-1.5 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:hover:bg-transparent`}
               title='Next page'
             >
-              <ChevronRight
-                className={`h-${iconSize / 4} w-${iconSize / 4} text-gray-600`}
-              />
+              <ChevronRight className={`h-4 w-4 text-gray-600`} />
             </button>
           </div>
 
-          {/* Zoom controls - now visible on mobile too */}
+          {/* Zoom controls - aligned properly */}
           <div className='flex items-center space-x-1'>
             <button
               onClick={handleZoomOut}
@@ -619,7 +579,7 @@ const DocumentPreview = ({ content, onContentChange }) => {
       </div>
 
       {/* Document content with improved rendering */}
-      <div className={`bg-white overflow-auto relative ${getContentHeight()}`}>
+      <div className={`bg-white relative ${getContentHeight()}`}>
         {isLoading ? (
           <div className='flex items-center justify-center h-full p-8'>
             <div className='text-center'>
@@ -737,43 +697,23 @@ const DocumentPreview = ({ content, onContentChange }) => {
         )}
       </div>
 
-      {/* Footer with improved actions - now with proper padding for mobile */}
-      <div className='bg-gray-50 p-2 md:p-3 border-t border-gray-200 pb-3 relative'>
-        {/* Mobile print button - positioned in the right and vertically centered */}
-        <div className='sm:hidden absolute top-1/2 right-2 -translate-y-1/2'>
-          <button
-            className='bg-gradient-to-br from-blue-600 to-blue-800 text-white py-1.5 px-4 rounded-md text-xs font-medium hover:opacity-90 shadow-sm transition-colors flex items-center'
-            onClick={handlePrint}
-          >
-            <Printer className='h-4 w-4 inline mr-1.5' />
-            Print
-          </button>
-        </div>
-
-        {/* Desktop footer layout */}
-        <div className='flex flex-col sm:flex-row justify-between items-center gap-y-2 sm:items-center mt-10 sm:mt-0'>
-          <span className='text-xs text-gray-500 text-center sm:text-left'>
+      {/* Footer with only the status message - now visible on all screens */}
+      <div
+        className={`bg-gray-50 px-2 py-1 md:px-3 md:py-1.5 border-t border-gray-200 ${
+          fullscreen ? 'mt-auto' : ''
+        }`}
+      >
+        <div className='flex justify-center items-center'>
+          <span className='text-xs text-gray-500 text-center'>
             {searchResults.length > 0 && (
               <span className='mr-2 bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-md text-xs'>
                 {searchResults.length}{' '}
                 {searchResults.length === 1 ? 'match' : 'matches'} found
               </span>
             )}
-            <span className='hidden sm:inline'>
-              Preview Mode • Document will render differently when exported
-            </span>
+            {!isMobile && <span>Preview Mode • </span>}Document will render
+            differently when exported
           </span>
-
-          {/* Desktop print button */}
-          <div className='hidden sm:block'>
-            <button
-              className='bg-gradient-to-br from-blue-600 to-blue-800 text-white py-1.5 px-4 rounded-md text-xs font-medium hover:opacity-90 shadow-sm transition-colors flex items-center'
-              onClick={handlePrint}
-            >
-              <Printer className='h-4 w-4 inline mr-1.5' />
-              Print
-            </button>
-          </div>
         </div>
       </div>
     </motion.div>

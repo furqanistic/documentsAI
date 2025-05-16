@@ -110,30 +110,6 @@ const DocumentBranding = ({
     return null
   }
 
-  const handleTimeInputChange = (e) => {
-    // Just let the user type without updating state immediately
-    // This prevents re-renders and focus loss
-  }
-
-  const handleTimeInputBlur = (e) => {
-    const value = e.target.value
-    const parsedTime = parseTime(value)
-    if (parsedTime) {
-      handleTimeChange(parsedTime)
-    } else {
-      // Reset to previous valid time if parsing fails
-      if (metadata.documentTime) {
-        e.target.value = formatTime(metadata.documentTime)
-      }
-    }
-  }
-
-  const handleTimeInputKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.target.blur()
-    }
-  }
-
   const itemVariant = {
     hidden: { opacity: 0, y: 10 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
@@ -146,9 +122,13 @@ const DocumentBranding = ({
         onClick={onClick}
         readOnly
         ref={ref}
-        className='w-full p-3 border border-gray-300 rounded-lg bg-white text-sm'
+        placeholder='Enter Date'
+        className='w-full p-3 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none'
         style={{ minWidth: 0, overflow: 'visible' }}
       />
+      <div className='absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none'>
+        <Calendar className='h-4 w-4 text-gray-400' />
+      </div>
     </div>
   ))
 
@@ -307,6 +287,7 @@ const DocumentBranding = ({
               name='orgName'
               value={metadata.orgName || ''}
               onChange={handleInputChange}
+              placeholder='Enter Organization'
               className='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none text-sm bg-white'
             />
           </div>
@@ -354,7 +335,7 @@ const DocumentBranding = ({
               name='additionalInfo'
               value={metadata.additionalInfo || ''}
               onChange={handleInputChange}
-              placeholder='Any additional information to include in the header ( department, course code, etc.)'
+              placeholder='Any additional information to include in the header (department, course code, etc.)'
               className='w-full h-20 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none resize-none text-sm bg-white'
             />
           </div>

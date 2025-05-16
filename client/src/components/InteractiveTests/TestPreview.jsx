@@ -188,7 +188,11 @@ const TestPreview = ({
 
       {/* Editing Controls */}
       {isEditing && (
-        <div className='bg-gray-50 p-3 border-t border-gray-200 flex justify-end'>
+        <div
+          className={`bg-gray-50 px-3 py-1.5 md:px-3 md:py-2 border-t border-gray-200 flex justify-end ${
+            fullscreen ? 'mt-auto' : ''
+          }`}
+        >
           <button
             onClick={handleEditToggle}
             className='px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors flex items-center'

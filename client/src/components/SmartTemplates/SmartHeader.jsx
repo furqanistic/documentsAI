@@ -60,7 +60,7 @@ const SmartHeader = () => {
                 initial={{ width: '0%' }}
                 animate={{ width: '100%' }}
                 transition={{ duration: 0.8, delay: 0.3 }}
-                className='h-1 bg-gradient-to-r from-gray-500 to-gray-400 rounded-full mb-4 hidden md:block'
+                className='h-1 bg-gradient-to-r bg-[#3e9ef5] rounded-full mb-4 hidden md:block'
                 style={{ maxWidth: '355px' }}
               />
               <p className='text-gray-300 text-lg mb-4 max-w-lg leading-relaxed'>
@@ -89,38 +89,15 @@ const SmartHeader = () => {
               transition={{ duration: 0.7, delay: 0.3 }}
               className='relative w-full md:w-1/2 max-w-sm'
             >
-              {/* Floating document elements */}
-              <motion.div
-                initial={{ y: 10 }}
-                animate={{ y: -5 }}
-                transition={{
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                  duration: 2,
-                }}
-                className='absolute -top-6 -right-6 w-24 h-32 bg-gray-500 bg-opacity-10 backdrop-blur-sm rounded-lg border border-gray-500 border-opacity-30 shadow-lg z-10 transform rotate-6'
-              />
-
-              <motion.div
-                initial={{ y: -5 }}
-                animate={{ y: 10 }}
-                transition={{
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                  duration: 2.5,
-                }}
-                className='absolute -bottom-8 -left-6 w-28 h-36 bg-gray-500 bg-opacity-10 backdrop-blur-sm rounded-lg border border-gray-500 border-opacity-30 shadow-lg transform -rotate-12'
-              />
-
               {/* Main document preview */}
-              <div className='bg-white bg-opacity-5 backdrop-blur-sm border border-gray-700 rounded-xl shadow-2xl p-5 relative z-20'>
+              <div className='bg-[#3e9ef5] bg-opacity-5 backdrop-blur-sm border border-gray-700 rounded-xl shadow-2xl p-5 relative z-20'>
                 <div className='flex justify-between items-center mb-4'>
                   <div className='flex space-x-1.5'>
-                    <div className='w-3 h-3 bg-gray-500 rounded-full'></div>
-                    <div className='w-3 h-3 bg-gray-500 rounded-full'></div>
-                    <div className='w-3 h-3 bg-gray-500 rounded-full'></div>
+                    <div className='w-3 h-3 bg-red-400 rounded-full'></div>
+                    <div className='w-3 h-3 bg-yellow-400 rounded-full'></div>
+                    <div className='w-3 h-3 bg-green-400 rounded-full'></div>
                   </div>
-                  <div className='text-xs font-medium text-gray-400'>
+                  <div className='text-xs font-medium text-white'>
                     AI Template
                   </div>
                 </div>
@@ -130,9 +107,9 @@ const SmartHeader = () => {
                     <FileText className='w-5 h-5 text-gray-300' />
                   </div>
                   <div className='space-y-1.5 w-full'>
-                    <div className='h-2 bg-gray-700 rounded-full w-3/5 mx-auto'></div>
-                    <div className='h-2 bg-gray-700 rounded-full w-4/5 mx-auto'></div>
-                    <div className='h-2 bg-gray-700 rounded-full w-2/3 mx-auto'></div>
+                    <div className='h-2 bg-white rounded-full w-3/5 mx-auto'></div>
+                    <div className='h-2 bg-white rounded-full w-4/5 mx-auto'></div>
+                    <div className='h-2 bg-white rounded-full w-2/3 mx-auto'></div>
                   </div>
                 </div>
 
@@ -140,7 +117,7 @@ const SmartHeader = () => {
                   initial={{ width: '0%' }}
                   animate={{ width: '100%' }}
                   transition={{ duration: 1.5, delay: 0.5 }}
-                  className='h-1 bg-gray-400 rounded-full mt-5'
+                  className='h-1 bg-gray-100 rounded-full mt-5'
                 />
               </div>
             </motion.div>

@@ -57,7 +57,12 @@ const CreateDocumentsHeader = () => {
                 Smart Documents
               </h2>
               <p className='text-gray-400 text-lg max-w-md'>
-                Create professional docs with intelligence.
+                <span className='sm:hidden'>
+                  Create professional docs with intelligence.
+                </span>
+                <span className='hidden sm:inline'>
+                  Create professional documents with intelligence.
+                </span>
               </p>
             </div>
           </div>
@@ -79,13 +84,33 @@ const CreateDocumentsHeader = () => {
                     <div className='w-1.5 h-1.5 bg-yellow-400 rounded-full'></div>
                     <div className='w-1.5 h-1.5 bg-green-400 rounded-full'></div>
                   </div>
+                  <div className='text-xs text-gray-400'>Document</div>
                 </div>
-                {/* Clean document content */}
-                <div className='absolute top-7 left-3 right-3 space-y-1.5'>
-                  <div className='h-1 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full w-3/4'></div>
-                  <div className='h-1 bg-gray-500 rounded-full w-full'></div>
-                  <div className='h-1 bg-gray-500 rounded-full w-2/3'></div>
-                  <div className='h-1 bg-gray-500 rounded-full w-1/2'></div>
+                {/* Document content with text labels */}
+                <div className='absolute top-6 left-2 right-2'>
+                  {/* Document type */}
+                  <div className='flex justify-between items-center'>
+                    <div className='text-xs text-blue-400 px-1 rounded'>
+                      Smart Contract
+                    </div>
+                    <div className='text-xs text-blue-400'>DOCX</div>
+                  </div>
+
+                  {/* Document content lines */}
+                  <div className='mt-1.5'>
+                    <div className='h-1 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full w-3/4'></div>
+                    <div className='h-1 bg-gray-500 rounded-full w-full mt-1'></div>
+                    <div className='h-1 bg-gray-500 rounded-full w-2/3 mt-1'></div>
+                  </div>
+
+                  {/* Status indicator */}
+                  <div className='mt-2 flex justify-between items-center'>
+                    <div className='text-xs text-blue-400 flex items-center'>
+                      <span className='inline-block w-1.5 h-1.5 bg-green-400 rounded-full mr-1'></span>
+                      Ready
+                    </div>
+                    <div className='text-xs text-blue-400'>⚡</div>
+                  </div>
                 </div>
               </div>
               {/* Subtle shadow effect */}

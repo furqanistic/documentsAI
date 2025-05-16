@@ -450,8 +450,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
       <div className='min-h-screen bg-gray-50 text-gray-900'>
         {/* Header component */}
 
-        {/* REDUCED TOP PADDING */}
-        <main className='container mx-auto px-4 py-4 md:py-6 max-w-7xl'>
+        <main className='container mx-auto px-4 py-6 md:py-12 max-w-7xl'>
           {/* Main Content Area with enhanced grid layout */}
           <div className='grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8'>
             {/* Left Column - Input with enhanced styling */}
@@ -461,15 +460,15 @@ Design a frontend architecture for a real-time collaborative document editing sy
               variants={fadeIn}
               className='lg:col-span-8 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden'
             >
-              {/* Content area - KEEPING ORIGINAL HORIZONTAL PADDING */}
-              <div className='p-4 pt-5.5 md:p-8 md:pt-6'>
+              {/* Content area - single merged interface */}
+              <div className='p-4 md:p-8'>
                 <motion.div
                   initial='hidden'
                   animate='visible'
                   variants={staggerContainer}
                 >
-                  {/* Test Type Selection - REMOVED EXTRA TOP PADDING */}
-                  <motion.div variants={itemVariant} className='mb-5'>
+                  {/* Test Type Selection */}
+                  <motion.div variants={itemVariant} className='mb-5 pt-4'>
                     <h3 className='text-base md:text-lg font-medium text-black mb-3'>
                       Test Type
                     </h3>
@@ -533,8 +532,8 @@ Design a frontend architecture for a real-time collaborative document editing sy
                     </div>
                   </motion.div>
 
-                  {/* FILE UPLOAD SECTION - REMOVED EXTRA TOP PADDING */}
-                  <motion.div variants={itemVariant} className='mb-5'>
+                  {/* FILE UPLOAD SECTION */}
+                  <motion.div variants={itemVariant} className='mb-5 pt-4'>
                     <div className='flex items-center justify-between mb-3'>
                       <label className='block text-base md:text-lg font-medium text-black'>
                         Upload a File (Optional)
@@ -584,8 +583,8 @@ Design a frontend architecture for a real-time collaborative document editing sy
                     </div>
                   </motion.div>
 
-                  {/* Prompt input - REMOVED EXTRA TOP PADDING */}
-                  <motion.div variants={itemVariant} className='mb-5'>
+                  {/* Prompt input */}
+                  <motion.div variants={itemVariant} className='mb-5 pt-4'>
                     <div className='flex items-center justify-between mb-3'>
                       <label className='block text-base md:text-lg font-medium text-black'>
                         Describe Your Test
@@ -620,18 +619,18 @@ Design a frontend architecture for a real-time collaborative document editing sy
                     </div>
                   </motion.div>
 
-                  {/* AI Prompt Suggestions Component - IMPROVED SPACING */}
-                  <div className='mb-3'>
+                  {/* AI Prompt Suggestions Component */}
+                  <div className='pt-1'>
                     <AiPromptSuggestions
                       suggestions={promptSuggestions[selectedTestType] || []}
                       onSuggestionClick={applyPromptSuggestion}
                     />
                   </div>
 
-                  {/* Generate Test Button - REDUCED TOP MARGIN */}
+                  {/* Generate Test Button */}
                   <motion.div
                     variants={itemVariant}
-                    className='mt-6 flex justify-end'
+                    className='mt-6 md:mt-8 flex justify-end'
                   >
                     <div className='flex items-center space-x-3 md:space-x-4 w-full'>
                       <button className='text-black py-2 px-3 md:px-4 rounded-md text-sm font-medium flex items-center hover:bg-gray-100 transition-all border border-gray-300'>

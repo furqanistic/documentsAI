@@ -1,3 +1,4 @@
+import ExamplesHeader from '@/components/Examples/ExamplesHeader'
 import { motion } from 'framer-motion'
 import {
   Book,
@@ -259,28 +260,9 @@ const ExamplesPage = () => {
     <Layout>
       <div className='min-h-screen bg-white'>
         {/* Header Section */}
+        <ExamplesHeader />
         <section className='pt-10 pb-8'>
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-            <div className='flex flex-col md:flex-row md:items-center md:justify-between mb-8'>
-              <div className='max-w-2xl text-center md:text-left mx-auto md:mx-0'>
-                <h1 className='text-4xl md:text-5xl font-bold text-gray-900 tracking-tight mb-2'>
-                  Generated Examples
-                </h1>
-                <p className='text-lg text-gray-700 mb-4 max-w-2xl'>
-                  Real documents created by our users with Calani AI in seconds.
-                </p>
-              </div>
-              <div className='mt-4 md:mt-0 flex justify-center md:justify-start'>
-                <span className='inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800'>
-                  <span className='relative flex h-2 w-2 mr-2'>
-                    <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75'></span>
-                    <span className='relative inline-flex rounded-full h-2 w-2 bg-green-500'></span>
-                  </span>
-                  100+ new examples every month
-                </span>
-              </div>
-            </div>
-
             {/* Filter Buttons */}
             <div className='mb-6'>
               <div className='flex justify-between items-center mb-5'>

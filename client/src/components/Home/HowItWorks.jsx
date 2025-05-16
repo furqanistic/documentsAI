@@ -118,7 +118,7 @@ const features = {
       icon: (
         <Smartphone
           size={18}
-          color='#12b886'
+          color='#7a10dd'
           className='w-6 h-6 sm:w-7 sm:h-7'
         />
       ),
@@ -207,7 +207,7 @@ const stats = [
 // Header badges data
 const headerContent = {
   badge: {
-    icon: <BrainCircuit size={16} color='#9333ea' />,
+    icon: <BrainCircuit size={16} />,
     text: 'Quick & Easy Conversion',
   },
   title: 'One-Click Digital Assessment',
@@ -805,7 +805,7 @@ const ProfessionalDemo = () => (
                     <FileText
                       size={10}
                       color='#4299e1'
-                      className='sm:w-3 sm:h-3'
+                      className='w-5 h-5 md:w-4 md:h-4'
                     />
                   </div>
                   {format}

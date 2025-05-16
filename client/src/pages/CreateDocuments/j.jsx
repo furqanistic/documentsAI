@@ -1,4 +1,9 @@
-// file 2
+import AiPromptSuggestions from '@/components/CreateDocuments/AiPromptSuggestions'
+import CreateDocumentsHeader from '@/components/CreateDocuments/CreateDocumentsHeader'
+import DocumentBranding from '@/components/CreateDocuments/DocumentBranding'
+import DocumentPreview from '@/components/CreateDocuments/DocumentPreview'
+import SidebarCreateDocument from '@/components/CreateDocuments/SidebarCreateDocument'
+import InteractiveTestOptions from '@/components/InteractiveTests/InteractiveTestOptions'
 import { motion } from 'framer-motion'
 import {
   ArrowRight,
@@ -12,30 +17,29 @@ import {
   FileType,
   Globe,
   HelpCircle,
+  LayoutGrid,
+  RefreshCw,
   Share,
   Sparkles,
   Upload,
   Users,
+  Wand2,
   Zap,
 } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
+import Layout from '../Layout/Layout'
 
-// You'll need to create or import these components
-
-import AiPromptSuggestions from '../CreateDocuments/AiPromptSuggestions'
-import InteractiveTestOptions from './InteractiveTestOptions'
-import SidebarCreateTest from './SidebarCreateTest'
-import TestPreview from './TestPreview'
-
-const InteractiveTestsMain = () => {
+const CreateDocumentsPage = () => {
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedTestType, setSelectedTestType] = useState(null) // Default to first option
+  const [selectedDocType, setSelectedDocType] = useState(null) // Default to first option
   const [showExportOptions, setShowExportOptions] = useState(false)
-  const [selectedExportFormat, setSelectedExportFormat] = useState('html') // Default to HTML for interactive tests
+  const [selectedExportFormat, setSelectedExportFormat] = useState('pdf')
   const [generationComplete, setGenerationComplete] = useState(false)
   const [promptText, setPromptText] = useState('')
-  const [testContent, setTestContent] = useState('')
+  const [documentContent, setDocumentContent] = useState('')
   const [selectedFile, setSelectedFile] = useState(null)
+  const [showInteractiveOptions, setShowInteractiveOptions] = useState(false)
+  const [convertToInteractive, setConvertToInteractive] = useState(false)
   const [interactiveSettings, setInteractiveSettings] = useState({
     timeLimit: null,
     showResults: true,
@@ -44,16 +48,15 @@ const InteractiveTestsMain = () => {
     generateLink: false,
   })
   const [interactiveLink, setInteractiveLink] = useState('')
-  // Test metadata state
-  const [testMetadata, setTestMetadata] = useState({
-    title: '',
-    description: '',
-    author: '',
+  // Document branding/metadata state
+  const [documentMetadata, setDocumentMetadata] = useState({
+    logo: null,
+    orgName: '',
     date: '',
-    passingScore: 70,
-    randomizeQuestions: true,
-    showProgress: true,
+    time: '',
+    additionalInfo: '',
   })
+  const [brandingEnabled, setBrandingEnabled] = useState(false)
   const fileInputRef = useRef(null)
 
   // Animation variants
@@ -81,31 +84,75 @@ const InteractiveTestsMain = () => {
     },
   }
 
-  // Test type options
-  const testTypes = [
-    {
-      icon: <FileQuestion className='h-5 w-5' />,
-      name: 'Multiple Choice',
-      description: 'Auto-graded quiz with MCQ',
-    },
+  useEffect(() => {
+    // Reset convert to interactive option when document type changes
+    if (selectedDocType !== 1) {
+      // Changed from 0 to 1
+      setConvertToInteractive(false)
+      setShowInteractiveOptions(false)
+    }
+
+    // Show interactive options only if user chose to convert
+    if (convertToInteractive && generationComplete) {
+      setShowInteractiveOptions(true)
+    } else {
+      setShowInteractiveOptions(false)
+      setInteractiveSettings({
+        ...interactiveSettings,
+        generateLink: false,
+      })
+    }
+  }, [selectedDocType, generationComplete, convertToInteractive])
+
+  // AI prompt suggestions based on selected document type
+  const promptSuggestions = {
+    0: [
+      'Create a final exam for an Introduction to Psychology course with 30 multiple choice questions and 5 essay questions',
+      'Generate a technical interview question set for a senior JavaScript developer position',
+      'Make a quiz about world history focusing on the 20th century events',
+    ],
+    1: [
+      'Create a formal business proposal for a software development project',
+      'Generate a legal contract for a consulting agreement',
+      'Draft a professional memo to all department heads about the upcoming fiscal year',
+    ],
+    2: [
+      'Create interview questions for a marketing manager position',
+      'Generate a structured interview guide for technical candidates',
+      'Design a behavioral interview assessment for customer service roles',
+    ],
+    3: [
+      'Create a quarterly business performance report for a tech startup',
+      'Generate a market research report on renewable energy trends in Europe',
+      "Create a financial analysis report for company XYZ's 2024 fiscal year",
+    ],
+  }
+
+  // Document types with enhanced descriptions
+  const documentTypes = [
     {
       icon: <FileText className='h-5 w-5' />,
-      name: 'Essay Questions',
-      description: 'Long form answers',
+      name: 'Professional Documents',
+      description: 'Formal business and official documents',
+    },
+    {
+      icon: <FileQuestion className='h-5 w-5' />,
+      name: 'Exams & Quizzes',
+      description: 'Create assessments',
     },
     {
       icon: <Users className='h-5 w-5' />,
-      name: 'Interview Assessment',
-      description: 'Assessment for interview candidates',
+      name: 'Interviews',
+      description: 'Any type of Interview questions',
     },
     {
       icon: <FilePlus className='h-5 w-5' />,
-      name: 'Mixed Format',
-      description: 'Combination of question types',
+      name: 'Reports',
+      description: 'Comprehensive data analysis reports',
     },
   ]
 
-  // Export formats
+  // File export formats
   const exportFormats = [
     {
       id: 'pdf',
@@ -133,34 +180,10 @@ const InteractiveTestsMain = () => {
     },
   ]
 
-  // AI prompt suggestions based on selected test type
-  const promptSuggestions = {
-    0: [
-      'Create a multiple choice quiz about world history with 20 questions focusing on the 20th century',
-      'Generate a biology quiz with 15 multiple choice questions about the human body systems',
-      'Make a computer science quiz with 25 questions covering algorithms and data structures',
-    ],
-    1: [
-      'Create 5 essay questions for a literature course on Shakespeares tragedies',
-      'Generate 3 long-form questions about environmental sustainability challenges',
-      'Create an essay exam with 4 questions on macroeconomic theory',
-    ],
-    2: [
-      'Create a technical interview assessment for a senior JavaScript developer position',
-      'Generate a design thinking challenge for UX designer candidates',
-      'Create a problem-solving assessment for project manager candidates',
-    ],
-    3: [
-      'Create a mixed format exam with multiple choice, short answer, and essay questions about American history',
-      'Generate a comprehensive assessment with various question types for a marketing course',
-      'Create a mixed format quiz covering data analysis with both theoretical and practical questions',
-    ],
-  }
-
-  // Simulated test generation
+  // Simulated AI document generation
   const handleGenerate = async () => {
     if (!promptText && !selectedFile) {
-      alert('Please enter a prompt or upload a file for your test')
+      alert('Please enter a prompt or upload a file for your document')
       return
     }
 
@@ -173,199 +196,163 @@ const InteractiveTestsMain = () => {
       // Simulate API call to AI service
       await new Promise((resolve) => setTimeout(resolve, 2500))
 
-      // Generate test content based on prompt or file
+      // Generate document content based on prompt or file
       const generatedContent = generateSampleContent()
-      setTestContent(generatedContent)
-
-      // Auto-fill test metadata with AI-generated title if empty
-      if (!testMetadata.title) {
-        const inferredTitle = getInferredTitle()
-        setTestMetadata({
-          ...testMetadata,
-          title: inferredTitle,
-          date: new Date().toISOString().split('T')[0],
-        })
-      }
+      setDocumentContent(generatedContent)
 
       setIsLoading(false)
       setGenerationComplete(true)
       setShowExportOptions(true)
     } catch (error) {
-      console.error('Error generating test:', error)
+      console.error('Error generating document:', error)
       setIsLoading(false)
-      alert('Failed to generate test. Please try again.')
+      alert('Failed to generate document. Please try again.')
     }
   }
 
-  // Get inferred title from the prompt
-  const getInferredTitle = () => {
-    if (promptText.length < 10) return 'Interactive Test'
-
-    // Extract a title from the prompt text
-    const words = promptText.split(' ').slice(0, 5).join(' ')
-    return words.charAt(0).toUpperCase() + words.slice(1) + '...'
-  }
-
-  // Simulate test content generation based on type
+  // Simulate document content generation based on type
   const generateSampleContent = () => {
-    const testTypes = ['multiple-choice', 'essay', 'interview', 'mixed']
-    const selectedType = testTypes[selectedTestType]
+    const docTypes = ['exam', 'professional', 'interview', 'report']
+    const selectedType = docTypes[selectedDocType]
 
-    let testContent = ''
+    // Create header content if branding is enabled
+    let headerContent = ''
+    if (brandingEnabled) {
+      const dateDisplay = documentMetadata.date
+        ? `Date: ${documentMetadata.date}`
+        : ''
+      const timeDisplay = documentMetadata.time
+        ? `Time: ${documentMetadata.time}`
+        : ''
 
-    if (selectedType === 'multiple-choice') {
-      testContent = `
-## World History Quiz: 20th Century Events
+      headerContent = `
+# ${documentMetadata.orgName || 'Organization Name'}
+${documentMetadata.additionalInfo ? documentMetadata.additionalInfo + '\n' : ''}
+${dateDisplay} ${timeDisplay}
 
-**Instructions:** Select the best answer for each question. You have 30 minutes to complete this quiz.
+---
 
-1. Which event marked the beginning of World War I?
-   - [ ] The invasion of Poland
-   - [x] The assassination of Archduke Franz Ferdinand
-   - [ ] The sinking of the Lusitania
-   - [ ] The Treaty of Versailles
+`
+    }
 
-2. Which country was NOT part of the Allied Powers during World War II?
-   - [ ] United States
-   - [ ] Great Britain
-   - [x] Italy
-   - [ ] Soviet Union
+    let mainContent = ''
+    if (selectedType === 'exam') {
+      mainContent = `
+## Introduction to Psychology - Final Examination
 
-3. The Cold War was primarily a geopolitical tension between:
-   - [x] The United States and the Soviet Union
-   - [ ] Great Britain and Germany
-   - [ ] China and Japan
-   - [ ] France and Russia
+**Instructions:** This exam consists of 30 multiple choice questions and 3 essay questions. You have 2 hours to complete this exam.
 
-4. Which agreement divided Korea into two separate countries?
-   - [ ] Treaty of Versailles
-   - [ ] NATO Agreement
-   - [x] Potsdam Agreement
-   - [ ] Camp David Accords
+### Multiple Choice (2 points each)
 
-5. The Cuban Missile Crisis occurred during which decade?
-   - [ ] 1950s
-   - [x] 1960s
-   - [ ] 1970s
-   - [ ] 1980s
+1. Which of the following is NOT one of the main perspectives in psychology?
+   a) Cognitive
+   b) Behavioral
+   c) Mathematical
+   d) Psychodynamic
+
+2. The tendency to attribute other people's behavior to their personality and to attribute our own behavior to the situation is known as:
+   a) Fundamental attribution error
+   b) Self-serving bias
+   c) Hindsight bias
+   d) Confirmation bias
 
 [... remaining questions would appear here ...]
+
+### Essay Questions (10 points each)
+
+1. Compare and contrast classical and operant conditioning. Provide examples of how each might be applied in educational settings.
+
+2. Explain the major theories of cognitive development, highlighting the key contributions and limitations of each approach.
+
+3. Discuss the biological and environmental factors that contribute to the development of psychological disorders.
       `
-    } else if (selectedType === 'essay') {
-      testContent = `
-## Literature Examination: Shakespeare's Tragedies
+    } else if (selectedType === 'professional') {
+      mainContent = `
+# Professional Business Proposal
+## Project: Enterprise CRM Implementation
 
-**Instructions:** Answer each question thoroughly with well-developed arguments and specific examples from the texts. Each essay should be approximately 500-750 words.
+### Executive Summary
+This proposal outlines our approach to implementing a customized Customer Relationship Management (CRM) system for XYZ Corporation. Our solution will address the specific requirements identified during our preliminary analysis and is designed to increase sales efficiency by 25% and improve customer retention by 15%.
 
-### Essay Questions (20 points each)
+### Scope of Work
+- Requirements gathering and analysis (2 weeks)
+- System design and architecture (3 weeks)
+- Development and customization (8 weeks)
+- Testing and quality assurance (3 weeks)
+- Deployment and training (2 weeks)
+- Post-implementation support (ongoing)
 
-1. **Character Analysis**: Compare and contrast the tragic flaws of Macbeth and Hamlet. How do their respective flaws drive the action of each play and lead to their downfalls? Use specific examples from both texts to support your analysis.
+### Budget and Timeline
+- Total project cost: $175,000
+- Timeline: 18 weeks from contract signing
+- Payment schedule: 30% upfront, 40% at midpoint, 30% upon completion
 
-2. **Thematic Exploration**: Examine the theme of ambition in "Macbeth" and "Julius Caesar." How does Shakespeare portray the corrupting influence of ambition, and what commentary does he make about power and leadership? Support your argument with textual evidence.
+### Team and Resources
+Our implementation team consists of:
+- 1 Project Manager
+- 2 Business Analysts
+- 3 Senior Developers
+- 1 UX/UI Specialist
+- 2 QA Engineers
 
-3. **Literary Devices**: Analyze Shakespeare's use of supernatural elements in his tragedies. Choose at least two plays and discuss how supernatural occurrences (ghosts, witches, prophecies, etc.) function within the narratives. What purpose do they serve beyond mere dramatic effect?
-
-4. **Historical Context**: Discuss how the political climate of Elizabethan England influenced Shakespeare's portrayal of monarchy and governance in his tragedies. Consider plays such as "King Lear," "Macbeth," or "Richard III" in your response.
-
-5. **Critical Perspectives**: Choose ONE of Shakespeare's tragic heroines (Lady Macbeth, Ophelia, Desdemona, etc.) and analyze her character through both a contemporary lens and from the perspective of Shakespeare's time. How might interpretations of this character have changed over time?
-
-[Grading Rubric details would appear here...]
+[... remaining content would appear here ...]
     `
     } else if (selectedType === 'interview') {
-      testContent = `
-## Senior JavaScript Developer Technical Assessment
+      mainContent = `
+# Senior Software Engineer Interview Guide
+## Technical Assessment and Behavioral Questions
 
-**Candidate Instructions:** This assessment evaluates your JavaScript proficiency, problem-solving abilities, and software architecture knowledge. Complete all sections within the 60-minute time limit.
+### Introduction (5 minutes)
+- Brief introduction of the interview panel
+- Overview of the interview process
+- Candidate introduction and background
 
-### Section 1: Conceptual Questions (10 points)
+### Technical Questions (30 minutes)
 
-1. Explain the difference between 'let', 'const', and 'var' in JavaScript.
+#### Programming Fundamentals
+1. Explain the difference between object-oriented and functional programming paradigms.
+2. How would you optimize a SQL query that's performing poorly?
+3. Describe a complex technical problem you've solved recently. What approach did you take?
 
-2. What is closure in JavaScript and how might you use it in practical applications?
+#### System Design
+1. How would you design a distributed caching system?
+2. Draw the architecture for a high-traffic web application with multiple microservices.
+3. Explain how you would implement authentication across a microservices architecture.
 
-3. Describe the event loop in JavaScript and how it handles asynchronous operations.
+#### Coding Assessment
+Please implement a function that finds the longest palindromic substring in a given string.
 
-### Section 2: Code Implementation (15 points)
+### Behavioral Questions (15 minutes)
 
-Implement a function called 'debounce' that takes a function and a delay time as arguments and returns a debounced version of the function.
+1. Describe a situation where you disagreed with a team member. How did you resolve it?
+2. Tell me about a time when you had to meet a tight deadline. How did you manage your time?
+3. How do you stay updated with the latest technologies and industry trends?
 
-\`\`\`javascript
-// Your implementation here
-function debounce(func, delay) {
-  // Complete this function
-}
-\`\`\`
-
-### Section 3: Problem Solving (15 points)
-
-You are tasked with optimizing a web application that is experiencing performance issues. The application loads data from an API and renders a large list of items (>1000) with complex DOM structures.
-
-1. What potential issues might be causing performance problems?
-2. Describe your approach to diagnosing the performance bottlenecks.
-3. Outline specific strategies you would implement to improve performance.
-
-### Section 4: System Design (10 points)
-
-Design a frontend architecture for a real-time collaborative document editing system similar to Google Docs. Include considerations for:
-
-1. State management
-2. Real-time synchronization
-3. Conflict resolution
-4. User presence indicators
-5. Offline capabilities
-
-[... assessment continues ...]
+[... remaining content would appear here ...]
     `
     } else {
-      testContent = `
-## Comprehensive Marketing Assessment
+      mainContent = `
+# Quarterly Business Performance Report
+## Q1 2025 - XYZ Technology Inc.
 
-**Instructions:** This assessment contains multiple types of questions. Complete all sections within the allotted time.
+### Executive Summary
+This report presents an analysis of XYZ Technology's performance in Q1 2025. Overall revenue increased by 15.3% compared to Q4 2024, exceeding projections by 7.2%. The cloud services division showed the strongest growth at 22.1%, while hardware sales slightly underperformed projections by 3.5%.
 
-### Section 1: Multiple Choice (2 points each)
+### Financial Highlights
+- Total Revenue: $124.7M (+15.3% QoQ)
+- Operating Expenses: $87.2M (+8.1% QoQ)
+- Net Profit: $27.3M (+23.4% QoQ)
+- Cash Reserves: $215.6M (+5.2% QoQ)
 
-1. Which of the following is NOT one of the 4 Ps of marketing?
-   - [ ] Product
-   - [ ] Price
-   - [ ] Place
-   - [x] Purpose
-   - [ ] Promotion
+### Department Performance
+#### Cloud Services
+Cloud services continued its strong performance with revenue of $68.3M, representing a 22.1% increase over the previous quarter. The introduction of the new enterprise security features contributed significantly to this growth, adding approximately $7.2M in new contracts.
 
-2. Which digital marketing channel typically has the highest ROI?
-   - [ ] Social media advertising
-   - [x] Email marketing
-   - [ ] Display advertising
-   - [ ] Print media
-
-3. What does SEO stand for?
-   - [ ] Search Engine Operations
-   - [x] Search Engine Optimization
-   - [ ] Search Engine Ownership
-   - [ ] Search Engine Outcomes
-
-[... more multiple choice questions ...]
-
-### Section 2: Short Answer Questions (5 points each)
-
-1. Explain the concept of customer segmentation and why it's important in marketing strategy.
-
-2. Describe the difference between inbound and outbound marketing approaches.
-
-3. What is a unique selling proposition (USP) and why is it important for brand positioning?
-
-### Section 3: Case Study Analysis (20 points)
-
-**Scenario:** You are the marketing director for a direct-to-consumer fitness equipment company that has been experiencing declining sales over the past year despite increased spending on digital advertising.
-
-1. What potential factors might be contributing to the declining sales?
-2. Outline a comprehensive marketing strategy to reverse this trend.
-3. Describe how you would measure the success of your proposed strategy.
-
-[... additional content would appear here ...]
+[... remaining content would appear here ...]
       `
     }
 
-    return testContent
+    return headerContent + mainContent
   }
 
   // File upload handler
@@ -380,7 +367,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
         setPromptText(
           `Process this ${
             file.type.split('/')[1]
-          } file and create an interactive test based on its content.`
+          } file and create a similar document with improved content.`
         )
       }
       reader.readAsText(file)
@@ -408,13 +395,13 @@ Design a frontend architecture for a real-time collaborative document editing sy
       setIsLoading(false)
 
       // In a real implementation, this would trigger the actual file download
-      console.log(`Exporting test as ${format}...`)
+      console.log(`Exporting document as ${format}...`)
 
       // Create a simulated download for demonstration purposes
       const element = document.createElement('a')
-      const file = new Blob([testContent], { type: 'text/plain' })
+      const file = new Blob([documentContent], { type: 'text/plain' })
       element.href = URL.createObjectURL(file)
-      element.download = `interactive-test.${format}`
+      element.download = `document.${format}`
       document.body.appendChild(element)
       element.click()
       document.body.removeChild(element)
@@ -432,7 +419,9 @@ Design a frontend architecture for a real-time collaborative document editing sy
         setIsLoading(false)
         // Generate a fake unique URL
         const uniqueId = Math.random().toString(36).substring(2, 10)
-        setInteractiveLink(`https://yourdomain.com/take-test/${uniqueId}`)
+        setInteractiveLink(
+          `https://yourdomain.com/interactive-test/${uniqueId}`
+        )
       }, 1500)
     } else {
       setInteractiveSettings({ ...interactiveSettings, generateLink: false })
@@ -446,12 +435,12 @@ Design a frontend architecture for a real-time collaborative document editing sy
   }
 
   return (
-    <>
+    <Layout>
       <div className='min-h-screen bg-gray-50 text-gray-900'>
         {/* Header component */}
+        <CreateDocumentsHeader />
 
-        {/* REDUCED TOP PADDING */}
-        <main className='container mx-auto px-4 py-4 md:py-6 max-w-7xl'>
+        <main className='container mx-auto px-4 py-6 md:py-12 max-w-7xl'>
           {/* Main Content Area with enhanced grid layout */}
           <div className='grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8'>
             {/* Left Column - Input with enhanced styling */}
@@ -461,20 +450,19 @@ Design a frontend architecture for a real-time collaborative document editing sy
               variants={fadeIn}
               className='lg:col-span-8 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden'
             >
-              {/* Content area - KEEPING ORIGINAL HORIZONTAL PADDING */}
-              <div className='p-4 pt-5.5 md:p-8 md:pt-6'>
+              {/* Content area - single merged interface */}
+              <div className='p-4 md:p-8'>
                 <motion.div
                   initial='hidden'
                   animate='visible'
                   variants={staggerContainer}
                 >
-                  {/* Test Type Selection - REMOVED EXTRA TOP PADDING */}
-                  <motion.div variants={itemVariant} className='mb-5'>
+                  <motion.div variants={itemVariant} className='mb-5 pt-4'>
                     <h3 className='text-base md:text-lg font-medium text-black mb-3'>
-                      Test Type
+                      Document Type
                     </h3>
                     <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4'>
-                      {testTypes.map((type, index) => (
+                      {documentTypes.map((type, index) => (
                         <motion.div
                           key={index}
                           whileHover={{ scale: 1.01 }}
@@ -482,17 +470,17 @@ Design a frontend architecture for a real-time collaborative document editing sy
                           className='cursor-pointer rounded-lg p-2 sm:p-3 flex items-center space-x-2 sm:space-x-3 transition-all duration-300 relative border border-transparent hover:bg-gray-50'
                           style={{
                             boxShadow:
-                              selectedTestType === index
+                              selectedDocType === index
                                 ? '0 0 0 2px rgb(31 41 55)'
                                 : '0 0 0 1px rgb(229 231 235)',
                           }}
-                          onClick={() => setSelectedTestType(index)}
+                          onClick={() => setSelectedDocType(index)}
                         >
                           <div
                             className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md flex-shrink-0 ${
-                              selectedTestType === index
+                              selectedDocType === index
                                 ? 'bg-gray-800 text-white'
-                                : 'bg-gray-100 text-black'
+                                : 'bg-gray-100 text-gray-700'
                             }`}
                           >
                             {type.icon}
@@ -503,7 +491,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
                                 {type.name}
                               </span>
 
-                              {selectedTestType === index && (
+                              {selectedDocType === index && (
                                 <div className='flex-shrink-0 ml-1'>
                                   <div className='h-5 w-5 sm:h-5 sm:w-5 bg-gray-900 rounded-full flex items-center justify-center'>
                                     <Check className='h-3 w-3 sm:h-3 sm:w-3 text-white' />
@@ -521,20 +509,19 @@ Design a frontend architecture for a real-time collaborative document editing sy
                   </motion.div>
 
                   {/* Introduction Help Text */}
+
                   <motion.div variants={itemVariant} className='mb-5'>
                     <div className='p-3 md:p-4 bg-blue-50 rounded-lg border border-blue-200 flex items-center'>
                       <HelpCircle className='h-5 w-5 text-blue-500 mr-2 md:mr-3 flex-shrink-0' />
-                      <p className='text-xs md:text-sm text-black'>
-                        Create an interactive test by uploading a file or
-                        describing what you need. Our AI will generate test
-                        content that can be shared with participants to take
-                        online.
+                      <p className='text-xs md:text-sm text-gray-700'>
+                        You can create documents in two ways: upload a file or
+                        describe what you need in the text prompt below.
                       </p>
                     </div>
                   </motion.div>
 
-                  {/* FILE UPLOAD SECTION - REMOVED EXTRA TOP PADDING */}
-                  <motion.div variants={itemVariant} className='mb-5'>
+                  {/* FILE UPLOAD SECTION */}
+                  <motion.div variants={itemVariant} className='mb-5 pt-4'>
                     <div className='flex items-center justify-between mb-3'>
                       <label className='block text-base md:text-lg font-medium text-black'>
                         Upload a File (Optional)
@@ -554,7 +541,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
                         accept='.pdf,.docx,.doc,.txt,.rtf'
                       />
                       <div className='flex flex-col md:flex-row items-center justify-center gap-4'>
-                        <div className='bg-gray-100 h-12 w-12 rounded-full flex items-center justify-center text-black'>
+                        <div className='bg-gray-100 h-12 w-12 rounded-full flex items-center justify-center text-gray-700'>
                           <Upload className='h-5 w-5' />
                         </div>
                         <div className='flex-1'>
@@ -566,12 +553,12 @@ Design a frontend architecture for a real-time collaborative document editing sy
                           <p className='text-xs text-gray-500'>
                             {selectedFile
                               ? `${(selectedFile.size / 1024).toFixed(2)} KB`
-                              : 'Upload your syllabus, notes, or existing tests'}
+                              : 'Supports PDF, DOCX, TXT, and more'}
                           </p>
                         </div>
                         {selectedFile && (
                           <button
-                            className='text-xs text-gray-500 hover:text-black border border-gray-200 rounded px-2 py-1'
+                            className='text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded px-2 py-1'
                             onClick={(e) => {
                               e.stopPropagation()
                               setSelectedFile(null)
@@ -584,11 +571,10 @@ Design a frontend architecture for a real-time collaborative document editing sy
                     </div>
                   </motion.div>
 
-                  {/* Prompt input - REMOVED EXTRA TOP PADDING */}
-                  <motion.div variants={itemVariant} className='mb-5'>
+                  <motion.div variants={itemVariant} className='mb-5 pt-4'>
                     <div className='flex items-center justify-between mb-3'>
                       <label className='block text-base md:text-lg font-medium text-black'>
-                        Describe Your Test
+                        Describe What You Need
                       </label>
                       <div className='flex items-center space-x-1'>
                         <button
@@ -601,8 +587,8 @@ Design a frontend architecture for a real-time collaborative document editing sy
                     </div>
                     <div className='relative h-32 md:h-40'>
                       <textarea
-                        className='w-full h-full p-3 md:p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none resize-none text-xs md:text-sm shadow-sm placeholder:text-xs md:placeholder:text-sm'
-                        placeholder='E.g., Create a multiple choice quiz about world history with 20 questions focusing on the 20th century. Include questions about both World Wars, the Cold War, and major political movements.'
+                        className='w-full h-full p-3 md:p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none resize-none text-xs md:text-sm shadow-sm placeholder:text-xs md:placeholder:text-sm'
+                        placeholder='E.g., Create a mid-term exam for a college-level Intro to Psychology course. Include 30 multiple choice questions and 3 essay questions covering topics like cognitive development, research methods, and behavioral psychology.'
                         value={promptText}
                         onChange={(e) => setPromptText(e.target.value)}
                       ></textarea>
@@ -620,21 +606,21 @@ Design a frontend architecture for a real-time collaborative document editing sy
                     </div>
                   </motion.div>
 
-                  {/* AI Prompt Suggestions Component - IMPROVED SPACING */}
-                  <div className='mb-3'>
+                  {/* AI Prompt Suggestions Component - with reduced but consistent padding */}
+                  <div className='pt-1'>
                     <AiPromptSuggestions
-                      suggestions={promptSuggestions[selectedTestType] || []}
+                      suggestions={promptSuggestions[selectedDocType] || []}
                       onSuggestionClick={applyPromptSuggestion}
                     />
                   </div>
 
-                  {/* Generate Test Button - REDUCED TOP MARGIN */}
+                  {/* Generate Document Button */}
                   <motion.div
                     variants={itemVariant}
-                    className='mt-6 flex justify-end'
+                    className='mt-6 md:mt-8 flex justify-end'
                   >
                     <div className='flex items-center space-x-3 md:space-x-4 w-full'>
-                      <button className='text-black py-2 px-3 md:px-4 rounded-md text-sm font-medium flex items-center hover:bg-gray-100 transition-all border border-gray-300'>
+                      <button className='text-gray-700 py-2 px-3 md:px-4 rounded-md text-sm font-medium flex items-center hover:bg-gray-100 transition-all border border-gray-300'>
                         <div className='flex items-center space-x-1 md:space-x-2'>
                           <Clock className='h-4 w-4' />
                           <span>Save Draft</span>
@@ -642,7 +628,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
                       </button>
 
                       <button
-                        className='bg-gradient-to-br from-blue-600 to-blue-800 text-white py-2 px-4 md:px-6 rounded-md text-sm font-medium flex items-center justify-center shadow-sm hover:bg-blue-700 transition-all ml-auto'
+                        className='bg-gradient-to-br from-blue-600 to-blue-800 text-white py-2 px-4 md:px-6 rounded-md text-sm font-medium flex items-center justify-center shadow-sm hover:bg-gray-800 transition-all ml-auto'
                         onClick={handleGenerate}
                         disabled={isLoading}
                       >
@@ -671,7 +657,23 @@ Design a frontend architecture for a real-time collaborative document editing sy
                     </div>
                   </motion.div>
 
-                  {/* Test Preview Section */}
+                  {/* Document Branding Options - Add after generation button but before preview */}
+                  {generationComplete && (
+                    <DocumentBranding
+                      metadata={documentMetadata}
+                      onMetadataChange={setDocumentMetadata}
+                      enabled={brandingEnabled}
+                      onToggleEnabled={(value) => {
+                        setBrandingEnabled(value)
+                        // Regenerate document content with or without branding when toggled
+                        if (value !== brandingEnabled) {
+                          setDocumentContent(generateSampleContent())
+                        }
+                      }}
+                    />
+                  )}
+
+                  {/* Document Preview Section */}
                   {generationComplete && (
                     <motion.div
                       initial={{ opacity: 0 }}
@@ -679,15 +681,117 @@ Design a frontend architecture for a real-time collaborative document editing sy
                       transition={{ delay: 0.3, duration: 0.5 }}
                       className='mt-6'
                     >
-                      <TestPreview
-                        content={testContent}
-                        metadata={testMetadata}
+                      <DocumentPreview
+                        content={documentContent}
                         onContentChange={(newContent) => {
-                          setTestContent(newContent)
+                          setDocumentContent(newContent)
                         }}
-                        onMetadataChange={setTestMetadata}
                       />
 
+                      {/* Interactive Test Conversion Option - Only for Exam/Quiz types */}
+
+                      {selectedDocType === 1 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.5 }}
+                          className='mt-5 p-3 md:p-5 border border-blue-300 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 shadow-md text-white'
+                        >
+                          {/* Mobile layout - fixed text wrapping */}
+                          <div className='md:hidden'>
+                            <div className='text-center mb-3'>
+                              <div className='w-10 h-10 mx-auto rounded-full bg-white flex items-center justify-center shadow-md mb-2'>
+                                <Zap className='h-5 w-5 text-blue-600' />
+                              </div>
+
+                              <h3 className='text-base font-medium text-white mb-1 leading-tight px-2'>
+                                Make this an interactive online test
+                              </h3>
+
+                              <p className='text-xs text-white/90 max-w-xs mx-auto px-2'>
+                                Time limits • Auto-grading • Share links
+                              </p>
+                            </div>
+
+                            <div className='mt-3'>
+                              <div className='bg-white/10 p-0.5 rounded-lg flex shadow-md backdrop-blur-sm'>
+                                <button
+                                  onClick={() => setConvertToInteractive(false)}
+                                  className={`flex-1 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                                    !convertToInteractive
+                                      ? 'bg-white text-blue-800 shadow-md'
+                                      : 'text-white'
+                                  }`}
+                                >
+                                  No
+                                </button>
+                                <button
+                                  onClick={() => setConvertToInteractive(true)}
+                                  className={`flex-1 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                                    convertToInteractive
+                                      ? 'bg-white text-blue-800 shadow-md'
+                                      : 'text-white'
+                                  }`}
+                                >
+                                  Yes
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Desktop layout - unchanged */}
+                          <div className='hidden md:flex flex-row items-center justify-between'>
+                            <div className='flex items-center'>
+                              <div className='w-12 h-12 rounded-full bg-white flex items-center justify-center mr-4 flex-shrink-0 shadow-md'>
+                                <Zap className='h-6 w-6 text-blue-600' />
+                              </div>
+                              <div>
+                                <h3 className='text-lg font-medium text-white'>
+                                  Make this an interactive online test
+                                </h3>
+                                <p className='text-sm text-white text-opacity-80 mt-1'>
+                                  Time limits • Auto-grading • Share links
+                                </p>
+                              </div>
+                            </div>
+                            <div className='flex items-center ml-2'>
+                              <div className='bg-white/10 p-1 rounded-lg flex shadow-md backdrop-blur-sm'>
+                                <button
+                                  onClick={() => setConvertToInteractive(false)}
+                                  className={`px-5 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                                    !convertToInteractive
+                                      ? 'bg-white text-blue-800 shadow-md'
+                                      : 'text-white'
+                                  }`}
+                                >
+                                  No
+                                </button>
+                                <button
+                                  onClick={() => setConvertToInteractive(true)}
+                                  className={`px-5 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                                    convertToInteractive
+                                      ? 'bg-white text-blue-800 shadow-md'
+                                      : 'text-white'
+                                  }`}
+                                >
+                                  Yes
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </motion.div>
+                  )}
+
+                  {/* Interactive Test Options - Only show if user chose to convert */}
+                  {showInteractiveOptions && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.3, duration: 0.4 }}
+                      className='mt-6'
+                    >
                       <InteractiveTestOptions
                         settings={interactiveSettings}
                         onSettingsChange={setInteractiveSettings}
@@ -763,7 +867,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
                     </motion.div>
                   )}
 
-                  {/* Export Options Section */}
+                  {/* Export Options Section - with reduced but consistent padding */}
                   {showExportOptions && (
                     <motion.div
                       initial={{ opacity: 0 }}
@@ -801,7 +905,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
                         </div>
                       </div>
 
-                      {/* Action buttons */}
+                      {/* Updated button layout */}
                       <div className='grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4'>
                         {/* Share button positioned under PDF */}
                         <button
@@ -842,13 +946,13 @@ Design a frontend architecture for a real-time collaborative document editing sy
 
             {/* Right Sidebar Component */}
             <div className='lg:col-span-4'>
-              <SidebarCreateTest />
+              <SidebarCreateDocument />
             </div>
           </div>
         </main>
       </div>
-    </>
+    </Layout>
   )
 }
 
-export default InteractiveTestsMain
+export default CreateDocumentsPage

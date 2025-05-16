@@ -41,7 +41,7 @@ const CreateDocumentsPage = () => {
   const [showInteractiveOptions, setShowInteractiveOptions] = useState(false)
   const [convertToInteractive, setConvertToInteractive] = useState(false)
   const [interactiveSettings, setInteractiveSettings] = useState({
-    timeLimit: 30,
+    timeLimit: null,
     showResults: true,
     allowRetry: true,
     isPublic: false,
@@ -440,7 +440,8 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
         {/* Header component */}
         <CreateDocumentsHeader />
 
-        <main className='container mx-auto px-4 py-6 md:py-12 max-w-7xl'>
+        {/* REDUCED AND CONSISTENT TOP PADDING */}
+        <main className='container mx-auto px-4 py-4 md:py-6 max-w-7xl'>
           {/* Main Content Area with enhanced grid layout */}
           <div className='grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8'>
             {/* Left Column - Input with enhanced styling */}
@@ -450,14 +451,15 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
               variants={fadeIn}
               className='lg:col-span-8 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden'
             >
-              {/* Content area - single merged interface */}
-              <div className='p-4 md:p-8'>
+              {/* Content area - original horizontal padding */}
+              <div className='p-4 pt-5.5 md:p-8 md:pt-6'>
                 <motion.div
                   initial='hidden'
                   animate='visible'
                   variants={staggerContainer}
                 >
-                  <motion.div variants={itemVariant} className='mb-5 pt-4'>
+                  {/* Document Type - CONSISTENT SPACING */}
+                  <motion.div variants={itemVariant} className='mb-5'>
                     <h3 className='text-base md:text-lg font-medium text-black mb-3'>
                       Document Type
                     </h3>
@@ -509,7 +511,6 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                   </motion.div>
 
                   {/* Introduction Help Text */}
-
                   <motion.div variants={itemVariant} className='mb-5'>
                     <div className='p-3 md:p-4 bg-blue-50 rounded-lg border border-blue-200 flex items-center'>
                       <HelpCircle className='h-5 w-5 text-blue-500 mr-2 md:mr-3 flex-shrink-0' />
@@ -520,8 +521,8 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                     </div>
                   </motion.div>
 
-                  {/* FILE UPLOAD SECTION */}
-                  <motion.div variants={itemVariant} className='mb-5 pt-4'>
+                  {/* FILE UPLOAD SECTION - CONSISTENT SPACING */}
+                  <motion.div variants={itemVariant} className='mb-5'>
                     <div className='flex items-center justify-between mb-3'>
                       <label className='block text-base md:text-lg font-medium text-black'>
                         Upload a File (Optional)
@@ -571,7 +572,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                     </div>
                   </motion.div>
 
-                  <motion.div variants={itemVariant} className='mb-5 pt-4'>
+                  <motion.div variants={itemVariant} className='mb-5'>
                     <div className='flex items-center justify-between mb-3'>
                       <label className='block text-base md:text-lg font-medium text-black'>
                         Describe What You Need
@@ -606,8 +607,8 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                     </div>
                   </motion.div>
 
-                  {/* AI Prompt Suggestions Component - with reduced but consistent padding */}
-                  <div className='pt-1'>
+                  {/* AI Prompt Suggestions Component */}
+                  <div className='mb-3'>
                     <AiPromptSuggestions
                       suggestions={promptSuggestions[selectedDocType] || []}
                       onSuggestionClick={applyPromptSuggestion}
@@ -617,7 +618,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                   {/* Generate Document Button */}
                   <motion.div
                     variants={itemVariant}
-                    className='mt-6 md:mt-8 flex justify-end'
+                    className='mt-6 flex justify-end'
                   >
                     <div className='flex items-center space-x-3 md:space-x-4 w-full'>
                       <button className='text-gray-700 py-2 px-3 md:px-4 rounded-md text-sm font-medium flex items-center hover:bg-gray-100 transition-all border border-gray-300'>
@@ -867,7 +868,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                     </motion.div>
                   )}
 
-                  {/* Export Options Section - with reduced but consistent padding */}
+                  {/* Export Options Section */}
                   {showExportOptions && (
                     <motion.div
                       initial={{ opacity: 0 }}
