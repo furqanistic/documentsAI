@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ArrowRight, FileText, Shield } from 'lucide-react'
+import { Shield } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 
 const CreateDocumentsHeader = () => {
@@ -75,9 +75,9 @@ const CreateDocumentsHeader = () => {
               transition={{ duration: 0.2 }}
               className='relative h-16 w-52 group cursor-pointer'
             >
-              {/* Document container with clean design */}
+              {/* Example template container with enhanced mac-style window */}
               <div className='absolute inset-0 bg-gray-900 rounded-lg border border-gray-800 overflow-hidden group-hover:border-blue-600 transition-colors duration-300 shadow-lg'>
-                {/* Simple header bar */}
+                {/* Mac-style header bar */}
                 <div className='absolute top-0 left-0 right-0 h-5 bg-gray-800 flex items-center justify-between px-2'>
                   <div className='flex space-x-1.5'>
                     <div className='w-1.5 h-1.5 bg-red-400 rounded-full'></div>
@@ -86,30 +86,52 @@ const CreateDocumentsHeader = () => {
                   </div>
                   <div className='text-xs text-gray-400'>Document</div>
                 </div>
-                {/* Document content with text labels */}
+                {/* Example template content with template design */}
                 <div className='absolute top-6 left-2 right-2'>
-                  {/* Document type */}
+                  {/* Template type */}
                   <div className='flex justify-between items-center'>
-                    <div className='text-xs text-blue-400 px-1 rounded'>
+                    <div className='text-xs text-blue-600 px-1 rounded'>
                       Smart Contract
                     </div>
-                    <div className='text-xs text-blue-400'>DOCX</div>
+                    <div className='text-xs text-blue-600'>DOCX</div>
                   </div>
 
-                  {/* Document content lines */}
-                  <div className='mt-1.5'>
-                    <div className='h-1 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full w-3/4'></div>
-                    <div className='h-1 bg-gray-500 rounded-full w-full mt-1'></div>
-                    <div className='h-1 bg-gray-500 rounded-full w-2/3 mt-1'></div>
+                  {/* Document content */}
+                  <div className='my-1'>
+                    <div className='h-1 bg-blue-600 rounded-full w-4/5'></div>
+                    <div className='h-1 bg-blue-600/60 rounded-full w-3/5 mt-0.5'></div>
+                  </div>
+
+                  {/* Document body with paragraph styling */}
+                  <div className='mt-2'>
+                    {/* Paragraph 1 */}
+                    <div className='mb-1'>
+                      <div className='h-0.5 bg-gray-700 rounded-full w-full'></div>
+                      <div className='h-0.5 bg-gray-700 rounded-full w-11/12 mt-0.5'></div>
+                      <div className='h-0.5 bg-gray-700 rounded-full w-4/5 mt-0.5'></div>
+                    </div>
+
+                    {/* Form field - Highlighted */}
+                    <div className='mb-1'>
+                      <div className='h-0.5 bg-blue-600/30 rounded-full w-full'></div>
+                      <div className='h-0.5 bg-blue-600/30 rounded-full w-11/12 mt-0.5'></div>
+                      <div className='h-0.5 bg-blue-600/30 rounded-full w-3/4 mt-0.5'></div>
+                    </div>
+
+                    {/* Signature line */}
+                    <div className='mt-1.5'>
+                      <div className='h-0.5 bg-gray-700 rounded-full w-1/3'></div>
+                      <div className='h-0.5 bg-blue-600 rounded-full w-1/4 mt-1'></div>
+                    </div>
                   </div>
 
                   {/* Status indicator */}
-                  <div className='mt-2 flex justify-between items-center'>
-                    <div className='text-xs text-blue-400 flex items-center'>
-                      <span className='inline-block w-1.5 h-1.5 bg-green-400 rounded-full mr-1'></span>
+                  <div className='mt-1 flex justify-between items-center'>
+                    <div className='text-xs text-blue-600 flex items-center'>
+                      <span className='inline-block w-1.5 h-1.5 bg-blue-600 rounded-full mr-1'></span>
                       Ready
                     </div>
-                    <div className='text-xs text-blue-400'>⚡</div>
+                    <div className='text-xs text-blue-600'>✓</div>
                   </div>
                 </div>
               </div>

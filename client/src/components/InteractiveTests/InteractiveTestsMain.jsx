@@ -470,7 +470,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
                 >
                   {/* Test Type Selection - REMOVED EXTRA TOP PADDING */}
                   <motion.div variants={itemVariant} className='mb-5'>
-                    <h3 className='text-base md:text-lg font-medium text-black mb-3'>
+                    <h3 className='text-base md:text-lg font-bold text-black mb-3'>
                       Test Type
                     </h3>
                     <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4'>
@@ -536,7 +536,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
                   {/* FILE UPLOAD SECTION - REMOVED EXTRA TOP PADDING */}
                   <motion.div variants={itemVariant} className='mb-5'>
                     <div className='flex items-center justify-between mb-3'>
-                      <label className='block text-base md:text-lg font-medium text-black'>
+                      <label className='block text-base md:text-lg font-bold text-black'>
                         Upload a File (Optional)
                       </label>
                     </div>
@@ -558,12 +558,12 @@ Design a frontend architecture for a real-time collaborative document editing sy
                           <Upload className='h-5 w-5' />
                         </div>
                         <div className='flex-1'>
-                          <h3 className='text-sm font-medium mb-1'>
+                          <h3 className='text-sm md:text-base font-medium mb-1'>
                             {selectedFile
                               ? selectedFile.name
                               : 'Drag & drop or click to browse'}
                           </h3>
-                          <p className='text-xs text-gray-500'>
+                          <p className='text-xs sm:text-sm text-gray-500'>
                             {selectedFile
                               ? `${(selectedFile.size / 1024).toFixed(2)} KB`
                               : 'Upload your syllabus, notes, or existing tests'}
@@ -587,7 +587,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
                   {/* Prompt input - REMOVED EXTRA TOP PADDING */}
                   <motion.div variants={itemVariant} className='mb-5'>
                     <div className='flex items-center justify-between mb-3'>
-                      <label className='block text-base md:text-lg font-medium text-black'>
+                      <label className='block text-base md:text-lg font-bold text-black'>
                         Describe Your Test
                       </label>
                       <div className='flex items-center space-x-1'>
@@ -771,7 +771,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
                       transition={{ duration: 0.3 }}
                       className='mt-5 pt-4 border-t border-gray-100'
                     >
-                      <h3 className='text-base md:text-lg font-medium text-black mb-3'>
+                      <h3 className='text-base md:text-lg font-bold text-black mb-3'>
                         Export Options
                       </h3>
 

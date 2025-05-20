@@ -270,14 +270,10 @@ const PricingPage = () => {
                 transition={{ delay: 0.2, duration: 0.5 }}
               >
                 <h1 className='text-4xl md:text-5xl font-bold tracking-tight mb-2 text-gray-900 dark:text-white'>
-                  Choose Your{' '}
-                  <span className='bg-clip-text text-transparent bg-gradient-to-r bg-black'>
-                    Plan
-                  </span>
+                  Pricing Plans
                 </h1>
                 <p className='text-lg text-gray-700 dark:text-gray-300 mb-4 max-w-2xl mx-auto'>
-                  AI-powered document creation for educators, students, and
-                  professionals.
+                  Affordable plans for all your needs
                 </p>
               </motion.div>
 

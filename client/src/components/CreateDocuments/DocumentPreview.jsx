@@ -1,4 +1,3 @@
-import { AnimatePresence, motion } from 'framer-motion'
 import {
   ChevronLeft,
   ChevronRight,
@@ -329,35 +328,32 @@ const DocumentPreview = ({ content, onContentChange }) => {
     }
   }
 
-  // Animation for page transitions
-  const pageVariants = {
-    initial: { opacity: 0, x: 20 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -20 },
-  }
-
-  // Calculate appropriate height for content area in fullscreen
-  // Adjusted to ensure footer is visible on small screens
+  // Calculate appropriate height for content area
+  // FIXED: Proper handling for both overflow and maintaining correct boundaries
   const getContentHeight = () => {
-    if (!fullscreen) return 'max-h-96 md:max-h-[28rem]'
+    if (!fullscreen) {
+      // Fixed height with overflow-auto to prevent content from bleeding into footer
+      return 'h-96 md:h-[28rem] overflow-auto'
+    }
 
-    // Use flex-grow for fullscreen mode to ensure it takes all available space
+    // In fullscreen, use available space but ensure content doesn't overflow
     return 'flex-grow overflow-auto'
   }
 
   return (
-    <motion.div
-      className={`border ${
-        fullscreen ? 'rounded-none' : 'rounded-lg'
-      } border-gray-200 overflow-hidden shadow-sm ${
-        fullscreen ? 'fixed inset-0 z-50 bg-white flex flex-col' : ''
+    <div
+      className={`flex flex-col ${
+        fullscreen ? 'fixed inset-0 z-50 bg-white' : ''
       }`}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      style={{
+        borderRadius: fullscreen ? '0' : '0.5rem',
+        overflow: 'hidden',
+        border: '1px solid #e5e7eb',
+        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+      }}
     >
       {/* Preview toolbar with improved layout */}
-      <div className='bg-gray-50 p-2 md:p-3 border-b border-gray-200'>
+      <div className='bg-gray-50 p-2 md:p-3 border-b border-gray-200 flex-shrink-0'>
         <div className='flex flex-wrap items-center justify-between gap-y-2'>
           <div className='flex items-center space-x-3 md:space-x-4'>
             <div className='flex items-center'>
@@ -397,12 +393,7 @@ const DocumentPreview = ({ content, onContentChange }) => {
           <div className='flex items-center gap-1 md:gap-2 ml-auto flex-1 justify-end'>
             {/* Search bar (toggled by the search button) */}
             {showSearch && (
-              <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 'auto', opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                className='flex flex-1 items-center bg-white border border-gray-200 rounded-md overflow-hidden md:ml-2' // Added md:ml-2
-              >
+              <div className='flex flex-1 items-center bg-white border border-gray-200 rounded-md overflow-hidden md:ml-2'>
                 <input
                   ref={searchInputRef}
                   type='text'
@@ -445,7 +436,7 @@ const DocumentPreview = ({ content, onContentChange }) => {
                     </button>
                   </div>
                 )}
-              </motion.div>
+              </div>
             )}
 
             {/* Primary action buttons - right aligned with same spacing as bottom row */}
@@ -479,14 +470,9 @@ const DocumentPreview = ({ content, onContentChange }) => {
               >
                 <Copy className={`h-5 w-5 md:h-4.5 md:w-4.5 text-gray-500`} />
                 {copied && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className='absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap'
-                  >
+                  <div className='absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap'>
                     Copied!
-                  </motion.div>
+                  </div>
                 )}
               </button>
 
@@ -578,15 +564,14 @@ const DocumentPreview = ({ content, onContentChange }) => {
         </div>
       </div>
 
-      {/* Document content with improved rendering */}
+      {/* Document content with improved rendering and overflow handling */}
       <div className={`bg-white relative ${getContentHeight()}`}>
         {isLoading ? (
           <div className='flex items-center justify-center h-full p-8'>
             <div className='text-center'>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              <div
                 className='inline-block w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full mb-2'
+                style={{ animation: 'spin 1s linear infinite' }}
               />
               <p className='text-sm text-gray-500'>Loading document...</p>
             </div>
@@ -607,7 +592,7 @@ const DocumentPreview = ({ content, onContentChange }) => {
           </div>
         ) : (
           <div
-            className='document-content p-5 md:p-8'
+            className='document-content p-5 md:p-8 h-full overflow-auto'
             style={{
               fontSize: `${zoom}%`,
               maxWidth: '1000px',
@@ -615,66 +600,55 @@ const DocumentPreview = ({ content, onContentChange }) => {
             }}
             ref={contentRef}
           >
-            <AnimatePresence mode='wait'>
-              <motion.div
-                key={currentPage}
-                variants={pageVariants}
-                initial='initial'
-                animate='animate'
-                exit='exit'
-                transition={{ duration: 0.2 }}
-                className='prose prose-sm sm:prose max-w-none'
-              >
-                {/* Use ReactMarkdown for better rendering */}
-                {/* For a real implementation, you would include ReactMarkdown */}
-                <div className='markdown-content whitespace-pre-wrap'>
-                  {/* This creates a basic markdown-like rendering */}
-                  {contentPages[currentPage - 1]?.split('\n').map((line, i) => {
-                    // Very basic markdown-like rendering
-                    if (line.startsWith('# ')) {
-                      return (
-                        <h1 key={i} className='text-2xl font-bold mt-6 mb-4'>
-                          {line.substring(2)}
-                        </h1>
-                      )
-                    } else if (line.startsWith('## ')) {
-                      return (
-                        <h2 key={i} className='text-xl font-bold mt-5 mb-3'>
-                          {line.substring(3)}
-                        </h2>
-                      )
-                    } else if (line.startsWith('### ')) {
-                      return (
-                        <h3 key={i} className='text-lg font-bold mt-4 mb-2'>
-                          {line.substring(4)}
-                        </h3>
-                      )
-                    } else if (line.startsWith('- ')) {
-                      return (
-                        <li key={i} className='ml-4 mb-1'>
-                          {line.substring(2)}
-                        </li>
-                      )
-                    } else if (line.match(/^\d+\. /)) {
-                      const textContent = line.replace(/^\d+\. /, '')
-                      return (
-                        <li key={i} className='ml-4 mb-1 list-decimal'>
-                          {textContent}
-                        </li>
-                      )
-                    } else if (line.trim() === '') {
-                      return <div key={i} className='h-4'></div>
-                    } else {
-                      return (
-                        <p key={i} className='mb-2'>
-                          {line}
-                        </p>
-                      )
-                    }
-                  })}
-                </div>
-              </motion.div>
-            </AnimatePresence>
+            <div className='prose prose-sm sm:prose max-w-none'>
+              {/* Basic markdown-like rendering */}
+              <div className='markdown-content whitespace-pre-wrap'>
+                {/* This creates a basic markdown-like rendering */}
+                {contentPages[currentPage - 1]?.split('\n').map((line, i) => {
+                  // Very basic markdown-like rendering
+                  if (line.startsWith('# ')) {
+                    return (
+                      <h1 key={i} className='text-2xl font-bold mt-6 mb-4'>
+                        {line.substring(2)}
+                      </h1>
+                    )
+                  } else if (line.startsWith('## ')) {
+                    return (
+                      <h2 key={i} className='text-xl font-bold mt-5 mb-3'>
+                        {line.substring(3)}
+                      </h2>
+                    )
+                  } else if (line.startsWith('### ')) {
+                    return (
+                      <h3 key={i} className='text-lg font-bold mt-4 mb-2'>
+                        {line.substring(4)}
+                      </h3>
+                    )
+                  } else if (line.startsWith('- ')) {
+                    return (
+                      <li key={i} className='ml-4 mb-1'>
+                        {line.substring(2)}
+                      </li>
+                    )
+                  } else if (line.match(/^\d+\. /)) {
+                    const textContent = line.replace(/^\d+\. /, '')
+                    return (
+                      <li key={i} className='ml-4 mb-1 list-decimal'>
+                        {textContent}
+                      </li>
+                    )
+                  } else if (line.trim() === '') {
+                    return <div key={i} className='h-4'></div>
+                  } else {
+                    return (
+                      <p key={i} className='mb-2'>
+                        {line}
+                      </p>
+                    )
+                  }
+                })}
+              </div>
+            </div>
           </div>
         )}
 
@@ -697,9 +671,9 @@ const DocumentPreview = ({ content, onContentChange }) => {
         )}
       </div>
 
-      {/* Footer with only the status message - now visible on all screens */}
+      {/* Footer with only the status message - now properly fixed at the bottom */}
       <div
-        className={`bg-gray-50 px-2 py-1 md:px-3 md:py-1.5 border-t border-gray-200 ${
+        className={`bg-gray-50 px-2 py-1 md:px-3 md:py-1.5 border-t border-gray-200 flex-shrink-0 z-10 ${
           fullscreen ? 'mt-auto' : ''
         }`}
       >
@@ -716,7 +690,7 @@ const DocumentPreview = ({ content, onContentChange }) => {
           </span>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
 

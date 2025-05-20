@@ -460,7 +460,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                 >
                   {/* Document Type - CONSISTENT SPACING */}
                   <motion.div variants={itemVariant} className='mb-5'>
-                    <h3 className='text-base md:text-lg font-medium text-black mb-3'>
+                    <h3 className='text-base md:text-lg font-bold text-black mb-3'>
                       Document Type
                     </h3>
                     <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4'>
@@ -524,7 +524,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                   {/* FILE UPLOAD SECTION - CONSISTENT SPACING */}
                   <motion.div variants={itemVariant} className='mb-5'>
                     <div className='flex items-center justify-between mb-3'>
-                      <label className='block text-base md:text-lg font-medium text-black'>
+                      <label className='block text-base md:text-lg font-bold text-black'>
                         Upload a File (Optional)
                       </label>
                     </div>
@@ -546,12 +546,12 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                           <Upload className='h-5 w-5' />
                         </div>
                         <div className='flex-1'>
-                          <h3 className='text-sm font-medium mb-1'>
+                          <h3 className='text-sm md:text-base font-medium mb-1'>
                             {selectedFile
                               ? selectedFile.name
                               : 'Drag & drop or click to browse'}
                           </h3>
-                          <p className='text-xs text-gray-500'>
+                          <p className='text-xs sm:text-sm text-gray-500'>
                             {selectedFile
                               ? `${(selectedFile.size / 1024).toFixed(2)} KB`
                               : 'Supports PDF, DOCX, TXT, and more'}
@@ -574,7 +574,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
 
                   <motion.div variants={itemVariant} className='mb-5'>
                     <div className='flex items-center justify-between mb-3'>
-                      <label className='block text-base md:text-lg font-medium text-black'>
+                      <label className='block text-base md:text-lg font-bold text-black'>
                         Describe What You Need
                       </label>
                       <div className='flex items-center space-x-1'>

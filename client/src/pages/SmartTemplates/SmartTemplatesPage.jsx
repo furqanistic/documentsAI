@@ -480,7 +480,6 @@ const SmartTemplatesPage = () => {
       <div className='w-full min-h-screen bg-white text-gray-900'>
         {/* Header */}
         <SmartHeader />
-
         <style jsx>{`
           .bg-grid-pattern {
             background-image: linear-gradient(
@@ -496,125 +495,131 @@ const SmartTemplatesPage = () => {
             background-size: 20px 20px;
           }
         `}</style>
-
         {/* Category Navigation - Updated to match Examples page */}
-        <div className='w-full pt-12 pb-8'>
-          {' '}
-          {/* Updated padding to match Examples page */}
+        <div className='w-full pt-10 pb-8'>
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-            <div className='flex justify-between items-center mb-5'>
-              <h2 className='text-xl font-bold text-gray-900'>
-                Explore Templates
-              </h2>
+            <div className='mb-6'>
+              <div className='flex justify-between items-center mb-5'>
+                <h2 className='text-xl font-bold text-gray-900'>
+                  Explore Templates
+                </h2>
 
-              {/* Mobile Dropdown with ref for click-outside detection */}
-              <div className='relative sm:hidden' ref={dropdownRef}>
-                <button
-                  onClick={() => setShowMobileFilter(!showMobileFilter)}
-                  className='flex items-center justify-between w-32 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none'
-                >
-                  <span className='flex items-center'>
-                    <span className='mr-1.5'>
-                      {
-                        templateCategories.find(
-                          (c) => c.title === selectedCategory
-                        )?.icon
-                      }
+                {/* Mobile Dropdown with ref for click-outside detection */}
+                <div className='relative sm:hidden' ref={dropdownRef}>
+                  <button
+                    onClick={() => setShowMobileFilter(!showMobileFilter)}
+                    className='flex items-center justify-between w-32 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none'
+                  >
+                    <span className='flex items-center'>
+                      <span className='mr-1.5'>
+                        {
+                          templateCategories.find(
+                            (c) => c.title === selectedCategory
+                          )?.icon
+                        }
+                      </span>
+                      <span className='truncate'>{selectedCategory}</span>
                     </span>
-                    <span className='truncate'>{selectedCategory}</span>
-                  </span>
-                  <svg
-                    className='w-4 h-4 ml-1'
-                    xmlns='http://www.w3.org/2000/svg'
-                    viewBox='0 0 20 20'
-                    fill='currentColor'
-                    aria-hidden='true'
-                  >
-                    <path
-                      fillRule='evenodd'
-                      d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'
-                      clipRule='evenodd'
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      className='w-4 h-4 ml-1'
+                      xmlns='http://www.w3.org/2000/svg'
+                      viewBox='0 0 20 20'
+                      fill='currentColor'
+                      aria-hidden='true'
+                    >
+                      <path
+                        fillRule='evenodd'
+                        d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'
+                        clipRule='evenodd'
+                      />
+                    </svg>
+                  </button>
 
-                {/* Mobile Dropdown Menu */}
-                {showMobileFilter && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className='absolute z-10 w-32 mt-1 bg-white shadow-lg rounded-md py-1 ring-1 ring-black ring-opacity-5 focus:outline-none'
+                  {/* Mobile Dropdown Menu */}
+                  {showMobileFilter && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className='absolute z-10 w-32 right-0 mt-1 bg-white shadow-lg rounded-md py-1 ring-1 ring-black ring-opacity-5 focus:outline-none'
+                    >
+                      {templateCategories.map((category) => (
+                        <div
+                          key={category.id}
+                          onClick={() => {
+                            handleCategoryChange(category.title)
+                            setShowMobileFilter(false)
+                          }}
+                          className={`flex items-center px-3 py-1.5 text-xs cursor-pointer ${
+                            selectedCategory === category.title
+                              ? 'bg-gray-100 text-gray-900 rounded-md mx-1'
+                              : 'text-gray-700 hover:bg-gray-50 hover:rounded-md hover:mx-1'
+                          }`}
+                        >
+                          <span className='mr-1.5'>{category.icon}</span>
+                          <span className='truncate'>{category.title}</span>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+
+              {/* Desktop Category Chips - Adjusted to match Examples page */}
+              <div
+                className='hidden sm:flex sm:flex-wrap sm:gap-2 justify-center'
+                style={{ width: '100%' }}
+              >
+                {templateCategories.map((category) => (
+                  <motion.button
+                    key={category.id}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => handleCategoryChange(category.title)}
+                    className={`px-4 py-1.5 rounded-full flex items-center text-sm font-medium ${
+                      selectedCategory === category.title
+                        ? 'bg-black text-white shadow-sm'
+                        : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
                   >
-                    {templateCategories.map((category) => (
-                      <div
-                        key={category.id}
-                        onClick={() => {
-                          handleCategoryChange(category.title)
-                          setShowMobileFilter(false)
-                        }}
-                        className={`flex items-center px-3 py-1.5 text-xs cursor-pointer ${
-                          selectedCategory === category.title
-                            ? 'bg-gray-100 text-gray-900 rounded-md mx-1'
-                            : 'text-gray-700 hover:bg-gray-50 hover:rounded-md hover:mx-1'
-                        }`}
-                      >
-                        <span className='mr-1.5'>{category.icon}</span>
-                        <span className='truncate'>{category.title}</span>
-                      </div>
-                    ))}
-                  </motion.div>
-                )}
+                    <span className='mr-2'>{category.icon}</span>
+                    {category.title}
+                  </motion.button>
+                ))}
               </div>
             </div>
 
-            {/* Desktop Category Chips - Adjusted to match Examples page */}
-            <div
-              className='hidden sm:flex sm:flex-wrap sm:gap-2 mb-6 justify-center'
-              style={{ width: '100%' }}
-            >
-              {templateCategories.map((category) => (
-                <motion.button
-                  key={category.id}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => handleCategoryChange(category.title)}
-                  className={`px-4 py-1.5 rounded-full flex items-center text-sm font-medium ${
-                    selectedCategory === category.title
-                      ? 'bg-black text-white shadow-sm'
-                      : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <span className='mr-2'>{category.icon}</span>
-                  {category.title}
-                </motion.button>
-              ))}
-            </div>
-
-            {/* Search Bar - Adjusted margin to match Examples page */}
+            {/* Search Bar - Matching Examples page structure exactly */}
             <div className='flex justify-center'>
               <div className='relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg'>
-                <input
-                  type='text'
-                  value={searchTerm}
-                  onChange={handleSearchInput}
-                  onFocus={() => setShowMobileFilter(false)}
-                  className='w-full py-2 pl-4 pr-10 text-sm bg-white border border-gray-200 rounded-full focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-gray-800 placeholder-gray-500 shadow-sm'
-                  placeholder='Search templates...'
-                />
+                <div className='relative'>
+                  <input
+                    type='text'
+                    value={searchTerm}
+                    onChange={handleSearchInput}
+                    onFocus={() => setShowMobileFilter(false)}
+                    className='w-full py-2 pl-4 pr-10 text-sm bg-white border border-gray-200 rounded-full focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-gray-800 placeholder-gray-500 shadow-sm'
+                    placeholder='Search templates...'
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={clearSearch}
+                      className='absolute inset-y-0 right-0 px-3 flex items-center justify-center text-gray-400 hover:text-gray-600'
+                    >
+                      <X className='h-4 w-4' />
+                    </button>
+                  )}
+                </div>
                 {searchTerm && (
-                  <button
-                    onClick={clearSearch}
-                    className='absolute inset-y-0 right-0 px-3 flex items-center justify-center text-gray-400 hover:text-gray-600'
-                  >
-                    <X className='h-4 w-4' />
-                  </button>
+                  <div className='absolute mt-1 text-xs text-gray-500'>
+                    Found {searchResults.length} result
+                    {searchResults.length !== 1 ? 's' : ''}
+                  </div>
                 )}
               </div>
             </div>
           </div>
         </div>
-
         {/* Templates Grid - Adding mb-10 to search bar container to match Examples page */}
         <div className='w-full py-2'>
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10'>

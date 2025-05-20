@@ -18,7 +18,7 @@ const InteractiveTestsHeader = () => {
   return (
     <div
       className={`w-full bg-black py-4 sm:py-5 px-4 sm:px-6 lg:px-8 relative border-b ${
-        scrolled ? 'border-blue-900/20 shadow-md' : 'border-gray-800'
+        scrolled ? 'border-purple-900/20 shadow-md' : 'border-gray-800'
       } transition-all duration-300`}
     >
       {/* Simple grid background */}
@@ -27,12 +27,12 @@ const InteractiveTestsHeader = () => {
           className='h-full w-full'
           style={{
             backgroundImage:
-              'linear-gradient(to right, rgba(59, 130, 246, 0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(59, 130, 246, 0.03) 1px, transparent 1px)',
+              'linear-gradient(to right, rgba(147, 51, 234, 0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(147, 51, 234, 0.03) 1px, transparent 1px)',
             backgroundSize: '24px 24px',
           }}
         />
         {/* Simple glow effect - static, no animation */}
-        <div className='absolute top-0 left-1/4 w-1/2 h-24 bg-blue-600 rounded-full filter blur-[100px] opacity-5' />
+        <div className='absolute top-0 left-1/4 w-1/2 h-24 bg-purple-600 rounded-full filter blur-[100px] opacity-5' />
       </div>
       <div className='max-w-6xl mx-auto relative'>
         <div className='flex flex-col sm:flex-row items-center justify-between gap-5 sm:gap-0'>
@@ -61,7 +61,7 @@ const InteractiveTestsHeader = () => {
               </p>
             </div>
           </div>
-          {/* Right side - Floating test graphics hidden on mobile, visible on SM and up */}
+          {/* Right side - Floating example graphics hidden on mobile, visible on SM and up */}
           <div className='hidden sm:flex justify-center'>
             <motion.div
               onHoverStart={() => setIsHovered(true)}
@@ -70,7 +70,7 @@ const InteractiveTestsHeader = () => {
               transition={{ duration: 0.2 }}
               className='relative h-16 w-52 group cursor-pointer'
             >
-              {/* Interactive test container with enhanced mac-style window */}
+              {/* Example template container with enhanced mac-style window */}
               <div className='absolute inset-0 bg-gray-900 rounded-lg border border-gray-800 overflow-hidden group-hover:border-purple-600 transition-colors duration-300 shadow-lg'>
                 {/* Mac-style header bar */}
                 <div className='absolute top-0 left-0 right-0 h-5 bg-gray-800 flex items-center justify-between px-2'>
@@ -79,69 +79,54 @@ const InteractiveTestsHeader = () => {
                     <div className='w-1.5 h-1.5 bg-yellow-400 rounded-full'></div>
                     <div className='w-1.5 h-1.5 bg-green-400 rounded-full'></div>
                   </div>
+                  <div className='text-xs text-gray-400'>Test</div>
                 </div>
-                {/* Interactive test content with improved design */}
+                {/* Example template content with template design */}
                 <div className='absolute top-6 left-2 right-2'>
-                  {/* Question number */}
+                  {/* Template type */}
                   <div className='flex justify-between items-center'>
-                    <div className='bg-purple-900/40 text-xs text-purple-300 px-1 rounded'>
-                      Q2
+                    <div className='text-xs text-purple-600 px-1 rounded'>
+                      Quiz Template
                     </div>
-                    <div className='text-xs text-purple-400'>30s</div>
+                    <div className='text-xs text-purple-600'>Q2</div>
                   </div>
 
-                  {/* Question text */}
+                  {/* Document content */}
                   <div className='my-1'>
-                    <div className='h-1 bg-purple-600 rounded-full w-full'></div>
-                    <div className='h-1 bg-purple-600/60 rounded-full w-4/5 mt-0.5'></div>
+                    <div className='h-1 bg-purple-600 rounded-full w-4/5'></div>
+                    <div className='h-1 bg-purple-600/60 rounded-full w-3/5 mt-0.5'></div>
                   </div>
 
-                  {/* Answer options with more detail */}
+                  {/* Document body with paragraph styling */}
                   <div className='mt-2'>
-                    {/* Option A */}
-                    <div className='flex items-center mb-1 relative'>
-                      <div className='h-3 w-3 rounded-full border border-gray-600 flex-shrink-0'></div>
-                      <div className='ml-1.5 flex-1'>
-                        <div className='h-1 bg-gray-700 rounded-full w-2/3'></div>
-                      </div>
+                    {/* Paragraph 1 */}
+                    <div className='mb-1'>
+                      <div className='h-0.5 bg-gray-700 rounded-full w-full'></div>
+                      <div className='h-0.5 bg-gray-700 rounded-full w-11/12 mt-0.5'></div>
+                      <div className='h-0.5 bg-gray-700 rounded-full w-4/5 mt-0.5'></div>
                     </div>
 
-                    {/* Option B - Selected */}
-                    <div className='flex items-center mb-1 relative'>
-                      <div className='h-3 w-3 rounded-full border border-purple-500 bg-purple-500/20 flex-shrink-0 flex items-center justify-center'>
-                        <div className='h-1.5 w-1.5 rounded-full bg-purple-500'></div>
-                      </div>
-                      <div className='ml-1.5 flex-1'>
-                        <div className='h-1 bg-purple-500/30 rounded-full w-3/5'></div>
-                      </div>
-                      <div className='absolute -right-1 text-xs text-purple-500'>
-                        ✓
-                      </div>
+                    {/* Form field - Highlighted */}
+                    <div className='mb-1'>
+                      <div className='h-0.5 bg-purple-600/30 rounded-full w-full'></div>
+                      <div className='h-0.5 bg-purple-600/30 rounded-full w-11/12 mt-0.5'></div>
+                      <div className='h-0.5 bg-purple-600/30 rounded-full w-3/4 mt-0.5'></div>
                     </div>
 
-                    {/* Option C */}
-                    <div className='flex items-center mb-1'>
-                      <div className='h-3 w-3 rounded-full border border-gray-600 flex-shrink-0'></div>
-                      <div className='ml-1.5 flex-1'>
-                        <div className='h-1 bg-gray-700 rounded-full w-3/4'></div>
-                      </div>
-                    </div>
-
-                    {/* Option D */}
-                    <div className='flex items-center'>
-                      <div className='h-3 w-3 rounded-full border border-gray-600 flex-shrink-0'></div>
-                      <div className='ml-1.5 flex-1'>
-                        <div className='h-1 bg-gray-700 rounded-full w-1/2'></div>
-                      </div>
+                    {/* Signature line */}
+                    <div className='mt-1.5'>
+                      <div className='h-0.5 bg-gray-700 rounded-full w-1/3'></div>
+                      <div className='h-0.5 bg-purple-600 rounded-full w-1/4 mt-1'></div>
                     </div>
                   </div>
 
-                  {/* Progress and navigation */}
-                  <div className='mt-1.5 flex justify-between items-center'>
-                    <div className='w-3/4 h-1 bg-gray-800 rounded-full overflow-hidden'>
-                      <div className='h-full w-2/5 bg-purple-600 rounded-full'></div>
+                  {/* Status indicator */}
+                  <div className='mt-1 flex justify-between items-center'>
+                    <div className='text-xs text-purple-600 flex items-center'>
+                      <span className='inline-block w-1.5 h-1.5 bg-purple-600 rounded-full mr-1'></span>
+                      Interactive
                     </div>
-                    <div className='text-xs text-purple-400'>2/5</div>
+                    <div className='text-xs text-purple-600'>✓</div>
                   </div>
                 </div>
               </div>
