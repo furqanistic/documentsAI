@@ -495,7 +495,6 @@ const SmartTemplatesPage = () => {
             background-size: 20px 20px;
           }
         `}</style>
-        {/* Category Navigation - Updated to match Examples page */}
         <div className='w-full pt-10 pb-8'>
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
             <div className='mb-6'>
