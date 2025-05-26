@@ -271,7 +271,7 @@ const DocumentBranding = ({
                     Upload your organization logo
                   </p>
                   <p className='text-xs text-gray-500 mt-1'>
-                    Drag and drop or click to browse
+                    Drag & drop or click to browse
                   </p>
                 </div>
               )}

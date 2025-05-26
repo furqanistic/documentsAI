@@ -470,7 +470,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
                 >
                   {/* Test Type Selection - REMOVED EXTRA TOP PADDING */}
                   <motion.div variants={itemVariant} className='mb-5'>
-                    <h3 className='text-base md:text-lg font-bold text-black mb-3'>
+                    <h3 className='text-lg  font-bold text-black mb-3'>
                       Test Type
                     </h3>
                     <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4'>
@@ -536,7 +536,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
                   {/* FILE UPLOAD SECTION - REMOVED EXTRA TOP PADDING */}
                   <motion.div variants={itemVariant} className='mb-5'>
                     <div className='flex items-center justify-between mb-3'>
-                      <label className='block text-base md:text-lg font-bold text-black'>
+                      <label className='block text-lg  font-bold text-black'>
                         Upload a File (Optional)
                       </label>
                     </div>
@@ -566,7 +566,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
                           <p className='text-xs sm:text-sm text-gray-500'>
                             {selectedFile
                               ? `${(selectedFile.size / 1024).toFixed(2)} KB`
-                              : 'Upload your syllabus, notes, or existing tests'}
+                              : 'Supports PDF, DOC, DOCX, TXT files (Max 10MB)'}
                           </p>
                         </div>
                         {selectedFile && (
@@ -587,7 +587,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
                   {/* Prompt input - REMOVED EXTRA TOP PADDING */}
                   <motion.div variants={itemVariant} className='mb-5'>
                     <div className='flex items-center justify-between mb-3'>
-                      <label className='block text-base md:text-lg font-bold text-black'>
+                      <label className='block text-lg  font-bold text-black'>
                         Describe Your Test
                       </label>
                       <div className='flex items-center space-x-1'>
@@ -599,7 +599,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
                         </button>
                       </div>
                     </div>
-                    <div className='relative h-32 md:h-40'>
+                    <div className='relative h-35 md:h-40'>
                       <textarea
                         className='w-full h-full p-3 md:p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none resize-none text-xs md:text-sm shadow-sm placeholder:text-xs md:placeholder:text-sm'
                         placeholder='E.g., Create a multiple choice quiz about world history with 20 questions focusing on the 20th century. Include questions about both World Wars, the Cold War, and major political movements.'
@@ -771,7 +771,7 @@ Design a frontend architecture for a real-time collaborative document editing sy
                       transition={{ duration: 0.3 }}
                       className='mt-5 pt-4 border-t border-gray-100'
                     >
-                      <h3 className='text-base md:text-lg font-bold text-black mb-3'>
+                      <h3 className='text-lg  font-bold text-black mb-3'>
                         Export Options
                       </h3>
 

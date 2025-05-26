@@ -460,7 +460,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                 >
                   {/* Document Type - CONSISTENT SPACING */}
                   <motion.div variants={itemVariant} className='mb-5'>
-                    <h3 className='text-base md:text-lg font-bold text-black mb-3'>
+                    <h3 className='text-lg  font-bold text-black mb-3'>
                       Document Type
                     </h3>
                     <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4'>
@@ -524,7 +524,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                   {/* FILE UPLOAD SECTION - CONSISTENT SPACING */}
                   <motion.div variants={itemVariant} className='mb-5'>
                     <div className='flex items-center justify-between mb-3'>
-                      <label className='block text-base md:text-lg font-bold text-black'>
+                      <label className='block text-lg  font-bold text-black'>
                         Upload a File (Optional)
                       </label>
                     </div>
@@ -554,7 +554,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                           <p className='text-xs sm:text-sm text-gray-500'>
                             {selectedFile
                               ? `${(selectedFile.size / 1024).toFixed(2)} KB`
-                              : 'Supports PDF, DOCX, TXT, and more'}
+                              : 'Supports PDF, DOC, DOCX, TXT files (Max 10MB)'}
                           </p>
                         </div>
                         {selectedFile && (
@@ -574,7 +574,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
 
                   <motion.div variants={itemVariant} className='mb-5'>
                     <div className='flex items-center justify-between mb-3'>
-                      <label className='block text-base md:text-lg font-bold text-black'>
+                      <label className='block text-lg  font-bold text-black'>
                         Describe What You Need
                       </label>
                       <div className='flex items-center space-x-1'>
@@ -586,7 +586,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                         </button>
                       </div>
                     </div>
-                    <div className='relative h-32 md:h-40'>
+                    <div className='relative h-35 md:h-40'>
                       <textarea
                         className='w-full h-full p-3 md:p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none resize-none text-xs md:text-sm shadow-sm placeholder:text-xs md:placeholder:text-sm'
                         placeholder='E.g., Create a mid-term exam for a college-level Intro to Psychology course. Include 30 multiple choice questions and 3 essay questions covering topics like cognitive development, research methods, and behavioral psychology.'
@@ -876,7 +876,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                       transition={{ duration: 0.3 }}
                       className='mt-5 pt-4 border-t border-gray-100'
                     >
-                      <h3 className='text-base md:text-lg font-medium text-black mb-3'>
+                      <h3 className='text-lg  font-medium text-black mb-3'>
                         Export Options
                       </h3>
 
