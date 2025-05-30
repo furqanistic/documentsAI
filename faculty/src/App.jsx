@@ -4,6 +4,7 @@ import DashboardPage from './pages/Dashboard/DashboardPage'
 import MyDocumentsPage from './pages/Documents/MyDocumentsPage'
 import ProfileSettingsPage from './pages/Settings/ProfileSettingsPage'
 import MyTemplatesPage from './pages/Template/MyTemplatesPage'
+import TestManagementPage from './pages/TestManagement/TestManagementPage'
 
 const App = () => {
   return (
@@ -14,6 +15,7 @@ const App = () => {
         <Route path='/mytemplates' element={<MyTemplatesPage />} />
         <Route path='/mydocuments' element={<MyDocumentsPage />} />
         <Route path='/settings' element={<ProfileSettingsPage />} />
+        <Route path='/management' element={<TestManagementPage />} />
       </Routes>
     </BrowserRouter>
   )

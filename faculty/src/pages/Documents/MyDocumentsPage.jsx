@@ -32,8 +32,8 @@ const mockDocuments = [
     id: '1',
     title: 'Advanced Mathematics Exam',
     type: 'Exam',
-    createdAt: '2024-05-20',
-    lastModified: '2024-05-22',
+    createdAt: '2025-05-20T14:45:00',
+    lastModified: '2025-05-22T09:30:00',
     fileSize: '2.4 MB',
     status: 'completed',
     questions: 25,
@@ -42,8 +42,8 @@ const mockDocuments = [
     id: '2',
     title: 'History Study Guide - World War II',
     type: 'Study Guide',
-    createdAt: '2024-05-18',
-    lastModified: '2024-05-21',
+    createdAt: '2025-05-18T10:15:00',
+    lastModified: '2025-05-21T16:20:00',
     fileSize: '1.8 MB',
     status: 'completed',
     pages: 12,
@@ -52,18 +52,18 @@ const mockDocuments = [
     id: '3',
     title: 'Business Interview Questions',
     type: 'Interview',
-    createdAt: '2024-05-15',
-    lastModified: '2024-05-15',
+    createdAt: '2025-05-15T08:30:00',
+    lastModified: '2025-05-15T11:45:00',
     fileSize: '856 KB',
     status: 'draft',
     questions: 15,
   },
   {
     id: '4',
-    title: 'Trade Analysis Report Q1 2024',
+    title: 'Trade Analysis Report Q1 2025',
     type: 'Report',
-    createdAt: '2024-05-10',
-    lastModified: '2024-05-12',
+    createdAt: '2025-05-10T13:20:00',
+    lastModified: '2025-05-12T15:10:00',
     fileSize: '3.2 MB',
     status: 'completed',
     pages: 24,
@@ -72,8 +72,8 @@ const mockDocuments = [
     id: '5',
     title: 'Chemistry Lab Assessment',
     type: 'Exam',
-    createdAt: '2024-05-08',
-    lastModified: '2024-05-09',
+    createdAt: '2025-05-08T07:45:00',
+    lastModified: '2025-05-09T12:00:00',
     fileSize: '1.1 MB',
     status: 'completed',
     questions: 18,
@@ -82,8 +82,8 @@ const mockDocuments = [
     id: '6',
     title: 'Project Management Guidelines',
     type: 'Guide',
-    createdAt: '2024-05-05',
-    lastModified: '2024-05-06',
+    createdAt: '2025-05-05T17:30:00',
+    lastModified: '2025-05-06T09:15:00',
     fileSize: '2.7 MB',
     status: 'draft',
     pages: 16,
@@ -149,6 +149,21 @@ const MyDocuments = () => {
   const handleView = (document) => {
     // Implement view functionality
     console.log('View document:', document)
+  }
+
+  const formatDateTime = (dateTimeString) => {
+    const date = new Date(dateTimeString)
+    const time = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+    const dateStr = date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+    return { time, date: dateStr }
   }
 
   return (
@@ -231,104 +246,103 @@ const MyDocuments = () => {
               </thead>
               <tbody className='bg-white divide-y divide-gray-200'>
                 <AnimatePresence>
-                  {filteredDocuments.map((document, index) => (
-                    <motion.tr
-                      key={document.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.15 }}
-                      className='hover:bg-gray-50 transition-colors duration-200'
-                    >
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <div className='flex items-center'>
-                          <div className='p-2 bg-gray-100 rounded-lg mr-3'>
-                            <FileText className='w-5 h-5 text-gray-600' />
-                          </div>
-                          <div>
-                            <div className='text-sm font-medium text-gray-900 max-w-xs truncate'>
-                              {document.title}
+                  {filteredDocuments.map((document, index) => {
+                    const createdDateTime = formatDateTime(document.createdAt)
+                    const modifiedDateTime = formatDateTime(
+                      document.lastModified
+                    )
+
+                    return (
+                      <motion.tr
+                        key={document.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className='hover:bg-gray-50 transition-colors duration-200'
+                      >
+                        <td className='px-6 py-4 whitespace-nowrap'>
+                          <div className='flex items-center'>
+                            <div>
+                              <div className='text-sm font-medium text-gray-900 max-w-xs truncate'>
+                                {document.title}
+                              </div>
+                              <div className='text-sm text-gray-500'>
+                                Modified: {modifiedDateTime.date} ·{' '}
+                                {modifiedDateTime.time}
+                              </div>
                             </div>
-                            <div className='text-sm text-gray-500'>
-                              Modified{' '}
-                              {new Date(
-                                document.lastModified
-                              ).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                              })}
-                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <Badge
-                          variant='secondary'
-                          className={
-                            document.status === 'completed'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }
-                        >
-                          {document.status.charAt(0).toUpperCase() +
-                            document.status.slice(1)}
-                        </Badge>
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                        {new Date(document.createdAt).toLocaleDateString(
-                          'en-US',
-                          {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          }
-                        )}
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <span className='text-sm text-gray-900'>
-                          {document.type}
-                        </span>
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                        {document.questions && (
-                          <span>{document.questions} questions</span>
-                        )}
-                        {document.pages && <span>{document.pages} pages</span>}
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant='ghost'
-                              size='sm'
-                              className='h-8 w-8 p-0'
-                            >
-                              <MoreVertical className='w-4 h-4' />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align='end'>
-                            <DropdownMenuItem
-                              onClick={() => handleView(document)}
-                            >
-                              <Eye className='w-4 h-4 mr-2' />
-                              View
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Download className='w-4 h-4 mr-2' />
-                              Download
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDelete(document)}
-                              className='text-red-600 focus:text-red-600'
-                            >
-                              <Trash2 className='w-4 h-4 mr-2' />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </motion.tr>
-                  ))}
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap'>
+                          <Badge
+                            variant='secondary'
+                            className={
+                              document.status === 'completed'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }
+                          >
+                            {document.status.charAt(0).toUpperCase() +
+                              document.status.slice(1)}
+                          </Badge>
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap'>
+                          <div className='text-sm text-gray-900 font-medium'>
+                            {createdDateTime.date}
+                          </div>
+                          <div className='text-sm text-gray-500'>
+                            {createdDateTime.time}
+                          </div>
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap'>
+                          <span className='text-sm text-gray-900'>
+                            {document.type}
+                          </span>
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                          {document.questions && (
+                            <span>{document.questions} questions</span>
+                          )}
+                          {document.pages && (
+                            <span>{document.pages} pages</span>
+                          )}
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant='ghost'
+                                size='sm'
+                                className='h-8 w-8 p-0'
+                              >
+                                <MoreVertical className='w-4 h-4' />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align='end'>
+                              <DropdownMenuItem
+                                onClick={() => handleView(document)}
+                              >
+                                <Eye className='w-4 h-4 mr-2' />
+                                View
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <Download className='w-4 h-4 mr-2' />
+                                Download
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDelete(document)}
+                                className='text-red-600 focus:text-red-600'
+                              >
+                                <Trash2 className='w-4 h-4 mr-2' />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </motion.tr>
+                    )
+                  })}
                 </AnimatePresence>
               </tbody>
             </table>

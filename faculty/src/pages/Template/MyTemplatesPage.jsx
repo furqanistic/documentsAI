@@ -14,6 +14,37 @@ import {
 import React, { useEffect, useRef, useState } from 'react'
 import DashboardLayout from '../Layout/DashboardLayout'
 
+// Storage utility functions
+// NOTE: These would use localStorage in a real environment
+// For Claude.ai artifacts, we'll use in-memory storage that persists during the session
+const STORAGE_KEY = 'templatePagePreferences'
+let memoryStorage = {
+  isGridView: true,
+  sortBy: 'recent',
+}
+
+const getStoredPreferences = () => {
+  // In a real environment, uncomment this:
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return stored ? JSON.parse(stored) : { isGridView: true, sortBy: 'recent' }
+  } catch (error) {
+    console.error('Error reading preferences:', error)
+    return { isGridView: true, sortBy: 'recent' }
+  }
+}
+
+const savePreferences = (preferences) => {
+  // In a real environment, uncomment this:
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences))
+  } catch (error) {
+    console.error('Error saving preferences:', error)
+  }
+
+  memoryStorage = { ...memoryStorage, ...preferences }
+}
+
 // Reusable components
 const TemplateCard = ({
   template,
@@ -381,14 +412,17 @@ const mockTemplates = [
 const MyTemplatesPage = () => {
   const [templates, setTemplates] = useState(mockTemplates)
   const [searchQuery, setSearchQuery] = useState('')
-  const [isGridView, setIsGridView] = useState(true)
   const [filterOpen, setFilterOpen] = useState(false)
-  const [sortBy, setSortBy] = useState('recent')
   const [showPDFModal, setShowPDFModal] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [showNewTemplateForm, setShowNewTemplateForm] = useState(false)
   const filterRef = useRef(null)
   const mobileFilterRef = useRef(null)
+
+  // Initialize state from stored preferences
+  const storedPrefs = getStoredPreferences()
+  const [isGridView, setIsGridView] = useState(storedPrefs.isGridView)
+  const [sortBy, setSortBy] = useState(storedPrefs.sortBy)
 
   // Handle click outside to close filter dropdown
   useEffect(() => {
@@ -413,6 +447,19 @@ const MyTemplatesPage = () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
+
+  // Handle view change with persistence
+  const handleViewChange = (gridView) => {
+    setIsGridView(gridView)
+    savePreferences({ isGridView: gridView })
+  }
+
+  // Handle sort change with persistence
+  const handleSortChange = (newSortBy) => {
+    setSortBy(newSortBy)
+    savePreferences({ sortBy: newSortBy })
+    setFilterOpen(false)
+  }
 
   // Toggle favorite status
   const handleToggleFavorite = (id) => {
@@ -511,10 +558,7 @@ const MyTemplatesPage = () => {
                           ? 'text-blue-600 font-medium'
                           : 'text-gray-600'
                       }`}
-                      onClick={() => {
-                        setSortBy('recent')
-                        setFilterOpen(false)
-                      }}
+                      onClick={() => handleSortChange('recent')}
                     >
                       <div className='flex items-center'>
                         <Clock size={14} className='mr-2' />
@@ -527,10 +571,7 @@ const MyTemplatesPage = () => {
                           ? 'text-blue-600 font-medium'
                           : 'text-gray-600'
                       }`}
-                      onClick={() => {
-                        setSortBy('alphabetical')
-                        setFilterOpen(false)
-                      }}
+                      onClick={() => handleSortChange('alphabetical')}
                     >
                       <div className='flex items-center'>
                         <SortDesc size={14} className='mr-2' />
@@ -543,10 +584,7 @@ const MyTemplatesPage = () => {
                           ? 'text-blue-600 font-medium'
                           : 'text-gray-600'
                       }`}
-                      onClick={() => {
-                        setSortBy('favorites')
-                        setFilterOpen(false)
-                      }}
+                      onClick={() => handleSortChange('favorites')}
                     >
                       <div className='flex items-center'>
                         <Star size={14} className='mr-2' />
@@ -582,7 +620,7 @@ const MyTemplatesPage = () => {
                 className={`p-1.5 rounded ${
                   isGridView ? 'bg-white shadow-sm' : ''
                 }`}
-                onClick={() => setIsGridView(true)}
+                onClick={() => handleViewChange(true)}
               >
                 <Grid size={18} className='text-gray-600' />
               </button>
@@ -590,7 +628,7 @@ const MyTemplatesPage = () => {
                 className={`p-1.5 rounded ${
                   !isGridView ? 'bg-white shadow-sm' : ''
                 }`}
-                onClick={() => setIsGridView(false)}
+                onClick={() => handleViewChange(false)}
               >
                 <List size={18} className='text-gray-600' />
               </button>
@@ -622,10 +660,7 @@ const MyTemplatesPage = () => {
                           ? 'text-blue-600 font-medium'
                           : 'text-gray-600'
                       }`}
-                      onClick={() => {
-                        setSortBy('recent')
-                        setFilterOpen(false)
-                      }}
+                      onClick={() => handleSortChange('recent')}
                     >
                       <div className='flex items-center'>
                         <Clock size={14} className='mr-2' />
@@ -638,10 +673,7 @@ const MyTemplatesPage = () => {
                           ? 'text-blue-600 font-medium'
                           : 'text-gray-600'
                       }`}
-                      onClick={() => {
-                        setSortBy('alphabetical')
-                        setFilterOpen(false)
-                      }}
+                      onClick={() => handleSortChange('alphabetical')}
                     >
                       <div className='flex items-center'>
                         <SortDesc size={14} className='mr-2' />
@@ -654,10 +686,7 @@ const MyTemplatesPage = () => {
                           ? 'text-blue-600 font-medium'
                           : 'text-gray-600'
                       }`}
-                      onClick={() => {
-                        setSortBy('favorites')
-                        setFilterOpen(false)
-                      }}
+                      onClick={() => handleSortChange('favorites')}
                     >
                       <div className='flex items-center'>
                         <Star size={14} className='mr-2' />

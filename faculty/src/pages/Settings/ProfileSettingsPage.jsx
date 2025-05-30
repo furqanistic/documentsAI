@@ -103,7 +103,7 @@ const PasswordModal = ({
       {/* Modal */}
       <div className='relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-gray-700 transform transition-all duration-300 scale-100'>
         {/* Header */}
-        <div className='flex items-center justify-center p-6 border-b border-gray-200 dark:border-gray-700'>
+        <div className='flex items-center justify-center p-2 border-b border-gray-200 dark:border-gray-700'>
           <h2 className='text-lg font-semibold text-gray-900 dark:text-white'>
             Change Password
           </h2>
@@ -135,9 +135,9 @@ const PasswordModal = ({
                 className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600'
               >
                 {showCurrentPassword ? (
-                  <EyeOff className='h-4 w-4' />
+                  <Eye className='h-5 w-5' />
                 ) : (
-                  <Eye className='h-4 w-4' />
+                  <EyeOff className='h-5 w-5' />
                 )}
               </button>
             </div>
@@ -167,9 +167,9 @@ const PasswordModal = ({
                 className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600'
               >
                 {showNewPassword ? (
-                  <EyeOff className='h-4 w-4' />
+                  <Eye className='h-5 w-5' />
                 ) : (
-                  <Eye className='h-4 w-4' />
+                  <EyeOff className='h-5 w-5' />
                 )}
               </button>
             </div>
@@ -180,7 +180,7 @@ const PasswordModal = ({
         </div>
 
         {/* Footer */}
-        <div className='flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700'>
+        <div className='flex justify-end gap-3 pb-3 pr-3 border-gray-200 dark:border-gray-700'>
           <Button variant='outline' onClick={onClose}>
             Cancel
           </Button>
@@ -262,7 +262,7 @@ const TeamMember = ({ member, onRemove }) => {
           size='sm'
           variant='ghost'
           onClick={() => onRemove(member.id)}
-          className='text-red-500 bg-red-50 hover:bg-red-100 '
+          className='text-red-50 bg-red-600 hover:bg-red-700 '
         >
           Delete
         </Button>
@@ -382,7 +382,7 @@ const ProfileSettingsPage = () => {
               Profile Settings
             </h1>
             <p className='text-gray-500 dark:text-gray-400 text-sm sm:text-base'>
-              Manage your account settings and team access
+              Manage your account settings and team access.
             </p>
           </div>
           <div className='flex items-center gap-2 w-full sm:w-auto'>
@@ -463,7 +463,7 @@ const ProfileSettingsPage = () => {
                     Team Members
                   </h3>
                   <p className='text-sm text-gray-500 dark:text-gray-400'>
-                    Invite team members to collaborate on documents
+                    Invite team members to collaborate on documents.
                   </p>
                 </div>
                 <Button
