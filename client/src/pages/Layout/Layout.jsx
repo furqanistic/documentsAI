@@ -80,7 +80,7 @@ const Topbar = () => {
               <img
                 src='./logo.png'
                 alt='Logo'
-                className='h-12 object-contain lg:h-14'
+                className='h-12 object-contain lg:h-12'
               />
             </a>
           </motion.div>
