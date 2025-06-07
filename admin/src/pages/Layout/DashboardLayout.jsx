@@ -1,5 +1,6 @@
 import {
   ChevronDown,
+  CreditCard,
   FileText,
   FolderOpen,
   LayoutDashboard,
@@ -128,7 +129,7 @@ const DashboardLayout = ({
         <div className='p-4'>
           <div className='flex items-center justify-between mb-8'>
             <img
-              src='logo-black.png'
+              src='/logo-new.png'
               alt='Logo'
               className='h-13 object-contain'
             />
@@ -169,7 +170,7 @@ const DashboardLayout = ({
             })}
           </div>
 
-          <div className='absolute bottom-3 left-0 w-full px-4'>
+          {/* <div className='absolute bottom-3 left-0 w-full px-4'>
             <a
               href='/logout'
               className='flex items-center w-full p-3 rounded-lg text-red-600 hover:bg-gray-100 transition-all duration-200 hover:scale-102'
@@ -177,7 +178,7 @@ const DashboardLayout = ({
               <LogOut size={20} className='mr-3' />
               <span className='font-medium'>Logout</span>
             </a>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -187,7 +188,7 @@ const DashboardLayout = ({
           {/* Logo */}
           <div className='flex justify-center items-center w-full px-4 py-2'>
             <img
-              src='./logo-black.png'
+              src='/logo-new.png'
               alt='Logo'
               className='h-14 object-contain'
             />
@@ -219,7 +220,7 @@ const DashboardLayout = ({
           </div>
 
           {/* Logout Button */}
-          <div className='px-2 py-2 border-t border-gray-200'>
+          {/* <div className='px-2 py-2 border-t border-gray-200'>
             <a
               href='/logout'
               className='flex items-center justify-start w-full p-2.5 rounded-lg text-red-600 hover:bg-gray-100 transition-all duration-200 transform hover:scale-102'
@@ -227,7 +228,7 @@ const DashboardLayout = ({
               <LogOut size={20} />
               <span className='ml-3 font-medium'>Logout</span>
             </a>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -291,16 +292,16 @@ const DashboardLayout = ({
                     <div className='absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-20 transform transition-all duration-200 scale-95 animate-in fade-in zoom-in'>
                       <div className='py-1'>
                         <a
-                          href='/profile'
-                          className='flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150'
+                          href='/subscriptions'
+                          className='flex items-center px-4 py-2 text-sm text-gray-700  transition-colors duration-150'
                         >
-                          <Settings size={16} className='mr-2' />
-                          Profile Settings
+                          <CreditCard size={16} className='mr-2' />
+                          Subscriptions
                         </a>
                         <hr className='my-1' />
                         <a
                           href='/logout'
-                          className='flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors duration-150'
+                          className='flex items-center px-4 py-2 text-sm text-red-600 transition-colors duration-150'
                         >
                           <LogOut size={16} className='mr-2' />
                           Logout

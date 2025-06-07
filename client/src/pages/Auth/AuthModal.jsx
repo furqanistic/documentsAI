@@ -1,13 +1,25 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, Eye, EyeOff, Lock, Mail, User, X } from 'lucide-react'
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  User,
+  X,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
-
-const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
+import { axiosInstance } from '../../../config'
+const AuthModal = ({
+  isOpen,
+  onClose,
+  initialView = 'signup',
+  onAuthSuccess,
+}) => {
   const [view, setView] = useState(initialView)
   const [showPassword, setShowPassword] = useState(false)
-
-  // Prevent animation flicker when changing views
-  const [isChangingView, setIsChangingView] = useState(false)
 
   // Form states
   const [email, setEmail] = useState('')
@@ -15,30 +27,31 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
   const [name, setName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Error and success states
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  // Form validation
+  const [fieldErrors, setFieldErrors] = useState({})
+
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 0
   )
 
-  // Mobile UI improvements
   const isMobile = windowWidth < 768
 
-  // Set fixed height for mobile modal to maintain consistency between views
   const getMobileModalHeight = () => {
     if (windowWidth <= 320) {
-      // iPhone SE 1st gen and similar
       return '530px'
     } else if (windowWidth <= 375) {
-      // iPhone SE 2nd/3rd gen, iPhone 8, etc.
       return '550px'
     } else {
       return '570px'
     }
   }
 
-  // Fixed height for mobile forms to maintain consistency between views
   const mobileFormHeight = '180px'
 
-  // Update window width on resize
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth)
@@ -48,7 +61,6 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Close on escape key and prevent background scrolling
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape') onClose()
@@ -57,7 +69,7 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
     if (isOpen) {
       document.addEventListener('keydown', handleEscape)
       document.body.style.overflow = 'hidden'
-      document.documentElement.style.overflow = 'hidden' // Also prevent html element scrolling
+      document.documentElement.style.overflow = 'hidden'
     }
 
     return () => {
@@ -67,7 +79,6 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
     }
   }, [isOpen, onClose])
 
-  // Reset form when closing
   useEffect(() => {
     if (!isOpen) {
       setTimeout(() => {
@@ -75,24 +86,245 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
         setPassword('')
         setName('')
         setIsSubmitting(false)
+        setError('')
+        setSuccess('')
+        setFieldErrors({})
       }, 300)
     }
   }, [isOpen])
 
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+  // Clear errors when switching views
+  useEffect(() => {
+    setError('')
+    setSuccess('')
+    setFieldErrors({})
+  }, [view])
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Form submitted:', { view, email, password, name })
-      setIsSubmitting(false)
-      // Usually you would handle the auth logic here
-    }, 1500)
+  // Validate form fields
+  const validateForm = () => {
+    const errors = {}
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email) {
+      errors.email = 'Email is required'
+    } else if (!emailRegex.test(email)) {
+      errors.email = 'Please enter a valid email address'
+    }
+
+    // Password validation - only for signup
+    if (!password) {
+      errors.password = 'Password is required'
+    } else if (view === 'signup' && password.length < 6) {
+      errors.password = 'Password must be at least 6 characters'
+    }
+
+    // Name validation for signup
+    if (view === 'signup') {
+      if (!name) {
+        errors.name = 'Full name is required'
+      } else if (name.length < 2) {
+        errors.name = 'Name must be at least 2 characters'
+      }
+    }
+
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
   }
 
-  // Click outside to close
+  // Handle authentication
+  const handleAuth = async () => {
+    try {
+      setError('')
+      setSuccess('')
+
+      if (view === 'signup') {
+        const response = await axiosInstance.post('/auth/signup', {
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          password,
+        })
+
+        // Extract from your backend response format
+        const { token, data, status } = response.data
+        const user = data.user
+
+        // Store token in localStorage
+        localStorage.setItem('authToken', token)
+        localStorage.setItem('user', JSON.stringify(user))
+
+        setSuccess('Account created successfully!')
+
+        // Call success callback if provided
+        if (onAuthSuccess) {
+          onAuthSuccess({ user, token, isNewUser: true })
+        }
+
+        // Auto close after success
+        setTimeout(() => {
+          onClose()
+        }, 1500)
+      } else {
+        const response = await axiosInstance.post('/auth/signin', {
+          email: email.trim().toLowerCase(),
+          password,
+        })
+
+        // Extract from your backend response format
+        const { token, data, status } = response.data
+        const user = data.user
+
+        // Store token in localStorage
+        localStorage.setItem('authToken', token)
+        localStorage.setItem('user', JSON.stringify(user))
+
+        setSuccess('Login successful!')
+
+        // Call success callback if provided
+        if (onAuthSuccess) {
+          onAuthSuccess({ user, token, isNewUser: false })
+        }
+
+        // Auto close after success
+        setTimeout(() => {
+          onClose()
+        }, 1500)
+      }
+    } catch (err) {
+      console.error('Auth error:', err)
+
+      let errorMessage = 'An error occurred. Please try again.'
+
+      // Handle different status codes
+      if (err.response) {
+        const status = err.response.status
+        const backendMessage =
+          err.response.data?.message || err.response.data?.error || ''
+
+        switch (status) {
+          case 400:
+            if (view === 'signup') {
+              if (
+                backendMessage.toLowerCase().includes('email') &&
+                (backendMessage.toLowerCase().includes('exists') ||
+                  backendMessage.toLowerCase().includes('already'))
+              ) {
+                errorMessage =
+                  'An account with this email already exists. Try logging in instead.'
+              } else if (backendMessage.toLowerCase().includes('provide')) {
+                errorMessage = 'Please fill in all required fields.'
+              } else {
+                errorMessage = 'Please check your information and try again.'
+              }
+            } else {
+              if (backendMessage.toLowerCase().includes('provide')) {
+                errorMessage = 'Please provide both email and password.'
+              } else {
+                errorMessage = 'Please check your information and try again.'
+              }
+            }
+            break
+
+          case 401:
+            errorMessage =
+              'Invalid email or password. Please check your credentials and try again.'
+            break
+
+          case 404:
+            if (view === 'login') {
+              errorMessage =
+                'Invalid email or password. Please check your credentials and try again.'
+            } else {
+              errorMessage = 'Service not found. Please try again later.'
+            }
+            break
+
+          case 422:
+            errorMessage =
+              'Please check your information and ensure all fields are valid.'
+            break
+
+          case 429:
+            errorMessage =
+              'Too many attempts. Please wait a moment before trying again.'
+            break
+
+          case 500:
+            errorMessage = 'Server error. Please try again later.'
+            break
+
+          default:
+            // Try to use backend message if it's user-friendly
+            if (backendMessage && backendMessage.length < 100) {
+              // Clean up the backend message for better user experience
+              if (
+                backendMessage
+                  .toLowerCase()
+                  .includes('incorrect email or password')
+              ) {
+                errorMessage =
+                  'Invalid email or password. Please check your credentials and try again.'
+              } else {
+                errorMessage = backendMessage
+              }
+            } else {
+              errorMessage =
+                view === 'login'
+                  ? 'Invalid email or password. Please check your credentials and try again.'
+                  : 'Unable to create account. Please try again.'
+            }
+        }
+
+        // Additional message refinement based on backend messages
+        if (backendMessage) {
+          const lowerMessage = backendMessage.toLowerCase()
+          if (lowerMessage.includes('user with this email already exists')) {
+            errorMessage =
+              'An account with this email already exists. Try logging in instead.'
+          } else if (lowerMessage.includes('incorrect email or password')) {
+            errorMessage =
+              'Invalid email or password. Please check your credentials and try again.'
+          }
+        }
+      } else if (err.request) {
+        // Network error
+        errorMessage =
+          'Unable to connect. Please check your internet connection and try again.'
+      } else {
+        // Other error
+        errorMessage = 'An unexpected error occurred. Please try again.'
+      }
+
+      setError(errorMessage)
+    }
+  }
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    // Validate form
+    if (!validateForm()) {
+      return
+    }
+
+    setIsSubmitting(true)
+    await handleAuth()
+    setIsSubmitting(false)
+  }
+
+  // Handle Google authentication (placeholder)
+  const handleGoogleAuth = async () => {
+    try {
+      setError('')
+      // Implement Google OAuth here
+      console.log('Google auth not implemented yet')
+      setError('Google authentication coming soon!')
+    } catch (err) {
+      setError('Google authentication failed')
+    }
+  }
+
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
       onClose()
@@ -125,7 +357,7 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                 maxWidth: '100%',
               }}
             >
-              {/* Mobile header - with white background */}
+              {/* Mobile header */}
               <motion.div className='relative p-4 border-b border-gray-200'>
                 <div className='flex justify-between items-center'>
                   <motion.h3
@@ -149,7 +381,40 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                 </div>
               </motion.div>
 
-              {/* Form area with better mobile spacing - reduced padding & fixed height */}
+              {/* Error/Success Messages */}
+              {(error || success) && (
+                <motion.div
+                  className={`mx-4 mt-3 p-3 rounded-lg flex items-start space-x-2 ${
+                    error
+                      ? 'bg-red-50 border border-red-200'
+                      : 'bg-green-50 border border-green-200'
+                  }`}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {error ? (
+                    <AlertCircle
+                      size={16}
+                      className='text-red-600 mt-0.5 flex-shrink-0'
+                    />
+                  ) : (
+                    <CheckCircle
+                      size={16}
+                      className='text-green-600 mt-0.5 flex-shrink-0'
+                    />
+                  )}
+                  <span
+                    className={`text-sm ${
+                      error ? 'text-red-700' : 'text-green-700'
+                    }`}
+                  >
+                    {error || success}
+                  </span>
+                </motion.div>
+              )}
+
+              {/* Form area */}
               <div className='px-4 py-3 flex-grow overflow-y-auto'>
                 <AnimatePresence mode='wait' initial={false}>
                   <motion.form
@@ -163,15 +428,7 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                     style={{ minHeight: mobileFormHeight }}
                   >
                     {view === 'signup' ? (
-                      <div
-                        className='space-y-3'
-                        style={{
-                          height: mobileFormHeight,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'flex-start',
-                        }}
-                      >
+                      <div className='space-y-3'>
                         <div>
                           <label
                             htmlFor='name'
@@ -188,10 +445,19 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                               type='text'
                               value={name}
                               onChange={(e) => setName(e.target.value)}
-                              className='w-full pl-7 pr-2 py-2 border-b border-gray-300 text-gray-800 focus:border-black focus:outline-none transition-colors bg-transparent'
+                              className={`w-full pl-7 pr-2 py-2 border-b transition-colors bg-transparent ${
+                                fieldErrors.name
+                                  ? 'border-red-300 focus:border-red-500'
+                                  : 'border-gray-300 focus:border-black'
+                              } text-gray-800 focus:outline-none`}
                               required
                             />
                           </div>
+                          {fieldErrors.name && (
+                            <p className='text-red-600 text-xs mt-1'>
+                              {fieldErrors.name}
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -210,10 +476,19 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                               type='email'
                               value={email}
                               onChange={(e) => setEmail(e.target.value)}
-                              className='w-full pl-7 pr-2 py-2 border-b border-gray-300 text-gray-800 focus:border-black focus:outline-none transition-colors bg-transparent'
+                              className={`w-full pl-7 pr-2 py-2 border-b transition-colors bg-transparent ${
+                                fieldErrors.email
+                                  ? 'border-red-300 focus:border-red-500'
+                                  : 'border-gray-300 focus:border-black'
+                              } text-gray-800 focus:outline-none`}
                               required
                             />
                           </div>
+                          {fieldErrors.email && (
+                            <p className='text-red-600 text-xs mt-1'>
+                              {fieldErrors.email}
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -232,7 +507,11 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                               type={showPassword ? 'text' : 'password'}
                               value={password}
                               onChange={(e) => setPassword(e.target.value)}
-                              className='w-full pl-7 pr-8 py-2 border-b border-gray-300 text-gray-800 focus:border-black focus:outline-none transition-colors bg-transparent'
+                              className={`w-full pl-7 pr-8 py-2 border-b transition-colors bg-transparent ${
+                                fieldErrors.password
+                                  ? 'border-red-300 focus:border-red-500'
+                                  : 'border-gray-300 focus:border-black'
+                              } text-gray-800 focus:outline-none`}
                               required
                             />
                             <motion.button
@@ -257,18 +536,15 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                               )}
                             </motion.button>
                           </div>
+                          {fieldErrors.password && (
+                            <p className='text-red-600 text-xs mt-1'>
+                              {fieldErrors.password}
+                            </p>
+                          )}
                         </div>
                       </div>
                     ) : (
-                      <div
-                        className='space-y-3'
-                        style={{
-                          height: mobileFormHeight,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'flex-start',
-                        }}
-                      >
+                      <div className='space-y-3'>
                         <div>
                           <label
                             htmlFor='login-email'
@@ -285,10 +561,19 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                               type='email'
                               value={email}
                               onChange={(e) => setEmail(e.target.value)}
-                              className='w-full pl-7 pr-2 py-2 border-b border-gray-300 text-gray-800 focus:border-black focus:outline-none transition-colors bg-transparent'
+                              className={`w-full pl-7 pr-2 py-2 border-b transition-colors bg-transparent ${
+                                fieldErrors.email
+                                  ? 'border-red-300 focus:border-red-500'
+                                  : 'border-gray-300 focus:border-black'
+                              } text-gray-800 focus:outline-none`}
                               required
                             />
                           </div>
+                          {fieldErrors.email && (
+                            <p className='text-red-600 text-xs mt-1'>
+                              {fieldErrors.email}
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -307,7 +592,11 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                               type={showPassword ? 'text' : 'password'}
                               value={password}
                               onChange={(e) => setPassword(e.target.value)}
-                              className='w-full pl-7 pr-8 py-2 border-b border-gray-300 text-gray-800 focus:border-black focus:outline-none transition-colors bg-transparent'
+                              className={`w-full pl-7 pr-8 py-2 border-b transition-colors bg-transparent ${
+                                fieldErrors.password
+                                  ? 'border-red-300 focus:border-red-500'
+                                  : 'border-gray-300 focus:border-black'
+                              } text-gray-800 focus:outline-none`}
                               required
                             />
                             <motion.button
@@ -332,9 +621,13 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                               )}
                             </motion.button>
                           </div>
+                          {fieldErrors.password && (
+                            <p className='text-red-600 text-xs mt-1'>
+                              {fieldErrors.password}
+                            </p>
+                          )}
                         </div>
 
-                        {/* Forgot Password button */}
                         <div className='flex justify-end'>
                           <motion.button
                             type='button'
@@ -399,11 +692,11 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                 <div className='w-full'>
                   <motion.button
                     type='button'
+                    onClick={handleGoogleAuth}
                     className='w-full py-1.5 px-3 border border-gray-300 shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none flex items-center justify-center transition-colors rounded-md'
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    {/* Google icon */}
                     <svg
                       className='mr-2'
                       width='20'
@@ -431,22 +724,17 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                   </motion.button>
                 </div>
 
-                {/* Toggle view option */}
-                <div className='mt-4 md:mt-2 text-center'>
+                <div className='mt-4 text-center'>
                   <p className='text-sm text-gray-600'>
                     {view === 'signup'
                       ? 'Already have an account?'
                       : "Don't have an account?"}
                     <motion.button
                       type='button'
-                      className='ml-1  text-black hover:text-zinc-600 font-medium transition-colors'
-                      onClick={() => {
-                        setIsChangingView(true)
-                        setTimeout(() => {
-                          setView(view === 'signup' ? 'login' : 'signup')
-                          setIsChangingView(false)
-                        }, 50)
-                      }}
+                      className='ml-1 text-black hover:text-zinc-600 font-medium transition-colors'
+                      onClick={() =>
+                        setView(view === 'signup' ? 'login' : 'signup')
+                      }
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -455,7 +743,6 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                   </p>
                 </div>
 
-                {/* Terms links */}
                 <div className='mt-3 pt-2 text-xs text-gray-500 text-center'>
                   By continuing, you agree to Calani's{' '}
                   <motion.a
@@ -477,30 +764,22 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
               </div>
             </motion.div>
           ) : (
-            /* DESKTOP DESIGN (≥ 768px) */
+            /* DESKTOP DESIGN */
             <motion.div
               className='bg-white rounded-2xl overflow-hidden w-full max-w-5xl shadow-2xl flex flex-col md:flex-row'
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              style={{
-                height: windowWidth < 768 ? '700px' : '650px',
-              }}
+              style={{ height: '650px' }}
             >
-              {/* Left side - Creative Design - hidden on mobile */}
-              <div className='hidden md:flex w-full md:w-1/2 bg-black p-6 md:p-10 flex-col justify-between relative overflow-hidden'>
-                {/* Static gradient background with grid */}
+              {/* Left side - Creative Design */}
+              <div className='hidden md:flex w-1/2 bg-black p-10 flex-col justify-between relative overflow-hidden'>
                 <div className='absolute inset-0 bg-gradient-to-br from-black to-purple-900/80 opacity-80'>
-                  {/* Grid overlay */}
                   <div className='absolute inset-0 bg-[linear-gradient(0deg,transparent_calc(100%-1px),rgba(255,255,255,0.1)_100%),linear-gradient(90deg,transparent_calc(100%-1px),rgba(255,255,255,0.1)_100%)] bg-[size:50px_50px]'></div>
-
-                  {/* Glowing orb */}
                   <motion.div
-                    className='absolute w-32 h-32 md:w-40 md:h-40 rounded-full bg-purple-500/40 blur-3xl'
-                    animate={{
-                      opacity: [0.3, 0.5, 0.3],
-                    }}
+                    className='absolute w-40 h-40 rounded-full bg-purple-500/40 blur-3xl'
+                    animate={{ opacity: [0.3, 0.5, 0.3] }}
                     transition={{
                       repeat: Infinity,
                       duration: 4,
@@ -510,11 +789,10 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                   ></motion.div>
                 </div>
 
-                {/* Content overlay */}
                 <div className='relative z-10 flex flex-col h-full'>
                   <div>
                     <motion.h2
-                      className='text-white text-2xl md:text-4xl font-bold mb-4 md:mb-6'
+                      className='text-white text-4xl font-bold mb-6'
                       key={view}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -523,7 +801,7 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                       {view === 'signup' ? 'Join Calani Today' : 'Welcome Back'}
                     </motion.h2>
                     <motion.p
-                      className='text-zinc-300 text-base md:text-lg mb-6 md:mb-8'
+                      className='text-zinc-300 text-lg mb-8'
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.3, delay: 0.1 }}
@@ -534,10 +812,8 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                     </motion.p>
                   </div>
 
-                  {/* Animated illustration - hidden on very small screens */}
-                  <div className='relative h-24 md:h-48 my-4 md:my-6 hidden sm:block'>
+                  <div className='relative h-48 my-6'>
                     <div className='w-full h-full flex items-center justify-center'>
-                      {/* Animated line with gradient */}
                       <motion.div
                         className='w-full h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 relative'
                         initial={{ scaleX: 0 }}
@@ -545,7 +821,6 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                         transition={{ duration: 2, ease: 'easeOut' }}
                         style={{ transformOrigin: 'left' }}
                       >
-                        {/* Circles on the line */}
                         <motion.div
                           className='absolute -top-2 left-0 w-5 h-5 rounded-full bg-purple-600'
                           initial={{ opacity: 0 }}
@@ -567,74 +842,49 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                       </motion.div>
                     </div>
 
-                    {/* Rotating cube */}
                     <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 perspective-[600px]'>
                       <motion.div
                         className='w-full h-full relative'
                         style={{ transformStyle: 'preserve-3d' }}
-                        animate={{
-                          rotateY: 360,
-                          rotateX: 180,
-                        }}
+                        animate={{ rotateY: 360, rotateX: 180 }}
                         transition={{
                           duration: 10,
                           repeat: Infinity,
                           ease: 'linear',
                         }}
                       >
-                        <div
-                          className='absolute inset-0 bg-purple-600/20 border border-white/20'
-                          style={{ transform: 'translateZ(20px)' }}
-                        ></div>
-                        <div
-                          className='absolute inset-0 bg-purple-600/20 border border-white/20'
-                          style={{
-                            transform: 'rotateY(180deg) translateZ(20px)',
-                          }}
-                        ></div>
-                        <div
-                          className='absolute inset-0 bg-purple-600/20 border border-white/20'
-                          style={{
-                            transform: 'rotateY(90deg) translateZ(20px)',
-                          }}
-                        ></div>
-                        <div
-                          className='absolute inset-0 bg-purple-600/20 border border-white/20'
-                          style={{
-                            transform: 'rotateY(-90deg) translateZ(20px)',
-                          }}
-                        ></div>
-                        <div
-                          className='absolute inset-0 bg-purple-600/20 border border-white/20'
-                          style={{
-                            transform: 'rotateX(90deg) translateZ(20px)',
-                          }}
-                        ></div>
-                        <div
-                          className='absolute inset-0 bg-purple-600/20 border border-white/20'
-                          style={{
-                            transform: 'rotateX(-90deg) translateZ(20px)',
-                          }}
-                        ></div>
+                        {[0, 180, 90, -90, 90, -90].map((rotation, index) => (
+                          <div
+                            key={index}
+                            className='absolute inset-0 bg-purple-600/20 border border-white/20'
+                            style={{
+                              transform:
+                                index < 2
+                                  ? `rotateY(${rotation}deg) translateZ(20px)`
+                                  : index < 4
+                                  ? `rotateY(${rotation}deg) translateZ(20px)`
+                                  : `rotateX(${rotation}deg) translateZ(20px)`,
+                            }}
+                          ></div>
+                        ))}
                       </motion.div>
                     </div>
                   </div>
 
-                  {/* Trust badges */}
                   <div className='mt-auto'>
-                    <p className='text-zinc-400 text-xs md:text-sm mb-2 md:mb-3'>
+                    <p className='text-zinc-400 text-sm mb-3'>
                       Trusted by educators worldwide
                     </p>
-                    <div className='flex space-x-3 md:space-x-4'>
+                    <div className='flex space-x-4'>
                       {['Stanford', 'MIT', 'Harvard'].map((name, index) => (
                         <motion.div
                           key={name}
-                          className='h-10 w-10 md:h-12 md:w-12 rounded-full bg-zinc-800/50 border border-zinc-700/50 flex items-center justify-center shadow-lg'
+                          className='h-12 w-12 rounded-full bg-zinc-800/50 border border-zinc-700/50 flex items-center justify-center shadow-lg'
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.1, duration: 0.5 }}
                         >
-                          <span className='text-white text-xs md:text-sm font-medium'>
+                          <span className='text-white text-sm font-medium'>
                             {name[0]}
                           </span>
                         </motion.div>
@@ -645,17 +895,10 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
               </div>
 
               {/* Right side - Auth Form */}
-              <div
-                className='w-full md:w-1/2 p-6 md:p-10 flex flex-col h-full'
-                style={{
-                  width: windowWidth < 768 ? '100%' : '50%',
-                  maxHeight: windowWidth < 768 ? '700px' : '650px',
-                  padding: windowWidth < 768 ? '16px' : '',
-                }}
-              >
+              <div className='w-1/2 p-10 flex flex-col h-full'>
                 <div className='flex justify-between items-center mb-6'>
                   <motion.h3
-                    className='text-xl md:text-3xl font-bold text-gray-900'
+                    className='text-3xl font-bold text-gray-900'
                     key={view}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -674,9 +917,40 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                   </motion.button>
                 </div>
 
-                {/* Fixed-height content area */}
+                {/* Error/Success Messages */}
+                {(error || success) && (
+                  <motion.div
+                    className={`mb-4 p-3 rounded-lg flex items-start space-x-2 ${
+                      error
+                        ? 'bg-red-50 border border-red-200'
+                        : 'bg-green-50 border border-green-200'
+                    }`}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {error ? (
+                      <AlertCircle
+                        size={16}
+                        className='text-red-600 mt-0.5 flex-shrink-0'
+                      />
+                    ) : (
+                      <CheckCircle
+                        size={16}
+                        className='text-green-600 mt-0.5 flex-shrink-0'
+                      />
+                    )}
+                    <span
+                      className={`text-sm ${
+                        error ? 'text-red-700' : 'text-green-700'
+                      }`}
+                    >
+                      {error || success}
+                    </span>
+                  </motion.div>
+                )}
+
                 <div className='flex-grow flex flex-col overflow-x-hidden'>
-                  {/* Form with fixed layout */}
                   <AnimatePresence mode='wait' initial={false}>
                     <motion.form
                       key={view}
@@ -689,204 +963,241 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                     >
                       <div className='form-fields-container'>
                         {view === 'signup' ? (
-                          <>
-                            {/* Signup view */}
-                            <div className='h-full flex flex-col'>
-                              <div>
-                                <div className='mb-4 pt-2'>
-                                  <label
-                                    htmlFor='name'
-                                    className='block text-sm font-medium text-gray-700 mb-1'
-                                  >
-                                    Full Name
-                                  </label>
-                                  <div className='relative flex items-center'>
-                                    <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
-                                      <User size={18} />
-                                    </div>
-                                    <input
-                                      id='name'
-                                      type='text'
-                                      value={name}
-                                      onChange={(e) => setName(e.target.value)}
-                                      className='w-full pl-7 pr-2 py-2 border-b border-gray-300 text-gray-800 focus:border-black focus:outline-none transition-colors bg-transparent'
-                                      required
-                                    />
+                          <div className='h-full flex flex-col'>
+                            <div>
+                              <div className='mb-4 pt-2'>
+                                <label
+                                  htmlFor='name'
+                                  className='block text-sm font-medium text-gray-700 mb-1'
+                                >
+                                  Full Name
+                                </label>
+                                <div className='relative flex items-center'>
+                                  <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
+                                    <User size={18} />
                                   </div>
+                                  <input
+                                    id='name'
+                                    type='text'
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    className={`w-full pl-7 pr-2 py-2 border-b transition-colors bg-transparent ${
+                                      fieldErrors.name
+                                        ? 'border-red-300 focus:border-red-500'
+                                        : 'border-gray-300 focus:border-black'
+                                    } text-gray-800 focus:outline-none`}
+                                    required
+                                  />
                                 </div>
-
-                                <div className='mb-4'>
-                                  <label
-                                    htmlFor='email'
-                                    className='block text-sm font-medium text-gray-700 mb-1'
-                                  >
-                                    Email Address
-                                  </label>
-                                  <div className='relative flex items-center'>
-                                    <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
-                                      <Mail size={18} />
-                                    </div>
-                                    <input
-                                      id='email'
-                                      type='email'
-                                      value={email}
-                                      onChange={(e) => setEmail(e.target.value)}
-                                      className='w-full pl-7 pr-2 py-2 border-b border-gray-300 text-gray-800 focus:border-black focus:outline-none transition-colors bg-transparent'
-                                      required
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className='mb-4'>
-                                  <label
-                                    htmlFor='password'
-                                    className='block text-sm font-medium text-gray-700 mb-1'
-                                  >
-                                    Password
-                                  </label>
-                                  <div className='relative flex items-center'>
-                                    <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
-                                      <Lock size={18} />
-                                    </div>
-                                    <input
-                                      id='password'
-                                      type={showPassword ? 'text' : 'password'}
-                                      value={password}
-                                      onChange={(e) =>
-                                        setPassword(e.target.value)
-                                      }
-                                      className='w-full pl-7 pr-8 py-2 border-b border-gray-300 text-gray-800 focus:border-black focus:outline-none transition-colors bg-transparent'
-                                      required
-                                    />
-                                    <motion.button
-                                      type='button'
-                                      className='absolute right-0 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer'
-                                      onClick={() =>
-                                        setShowPassword(!showPassword)
-                                      }
-                                      whileTap={{ scale: 0.9 }}
-                                      aria-label={
-                                        showPassword
-                                          ? 'Hide password'
-                                          : 'Show password'
-                                      }
-                                    >
-                                      {showPassword ? (
-                                        <EyeOff
-                                          size={18}
-                                          className='text-gray-400 hover:text-gray-600'
-                                        />
-                                      ) : (
-                                        <Eye
-                                          size={18}
-                                          className='text-gray-400 hover:text-gray-600'
-                                        />
-                                      )}
-                                    </motion.button>
-                                  </div>
-                                </div>
+                                {fieldErrors.name && (
+                                  <p className='text-red-600 text-xs mt-1'>
+                                    {fieldErrors.name}
+                                  </p>
+                                )}
                               </div>
-                              <div className='flex-grow'></div>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            {/* Login view with exact same starting position as signup */}
-                            <div className='h-full flex flex-col'>
-                              <div>
-                                <div className='mb-4 pt-2'>
-                                  <label
-                                    htmlFor='login-email'
-                                    className='block text-sm font-medium text-gray-700 mb-1'
-                                  >
-                                    Email Address
-                                  </label>
-                                  <div className='relative flex items-center'>
-                                    <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
-                                      <Mail size={18} />
-                                    </div>
-                                    <input
-                                      id='login-email'
-                                      type='email'
-                                      value={email}
-                                      onChange={(e) => setEmail(e.target.value)}
-                                      className='w-full pl-7 pr-2 py-2 border-b border-gray-300 text-gray-800 focus:border-black focus:outline-none transition-colors bg-transparent'
-                                      required
-                                    />
-                                  </div>
-                                </div>
 
-                                <div className='mb-4'>
-                                  <label
-                                    htmlFor='login-password'
-                                    className='block text-sm font-medium text-gray-700 mb-1'
-                                  >
-                                    Password
-                                  </label>
-                                  <div className='relative flex items-center'>
-                                    <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
-                                      <Lock size={18} />
-                                    </div>
-                                    <input
-                                      id='login-password'
-                                      type={showPassword ? 'text' : 'password'}
-                                      value={password}
-                                      onChange={(e) =>
-                                        setPassword(e.target.value)
-                                      }
-                                      className='w-full pl-7 pr-8 py-2 border-b border-gray-300 text-gray-800 focus:border-black focus:outline-none transition-colors bg-transparent'
-                                      required
-                                    />
-                                    <motion.button
-                                      type='button'
-                                      className='absolute right-0 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer'
-                                      onClick={() =>
-                                        setShowPassword(!showPassword)
-                                      }
-                                      whileTap={{ scale: 0.9 }}
-                                      aria-label={
-                                        showPassword
-                                          ? 'Hide password'
-                                          : 'Show password'
-                                      }
-                                    >
-                                      {showPassword ? (
-                                        <EyeOff
-                                          size={18}
-                                          className='text-gray-400 hover:text-gray-600'
-                                        />
-                                      ) : (
-                                        <Eye
-                                          size={18}
-                                          className='text-gray-400 hover:text-gray-600'
-                                        />
-                                      )}
-                                    </motion.button>
+                              <div className='mb-4'>
+                                <label
+                                  htmlFor='email'
+                                  className='block text-sm font-medium text-gray-700 mb-1'
+                                >
+                                  Email Address
+                                </label>
+                                <div className='relative flex items-center'>
+                                  <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
+                                    <Mail size={18} />
                                   </div>
+                                  <input
+                                    id='email'
+                                    type='email'
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className={`w-full pl-7 pr-2 py-2 border-b transition-colors bg-transparent ${
+                                      fieldErrors.email
+                                        ? 'border-red-300 focus:border-red-500'
+                                        : 'border-gray-300 focus:border-black'
+                                    } text-gray-800 focus:outline-none`}
+                                    required
+                                  />
                                 </div>
+                                {fieldErrors.email && (
+                                  <p className='text-red-600 text-xs mt-1'>
+                                    {fieldErrors.email}
+                                  </p>
+                                )}
+                              </div>
 
-                                {/* Forgot Password link */}
-                                <div className='mb-4 flex justify-end'>
+                              <div className='mb-4'>
+                                <label
+                                  htmlFor='password'
+                                  className='block text-sm font-medium text-gray-700 mb-1'
+                                >
+                                  Password
+                                </label>
+                                <div className='relative flex items-center'>
+                                  <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
+                                    <Lock size={18} />
+                                  </div>
+                                  <input
+                                    id='password'
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={password}
+                                    onChange={(e) =>
+                                      setPassword(e.target.value)
+                                    }
+                                    className={`w-full pl-7 pr-8 py-2 border-b transition-colors bg-transparent ${
+                                      fieldErrors.password
+                                        ? 'border-red-300 focus:border-red-500'
+                                        : 'border-gray-300 focus:border-black'
+                                    } text-gray-800 focus:outline-none`}
+                                    required
+                                  />
                                   <motion.button
                                     type='button'
-                                    className='text-sm text-black hover:text-zinc-600 font-medium transition-colors'
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                    className='absolute right-0 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer'
+                                    onClick={() =>
+                                      setShowPassword(!showPassword)
+                                    }
+                                    whileTap={{ scale: 0.9 }}
+                                    aria-label={
+                                      showPassword
+                                        ? 'Hide password'
+                                        : 'Show password'
+                                    }
                                   >
-                                    Forgot Password?
+                                    {showPassword ? (
+                                      <EyeOff
+                                        size={18}
+                                        className='text-gray-400 hover:text-gray-600'
+                                      />
+                                    ) : (
+                                      <Eye
+                                        size={18}
+                                        className='text-gray-400 hover:text-gray-600'
+                                      />
+                                    )}
                                   </motion.button>
                                 </div>
+                                {fieldErrors.password && (
+                                  <p className='text-red-600 text-xs mt-1'>
+                                    {fieldErrors.password}
+                                  </p>
+                                )}
                               </div>
-                              <div className='flex-grow'></div>
                             </div>
-                          </>
+                            <div className='flex-grow'></div>
+                          </div>
+                        ) : (
+                          <div className='h-full flex flex-col'>
+                            <div>
+                              <div className='mb-4 pt-2'>
+                                <label
+                                  htmlFor='login-email'
+                                  className='block text-sm font-medium text-gray-700 mb-1'
+                                >
+                                  Email Address
+                                </label>
+                                <div className='relative flex items-center'>
+                                  <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
+                                    <Mail size={18} />
+                                  </div>
+                                  <input
+                                    id='login-email'
+                                    type='email'
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className={`w-full pl-7 pr-2 py-2 border-b transition-colors bg-transparent ${
+                                      fieldErrors.email
+                                        ? 'border-red-300 focus:border-red-500'
+                                        : 'border-gray-300 focus:border-black'
+                                    } text-gray-800 focus:outline-none`}
+                                    required
+                                  />
+                                </div>
+                                {fieldErrors.email && (
+                                  <p className='text-red-600 text-xs mt-1'>
+                                    {fieldErrors.email}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className='mb-4'>
+                                <label
+                                  htmlFor='login-password'
+                                  className='block text-sm font-medium text-gray-700 mb-1'
+                                >
+                                  Password
+                                </label>
+                                <div className='relative flex items-center'>
+                                  <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
+                                    <Lock size={18} />
+                                  </div>
+                                  <input
+                                    id='login-password'
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={password}
+                                    onChange={(e) =>
+                                      setPassword(e.target.value)
+                                    }
+                                    className={`w-full pl-7 pr-8 py-2 border-b transition-colors bg-transparent ${
+                                      fieldErrors.password
+                                        ? 'border-red-300 focus:border-red-500'
+                                        : 'border-gray-300 focus:border-black'
+                                    } text-gray-800 focus:outline-none`}
+                                    required
+                                  />
+                                  <motion.button
+                                    type='button'
+                                    className='absolute right-0 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer'
+                                    onClick={() =>
+                                      setShowPassword(!showPassword)
+                                    }
+                                    whileTap={{ scale: 0.9 }}
+                                    aria-label={
+                                      showPassword
+                                        ? 'Hide password'
+                                        : 'Show password'
+                                    }
+                                  >
+                                    {showPassword ? (
+                                      <EyeOff
+                                        size={18}
+                                        className='text-gray-400 hover:text-gray-600'
+                                      />
+                                    ) : (
+                                      <Eye
+                                        size={18}
+                                        className='text-gray-400 hover:text-gray-600'
+                                      />
+                                    )}
+                                  </motion.button>
+                                </div>
+                                {fieldErrors.password && (
+                                  <p className='text-red-600 text-xs mt-1'>
+                                    {fieldErrors.password}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className='mb-4 flex justify-end'>
+                                <motion.button
+                                  type='button'
+                                  className='text-sm text-black hover:text-zinc-600 font-medium transition-colors'
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  Forgot Password?
+                                </motion.button>
+                              </div>
+                            </div>
+                            <div className='flex-grow'></div>
+                          </div>
                         )}
                       </div>
                     </motion.form>
                   </AnimatePresence>
                 </div>
 
-                {/* Fixed bottom section that won't move */}
                 <div className='mt-4'>
                   <motion.button
                     type='submit'
@@ -934,11 +1245,11 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                   <div className='w-full'>
                     <motion.button
                       type='button'
+                      onClick={handleGoogleAuth}
                       className='w-full py-2.5 px-4 border border-gray-300 rounded-sm shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center justify-center transition-colors'
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      {/* Using SVG for Google icon */}
                       <svg
                         className='mr-2'
                         width='20'
@@ -967,7 +1278,6 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                   </div>
                 </div>
 
-                {/* Footer section */}
                 <div className='w-full pt-4 mt-4'>
                   <div className='text-center'>
                     <p className='text-sm text-gray-600'>
@@ -976,14 +1286,10 @@ const AuthModal = ({ isOpen, onClose, initialView = 'signup' }) => {
                         : "Don't have an account?"}
                       <motion.button
                         type='button'
-                        className='ml-1 text-black  hover:text-zinc-600 font-medium transition-colors'
-                        onClick={() => {
-                          setIsChangingView(true)
-                          setTimeout(() => {
-                            setView(view === 'signup' ? 'login' : 'signup')
-                            setIsChangingView(false)
-                          }, 50)
-                        }}
+                        className='ml-1 text-black hover:text-zinc-600 font-medium transition-colors'
+                        onClick={() =>
+                          setView(view === 'signup' ? 'login' : 'signup')
+                        }
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >

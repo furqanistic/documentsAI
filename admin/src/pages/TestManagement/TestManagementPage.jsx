@@ -29,63 +29,91 @@ import DashboardLayout from '../Layout/DashboardLayout'
 const TestRow = ({ test, onAction }) => {
   const getStatusBadge = (status) => {
     const statusConfig = {
-      Active: { variant: 'default', text: 'Active' },
-      Draft: { variant: 'secondary', text: 'Draft' },
-      Archived: { variant: 'outline', text: 'Archived' },
+      Active: {
+        variant: 'secondary',
+        text: 'Active',
+        className: 'bg-green-100 text-green-800',
+      },
+      Draft: {
+        variant: 'secondary',
+        text: 'Draft',
+        className: 'bg-yellow-100 text-yellow-800',
+      },
+      Archived: {
+        variant: 'secondary',
+        text: 'Archived',
+        className: 'bg-gray-100 text-gray-800',
+      },
     }
     const config = statusConfig[status] || statusConfig['Draft']
-    return <Badge variant={config.variant}>{config.text}</Badge>
+    return (
+      <Badge variant={config.variant} className={config.className}>
+        {config.text}
+      </Badge>
+    )
   }
 
+  const formatDateTime = (dateTimeString) => {
+    const date = new Date(dateTimeString)
+    const time = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+    const dateStr = date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+    return { time, date: dateStr }
+  }
+
+  const createdDateTime = formatDateTime(test.createdAt)
+
   return (
-    <tr className='border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors'>
+    <tr className='hover:bg-gray-50 transition-colors duration-200'>
       {/* Test Details (Name & Type) */}
-      <td className='px-6 py-4'>
-        <div className='flex items-center gap-3'>
+      <td className='px-6 py-4 whitespace-nowrap'>
+        <div className='flex items-center'>
           <div>
-            <div className='font-medium text-gray-900 dark:text-white'>
+            <div className='text-sm font-medium text-gray-900 max-w-xs truncate'>
               {test.name}
             </div>
-            <div className='text-sm text-gray-500 dark:text-gray-400'>
-              {test.type}
-            </div>
+            <div className='text-sm text-gray-500'>{test.type}</div>
           </div>
         </div>
       </td>
 
       {/* Status */}
-      <td className='px-6 py-4 hidden sm:table-cell'>
+      <td className='px-6 py-4 whitespace-nowrap'>
         {getStatusBadge(test.status)}
       </td>
 
       {/* Subject */}
-      <td className='px-6 py-4 text-sm text-gray-900 dark:text-white hidden md:table-cell'>
-        {test.subject}
+      <td className='px-6 py-4 whitespace-nowrap'>
+        <span className='text-sm text-gray-900'>{test.subject}</span>
       </td>
 
       {/* Created By */}
-      <td className='px-6 py-4 text-sm text-gray-900 dark:text-white hidden lg:table-cell'>
-        <div className='flex items-center gap-1'>
-          <Users className='h-4 w-4 text-gray-400' />
-          {test.createdBy}
-        </div>
+      <td className='px-6 py-4 whitespace-nowrap'>
+        <span className='text-sm text-gray-900'>{test.createdBy}</span>
       </td>
 
       {/* Participants */}
-      <td className='px-6 py-4 text-sm text-gray-900 dark:text-white hidden lg:table-cell'>
-        <div className='flex items-center gap-1'>
-          <span className='text-gray-400'>#</span>
-          {test.participants}
-        </div>
+      <td className='px-6 py-4 whitespace-nowrap'>
+        <span className='text-sm text-gray-900'>{test.participants}</span>
       </td>
 
       {/* Created Date */}
-      <td className='px-6 py-4 text-sm text-gray-500 dark:text-gray-400 hidden xl:table-cell'>
-        {test.createdDate}
+      <td className='px-6 py-4 whitespace-nowrap'>
+        <div className='text-sm text-gray-900 font-medium'>
+          {createdDateTime.date}
+        </div>
+        <div className='text-sm text-gray-500'>{createdDateTime.time}</div>
       </td>
 
-      {/* Actions - View Report Button + Dropdown Menu */}
-      <td className='px-6 py-4'>
+      {/* Actions */}
+      <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
         <div className='flex items-center gap-2'>
           {/* View Report Button */}
           <Button
@@ -94,13 +122,17 @@ const TestRow = ({ test, onAction }) => {
             onClick={() => onAction('viewReport', test)}
             className='h-8 px-4 text-xs font-medium bg-gradient-to-br from-blue-600 to-blue-800 text-white border-blue-600 hover:from-blue-700 hover:to-blue-900 hover:text-white transition-all duration-200'
           >
-            View Report
+            View
           </Button>
 
           {/* More Actions Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant='ghost' size='sm' className='h-8 w-8 p-0'>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='h-8 w-8 p-0 ml-2 focus:ring-0 focus:outline-none active:ring-0 focus-visible:ring-0'
+              >
                 <MoreVertical className='h-4 w-4' />
               </Button>
             </DropdownMenuTrigger>
@@ -124,7 +156,7 @@ const TestRow = ({ test, onAction }) => {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => onAction('delete', test)}
-                className='text-red-600 dark:text-red-400'
+                className='text-red-600'
               >
                 <Trash2 className='h-4 w-4 mr-2' />
                 Delete Test
@@ -143,7 +175,7 @@ const TestManagementPage = () => {
   const [filterSubject, setFilterSubject] = useState('All')
   const [filterType, setFilterType] = useState('All')
 
-  // Mock test data
+  // Mock test data - Updated with datetime strings like My Documents
   const [tests] = useState([
     {
       id: 1,
@@ -151,7 +183,7 @@ const TestManagementPage = () => {
       type: 'Multiple Choice',
       subject: 'Mathematics',
       questions: 25,
-      createdDate: '2024-01-15',
+      createdAt: '2024-01-15T14:30:00',
       createdBy: 'Dr. Sarah Johnson',
       status: 'Active',
       participants: 45,
@@ -162,7 +194,7 @@ const TestManagementPage = () => {
       type: 'Essay',
       subject: 'History',
       questions: 5,
-      createdDate: '2024-01-12',
+      createdAt: '2024-01-12T09:15:00',
       createdBy: 'Prof. Michael Chen',
       status: 'Draft',
       participants: 0,
@@ -173,7 +205,7 @@ const TestManagementPage = () => {
       type: 'Mixed',
       subject: 'Science',
       questions: 15,
-      createdDate: '2024-01-10',
+      createdAt: '2024-01-10T16:45:00',
       createdBy: 'Ms. Emily Rodriguez',
       status: 'Active',
       participants: 32,
@@ -184,7 +216,7 @@ const TestManagementPage = () => {
       type: 'Multiple Choice',
       subject: 'English',
       questions: 20,
-      createdDate: '2024-01-08',
+      createdAt: '2024-01-08T11:20:00',
       createdBy: 'Dr. James Wilson',
       status: 'Archived',
       participants: 28,
@@ -195,7 +227,7 @@ const TestManagementPage = () => {
       type: 'Mixed',
       subject: 'Physics',
       questions: 12,
-      createdDate: '2024-01-05',
+      createdAt: '2024-01-05T13:10:00',
       createdBy: 'Prof. Lisa Anderson',
       status: 'Active',
       participants: 22,
@@ -213,7 +245,7 @@ const TestManagementPage = () => {
         alert(`Editing test: ${test.name}`)
         break
       case 'viewReport':
-        alert(`Viewing report for test: ${test.name}`)
+        window.location.href = '/management/report'
         break
       case 'copyLink':
         // Generate test link and copy to clipboard
@@ -259,7 +291,7 @@ const TestManagementPage = () => {
           `"${test.type}"`,
           `"${test.subject}"`,
           `"${test.createdBy}"`,
-          test.createdDate,
+          test.createdAt,
           test.status,
           test.participants,
         ].join(',')
@@ -295,30 +327,14 @@ const TestManagementPage = () => {
 
   return (
     <DashboardLayout>
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out forwards;
-        }
-      `}</style>
-
       <div className='max-w-7xl mx-auto'>
         {/* Page Header */}
-        <div className='flex flex-col sm:flex-row justify-between items-center mb-6 gap-3'>
+        <div className='flex flex-col sm:flex-row justify-between items-center mb-3 lg:mb-6 gap-3'>
           <div className='w-full sm:w-auto text-center sm:text-left'>
             <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1'>
               Test Management
             </h1>
-            <p className='text-gray-500 dark:text-gray-400 text-sm sm:text-base'>
+            <p className='text-gray-500 text-sm sm:text-base'>
               Create, manage, and track all your tests in one place.
             </p>
           </div>
@@ -326,34 +342,45 @@ const TestManagementPage = () => {
 
         {/* Filters and Search */}
         <div className='mb-6 animate-fadeIn'>
-          <div className='flex flex-col lg:flex-row gap-4 lg:items-center'>
-            {/* Search */}
-            <div className='flex-1 relative group'>
-              <Search className='absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-black transition-colors' />
-              <Input
+          <div className='flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4'>
+            {/* Search Bar - Takes all available space on desktop */}
+            <div className='relative group flex-1'>
+              <Search
+                size={18}
+                className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500'
+              />
+              <input
                 type='text'
-                placeholder='Search tests by name or subject...'
+                placeholder='Search tests...'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className='pl-12 pr-4 h-10 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700'
+                className='w-full pl-10 pr-3 h-10 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black focus:border-black `'
               />
             </div>
 
-            {/* Filters */}
-            <div className='flex flex-wrap gap-3 items-center'>
+            {/* Filters and Actions - Right aligned group */}
+            <div className='grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:gap-3 lg:items-center'>
               {/* Status Filter */}
               <div className='relative'>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className='appearance-none pl-3 pr-8 py-2 h-10 border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black dark:focus:border-black bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-200 text-sm min-w-[110px]'
+                  className='appearance-none w-full flex items-center justify-between pl-2 pr-6 h-9 lg:h-10 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none bg-white text-gray-700 transition-colors text-sm lg:w-[120px]' // Added text-sm here
                 >
-                  <option value='All'>All Status</option>
-                  <option value='Active'>Active</option>
-                  <option value='Draft'>Draft</option>
-                  <option value='Archived'>Archived</option>
+                  <option value='All' className='text-sm'>
+                    Status
+                  </option>
+                  <option value='Active' className='text-sm'>
+                    Active
+                  </option>
+                  <option value='Draft' className='text-sm'>
+                    Draft
+                  </option>
+                  <option value='Archived' className='text-sm'>
+                    Archived
+                  </option>
                 </select>
-                <ChevronDown className='absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none' />
+                <ChevronDown className='absolute right-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 ml-3 text-gray-400 pointer-events-none' />
               </div>
 
               {/* Subject Filter */}
@@ -361,16 +388,18 @@ const TestManagementPage = () => {
                 <select
                   value={filterSubject}
                   onChange={(e) => setFilterSubject(e.target.value)}
-                  className='appearance-none pl-3 pr-8 py-2 h-10 border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black dark:focus:border-black bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-200 text-sm min-w-[110px]'
+                  className='appearance-none w-full flex items-center justify-between pl-2 pr-6 h-9 lg:h-10 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none bg-white text-gray-700 transition-colors lg:w-[120px]' // Added text-sm here
                 >
-                  <option value='All'>All Subjects</option>
+                  <option value='All' className='text-sm'>
+                    Subject
+                  </option>
                   {uniqueSubjects.map((subject) => (
-                    <option key={subject} value={subject}>
+                    <option key={subject} value={subject} className='text-sm'>
                       {subject}
                     </option>
                   ))}
                 </select>
-                <ChevronDown className='absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none' />
+                <ChevronDown className='absolute right-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 ml-3 text-gray-400 pointer-events-none' />
               </div>
 
               {/* Type Filter */}
@@ -378,19 +407,21 @@ const TestManagementPage = () => {
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
-                  className='appearance-none pl-3 pr-8 py-2 h-10 border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black dark:focus:border-black bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all duration-200 text-sm min-w-[110px]'
+                  className='appearance-none w-full flex items-center justify-between pl-2 pr-6 h-9 lg:h-10 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none bg-white text-gray-700 transition-colors text-sm lg:w-[120px]' // Added text-sm here
                 >
-                  <option value='All'>All Types</option>
+                  <option value='All' className='text-sm'>
+                    Type
+                  </option>
                   {uniqueTypes.map((type) => (
-                    <option key={type} value={type}>
+                    <option key={type} value={type} className='text-sm'>
                       {type}
                     </option>
                   ))}
                 </select>
-                <ChevronDown className='absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none' />
+                <ChevronDown className='absolute right-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 ml-3 text-gray-400 pointer-events-none' />
               </div>
 
-              {/* Clear Filters */}
+              {/* Clear Button */}
               {(filterStatus !== 'All' ||
                 filterSubject !== 'All' ||
                 filterType !== 'All' ||
@@ -404,19 +435,19 @@ const TestManagementPage = () => {
                     setFilterSubject('All')
                     setFilterType('All')
                   }}
-                  className='h-10 px-3 text-sm'
+                  className='h-9 lg:h-10 px-2 lg:px-3 text-xs lg:text-sm font-medium lg:w-[120px]' // Keep text-xs for mobile, lg:text-sm for desktop
                 >
                   Clear
                 </Button>
               )}
 
-              {/* Export Excel */}
+              {/* Export Button */}
               <Button
                 onClick={handleExportExcel}
-                className='h-10 bg-green-600 hover:bg-green-700 text-white'
+                className='h-9 lg:h-10 bg-green-600 hover:bg-green-700 text-white px-3 text-xs lg:text-sm' // Keep text-xs for mobile, lg:text-sm for desktop
               >
-                <Download className='h-4 w-4 mr-2' />
-                Export Excel
+                <Download className='h-3 w-3 lg:h-4 lg:w-4 mr-1.5' />
+                Export
               </Button>
             </div>
           </div>
@@ -430,38 +461,35 @@ const TestManagementPage = () => {
         </div>
 
         {/* Tests Table */}
-        <div
-          className='bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 animate-fadeIn overflow-hidden'
-          style={{ animationDelay: '100ms' }}
-        >
+        <div className='bg-white rounded-lg border border-gray-200 overflow-hidden'>
           <div className='overflow-x-auto'>
-            <table className='w-full'>
-              <thead className='bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700'>
+            <table className='min-w-full divide-y divide-gray-200'>
+              <thead className='bg-gray-50'>
                 <tr>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Test Details
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden sm:table-cell'>
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Status
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell'>
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Subject
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell'>
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Created By
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell'>
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Participants
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell'>
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Created
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className='bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700'>
+              <tbody className='bg-white divide-y divide-gray-200'>
                 {filteredTests.map((test) => (
                   <TestRow
                     key={test.id}
@@ -477,10 +505,10 @@ const TestManagementPage = () => {
           {filteredTests.length === 0 && (
             <div className='text-center py-12'>
               <FileText className='h-12 w-12 mx-auto mb-4 text-gray-400' />
-              <h3 className='text-lg font-medium text-gray-900 dark:text-white mb-2'>
+              <h3 className='text-lg font-medium text-gray-900 mb-2'>
                 No tests found
               </h3>
-              <p className='text-gray-500 dark:text-gray-400 mb-4'>
+              <p className='text-gray-500 mb-4'>
                 {searchQuery ||
                 filterStatus !== 'All' ||
                 filterSubject !== 'All' ||

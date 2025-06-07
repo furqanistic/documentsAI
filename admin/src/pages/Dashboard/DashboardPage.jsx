@@ -104,8 +104,8 @@ const ActivityItem = ({ icon: Icon, title, subtitle, time, status }) => (
   </motion.div>
 )
 
-// Custom Tooltip Component for Speedometer
-const SpeedometerTooltip = ({ active, payload }) => {
+// Custom Tooltip Component for Full Circle Chart
+const CircularTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0]
     const total = 650 // Total limit
@@ -188,7 +188,6 @@ const UsageTooltip = ({ active, payload, label }) => {
 }
 
 const DashboardPage = () => {
-  const [timeRange, setTimeRange] = useState('7d')
   const [selectedPerson, setSelectedPerson] = useState('All Users')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -279,7 +278,7 @@ const DashboardPage = () => {
   const totalRemaining = totalLimit - totalUsed
   const usagePercentage = (totalUsed / totalLimit) * 100
 
-  const speedometerData = [
+  const circularData = [
     { name: 'Used', value: totalUsed, color: '#e7000b' }, // red-600
     { name: 'Remaining', value: totalRemaining, color: '#2563EB' }, // blue-600
   ]
@@ -325,8 +324,8 @@ const DashboardPage = () => {
   return (
     <DashboardLayout>
       <div className='max-w-7xl mx-auto'>
-        {/* Page Header */}
-        <div className='flex flex-col sm:flex-row justify-between items-center mb-3 sm:mb-6 gap-2 sm:gap-3'>
+        {/* Page Header - Updated to match My Documents layout */}
+        <div className='flex flex-col sm:flex-row justify-between items-center mb-6 gap-3'>
           <div className='w-full sm:w-auto text-center sm:text-left'>
             <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1'>
               Dashboard
@@ -341,69 +340,69 @@ const DashboardPage = () => {
             </p>
           </div>
 
-          {/* Person Selection Dropdown - Updated to match card width */}
-          <div className='relative w-full lg:w-70' ref={dropdownRef}>
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className='flex items-center justify-between px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors w-full'
-            >
-              <span>{selectedPerson}</span>
+          {/* Person Selection Dropdown - Updated alignment */}
+          <div className='flex items-center gap-2 w-full sm:w-auto'>
+            <div className='relative flex-1 sm:w-[280px]' ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className='appearance-none w-full flex items-center justify-between pl-2 pr-6 h-9 lg:h-10 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none bg-white text-gray-700 transition-colors text-sm'
+              >
+                <div className='flex-1 text-left'>{selectedPerson}</div>
+              </button>
               <ChevronDown
-                className={`w-4 h-4 ml-3 transition-transform duration-200 ${
+                className={`absolute right-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 ml-3 text-gray-400 pointer-events-none transition-transform duration-200 ${
                   isDropdownOpen ? 'rotate-180' : ''
                 }`}
               />
-            </button>
-
-            {isDropdownOpen && (
-              <div className='absolute z-20 right-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg'>
-                {/* Search Input */}
-                <div className='p-2 border-b border-gray-100'>
-                  <input
-                    type='text'
-                    placeholder='Search users...'
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className='w-full px-3 py-2 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
-                    onClick={(e) => e.stopPropagation()}
-                  />
+              {isDropdownOpen && (
+                <div className='absolute z-20 right-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg'>
+                  {/* Search Input */}
+                  <div className='p-2 border-b border-gray-200'>
+                    <input
+                      type='text'
+                      placeholder='Search users...'
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className='w-full px-3 py-2 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  {/* Dropdown Options */}
+                  <div className='max-h-48 overflow-y-auto'>
+                    {filteredPeople.length > 0 ? (
+                      filteredPeople.map((person) => (
+                        <button
+                          key={person}
+                          onClick={() => {
+                            setSelectedPerson(person)
+                            setIsDropdownOpen(false)
+                            setSearchQuery('')
+                          }}
+                          className={`w-full px-4 py-2 text-sm text-left hover:bg-gray-50 last:rounded-b-lg transition-colors ${
+                            selectedPerson === person
+                              ? 'bg-blue-50 text-blue-700 font-medium'
+                              : 'text-gray-700'
+                          }`}
+                        >
+                          {person}
+                        </button>
+                      ))
+                    ) : (
+                      <div className='px-4 py-3 text-center text-gray-500 text-sm'>
+                        No users found
+                      </div>
+                    )}
+                  </div>
                 </div>
-
-                {/* Dropdown Options */}
-                <div className='max-h-48 overflow-y-auto'>
-                  {filteredPeople.length > 0 ? (
-                    filteredPeople.map((person) => (
-                      <button
-                        key={person}
-                        onClick={() => {
-                          setSelectedPerson(person)
-                          setIsDropdownOpen(false)
-                          setSearchQuery('')
-                        }}
-                        className={`w-full px-4 py-2 text-sm text-left hover:bg-gray-50  last:rounded-b-lg transition-colors ${
-                          selectedPerson === person
-                            ? 'bg-blue-50 text-blue-700 font-medium'
-                            : 'text-gray-700'
-                        }`}
-                      >
-                        {person}
-                      </button>
-                    ))
-                  ) : (
-                    <div className='px-4 py-3 text-center text-gray-500 text-sm'>
-                      No users found
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Settings Sections */}
-        <div className='space-y-4 sm:space-y-6'>
-          {/* Stats Grid - Reordered */}
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6'>
+        {/* Settings Sections - Fixed consistent gaps */}
+        <div className='space-y-3 sm:space-y-6'>
+          {/* Stats Grid - Added margin top to drop it down a bit */}
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mt-4'>
             <StatCard
               icon={FileText}
               title='Documents Created'
@@ -497,7 +496,7 @@ const DashboardPage = () => {
               </ResponsiveContainer>
             </ChartCard>
 
-            {/* Total Generated */}
+            {/* Total Generated - Now with Full Circular Chart */}
             <ChartCard
               title='Total Generated'
               action={
@@ -517,9 +516,9 @@ const DashboardPage = () => {
                 className='flex flex-col items-center -mt-2 pt-0 pb-1 sm:-mt-3 sm:pt-1 sm:pb-2'
                 style={{ height: '250px' }}
               >
-                {/* Speedometer Chart - More compact */}
-                <div className='relative mb-1 md:mt-4 w-full max-w-md flex-1 flex items-center justify-center'>
-                  <ResponsiveContainer width='100%' height={130}>
+                {/* Full Circular Chart */}
+                <div className='relative mb-1 w-full max-w-md flex-1 flex items-center justify-center'>
+                  <ResponsiveContainer width='100%' height={180}>
                     <PieChart>
                       <defs>
                         <linearGradient
@@ -541,7 +540,7 @@ const DashboardPage = () => {
                           />
                         </linearGradient>
                         <linearGradient
-                          id='blueGradientSpeedometer'
+                          id='blueGradientCircular'
                           x1='0'
                           y1='0'
                           x2='1'
@@ -559,23 +558,33 @@ const DashboardPage = () => {
                           />
                         </linearGradient>
                       </defs>
-                      <Tooltip content={<SpeedometerTooltip />} />
+                      <Tooltip content={<CircularTooltip />} />
                       <Pie
-                        data={speedometerData}
+                        data={circularData}
                         cx='50%'
-                        cy='85%'
-                        startAngle={180}
-                        endAngle={0}
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={1}
+                        cy='50%'
+                        startAngle={90}
+                        endAngle={-270}
+                        innerRadius={50}
+                        outerRadius={75}
+                        paddingAngle={2}
                         dataKey='value'
                       >
                         <Cell fill='url(#redGradient)' />
-                        <Cell fill='url(#blueGradientSpeedometer)' />
+                        <Cell fill='url(#blueGradientCircular)' />
                       </Pie>
                     </PieChart>
                   </ResponsiveContainer>
+
+                  {/* Center Text */}
+                  <div className='absolute inset-0 flex items-center justify-center'>
+                    <div className='text-center'>
+                      <div className='text-xl font-bold text-gray-900'>
+                        {Math.round(usagePercentage)}%
+                      </div>
+                      <div className='text-xs text-gray-500'>Used</div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Stats Grid - Very compact */}
@@ -585,8 +594,8 @@ const DashboardPage = () => {
                       <span className='text-xs sm:text-sm font-semibold text-gray-700'>
                         Total Usage:
                       </span>
-                      <span className='text-lg sm:text-xl font-bold text-blue-600'>
-                        {Math.round(usagePercentage)}%
+                      <span className='text-xs sm:text-sm font-semibold text-blue-600'>
+                        {totalUsed}/{totalLimit}
                       </span>
                     </div>
                     <div className='w-full h-1.5 bg-gray-200 rounded-full overflow-hidden my-1'>
@@ -676,7 +685,7 @@ const DashboardPage = () => {
             transition={{ duration: 0.5 }}
             className='bg-white rounded-lg p-3 sm:p-6 shadow-sm border border-gray-200'
           >
-            <h3 className='text-base sm:text-lg font-semibold text-black mb-3 sm:mb-4'>
+            <h3 className='text-base sm:text-lg font-semibold text-black mb-3 lg:mb-6 sm:mb-4'>
               Quick Actions
             </h3>
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4'>

@@ -16,7 +16,7 @@ export default function NewTemplateForm({ isOpen = true, onClose = () => {} }) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    type: 'Education',
+    type: 'Academic',
     documentType: 'exam',
     uploadedFile: null,
   })

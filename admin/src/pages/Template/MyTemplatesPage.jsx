@@ -95,7 +95,7 @@ const TemplateCard = ({
 
   return (
     <motion.div
-      className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden cursor-pointer transition-all duration-200 hover:border-gray-300 ${
+      className={`bg-white rounded-lg  border border-gray-200 overflow-hidden cursor-pointer transition-all duration-200 hover:border-gray-300 ${
         isGridView ? 'h-72' : 'h-auto'
       }`}
       whileHover={{ y: -5, boxShadow: '0 10px 20px rgba(0,0,0,0.05)' }}
@@ -333,7 +333,7 @@ const EmptyState = ({ onCreateTemplate }) => (
     animate={{ opacity: 1 }}
     transition={{ delay: 0.2 }}
   >
-    <div className='bg-blue-100 p-4 rounded-full mb-4 shadow-sm'>
+    <div className='bg-blue-100 p-4 rounded-full mb-4 '>
       <Plus size={24} className='text-blue-600' />
     </div>
     <h3 className='text-lg font-medium text-gray-700 mb-2'>No templates yet</h3>
@@ -610,24 +610,20 @@ const MyTemplatesPage = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder='Search templates...'
-              className='pl-10 py-2 pr-4 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black focus:border-black shadow-sm h-10'
+              className='pl-10 py-2 pr-4 w-full border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black focus:border-black h-10'
             />
           </div>
 
           <div className='flex items-center gap-2 w-full md:w-auto justify-between md:justify-start'>
             <div className='hidden sm:flex items-center bg-gray-100 rounded-lg p-1'>
               <button
-                className={`p-1.5 rounded ${
-                  isGridView ? 'bg-white shadow-sm' : ''
-                }`}
+                className={`p-1.5 rounded ${isGridView ? 'bg-white ' : ''}`}
                 onClick={() => handleViewChange(true)}
               >
                 <Grid size={18} className='text-gray-600' />
               </button>
               <button
-                className={`p-1.5 rounded ${
-                  !isGridView ? 'bg-white shadow-sm' : ''
-                }`}
+                className={`p-1.5 rounded ${!isGridView ? 'bg-white ' : ''}`}
                 onClick={() => handleViewChange(false)}
               >
                 <List size={18} className='text-gray-600' />

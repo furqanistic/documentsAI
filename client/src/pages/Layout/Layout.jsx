@@ -74,7 +74,7 @@ const Topbar = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className='flex items-center'
+            className='flex items-center pl-2'
           >
             <a href='/' className='block'>
               <img
