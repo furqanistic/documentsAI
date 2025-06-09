@@ -1,3 +1,11 @@
+import {
+  loginFailure,
+  loginStart,
+  loginSuccess,
+  selectCurrentUser,
+  selectIsLoading,
+  selectToken,
+} from '@/redux/userSlice'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   AlertCircle,
@@ -11,13 +19,22 @@ import {
   X,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { axiosInstance } from '../../../config'
+
 const AuthModal = ({
   isOpen,
   onClose,
   initialView = 'signup',
   onAuthSuccess,
 }) => {
+  const dispatch = useDispatch()
+
+  // Redux state
+  const isLoading = useSelector(selectIsLoading)
+  const currentUser = useSelector(selectCurrentUser)
+  const token = useSelector(selectToken)
+
   const [view, setView] = useState(initialView)
   const [showPassword, setShowPassword] = useState(false)
 
@@ -25,9 +42,8 @@ const AuthModal = ({
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Error and success states
+  // Error and success states (keeping these local for UI feedback)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -85,7 +101,6 @@ const AuthModal = ({
         setEmail('')
         setPassword('')
         setName('')
-        setIsSubmitting(false)
         setError('')
         setSuccess('')
         setFieldErrors({})
@@ -99,6 +114,25 @@ const AuthModal = ({
     setSuccess('')
     setFieldErrors({})
   }, [view])
+
+  // Handle successful authentication
+  useEffect(() => {
+    if (currentUser && token && success) {
+      // Call success callback if provided
+      if (onAuthSuccess) {
+        onAuthSuccess({
+          user: currentUser,
+          token: token,
+          isNewUser: view === 'signup',
+        })
+      }
+
+      // Auto close after success
+      setTimeout(() => {
+        onClose()
+      }, 1500)
+    }
+  }, [currentUser, token, success, onAuthSuccess, onClose, view])
 
   // Validate form fields
   const validateForm = () => {
@@ -138,6 +172,9 @@ const AuthModal = ({
       setError('')
       setSuccess('')
 
+      // Start loading state
+      dispatch(loginStart())
+
       if (view === 'signup') {
         const response = await axiosInstance.post('/auth/signup', {
           name: name.trim(),
@@ -145,53 +182,24 @@ const AuthModal = ({
           password,
         })
 
-        // Extract from your backend response format
-        const { token, data, status } = response.data
-        const user = data.user
-
-        // Store token in localStorage
-        localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify(user))
-
+        // Dispatch success action with the response data
+        dispatch(loginSuccess(response.data))
         setSuccess('Account created successfully!')
-
-        // Call success callback if provided
-        if (onAuthSuccess) {
-          onAuthSuccess({ user, token, isNewUser: true })
-        }
-
-        // Auto close after success
-        setTimeout(() => {
-          onClose()
-        }, 1500)
       } else {
         const response = await axiosInstance.post('/auth/signin', {
           email: email.trim().toLowerCase(),
           password,
         })
 
-        // Extract from your backend response format
-        const { token, data, status } = response.data
-        const user = data.user
-
-        // Store token in localStorage
-        localStorage.setItem('authToken', token)
-        localStorage.setItem('user', JSON.stringify(user))
-
+        // Dispatch success action with the response data
+        dispatch(loginSuccess(response.data))
         setSuccess('Login successful!')
-
-        // Call success callback if provided
-        if (onAuthSuccess) {
-          onAuthSuccess({ user, token, isNewUser: false })
-        }
-
-        // Auto close after success
-        setTimeout(() => {
-          onClose()
-        }, 1500)
       }
     } catch (err) {
       console.error('Auth error:', err)
+
+      // Always dispatch failure action to reset loading state
+      dispatch(loginFailure())
 
       let errorMessage = 'An error occurred. Please try again.'
 
@@ -226,14 +234,12 @@ const AuthModal = ({
             break
 
           case 401:
-            errorMessage =
-              'Invalid email or password. Please check your credentials and try again.'
+            errorMessage = 'Invalid email or password.'
             break
 
           case 404:
             if (view === 'login') {
-              errorMessage =
-                'Invalid email or password. Please check your credentials and try again.'
+              errorMessage = 'Invalid email or password.'
             } else {
               errorMessage = 'Service not found. Please try again later.'
             }
@@ -262,15 +268,14 @@ const AuthModal = ({
                   .toLowerCase()
                   .includes('incorrect email or password')
               ) {
-                errorMessage =
-                  'Invalid email or password. Please check your credentials and try again.'
+                errorMessage = 'Invalid email or password.'
               } else {
                 errorMessage = backendMessage
               }
             } else {
               errorMessage =
                 view === 'login'
-                  ? 'Invalid email or password. Please check your credentials and try again.'
+                  ? 'Invalid email or password.'
                   : 'Unable to create account. Please try again.'
             }
         }
@@ -282,8 +287,7 @@ const AuthModal = ({
             errorMessage =
               'An account with this email already exists. Try logging in instead.'
           } else if (lowerMessage.includes('incorrect email or password')) {
-            errorMessage =
-              'Invalid email or password. Please check your credentials and try again.'
+            errorMessage = 'Invalid email or password.'
           }
         }
       } else if (err.request) {
@@ -308,20 +312,21 @@ const AuthModal = ({
       return
     }
 
-    setIsSubmitting(true)
     await handleAuth()
-    setIsSubmitting(false)
   }
 
   // Handle Google authentication (placeholder)
   const handleGoogleAuth = async () => {
     try {
       setError('')
+      dispatch(loginStart())
       // Implement Google OAuth here
       console.log('Google auth not implemented yet')
       setError('Google authentication coming soon!')
+      dispatch(loginFailure()) // Reset loading state
     } catch (err) {
       setError('Google authentication failed')
+      dispatch(loginFailure()) // Always reset loading state
     }
   }
 
@@ -451,6 +456,7 @@ const AuthModal = ({
                                   : 'border-gray-300 focus:border-black'
                               } text-gray-800 focus:outline-none`}
                               required
+                              disabled={isLoading}
                             />
                           </div>
                           {fieldErrors.name && (
@@ -482,6 +488,7 @@ const AuthModal = ({
                                   : 'border-gray-300 focus:border-black'
                               } text-gray-800 focus:outline-none`}
                               required
+                              disabled={isLoading}
                             />
                           </div>
                           {fieldErrors.email && (
@@ -513,12 +520,14 @@ const AuthModal = ({
                                   : 'border-gray-300 focus:border-black'
                               } text-gray-800 focus:outline-none`}
                               required
+                              disabled={isLoading}
                             />
                             <motion.button
                               type='button'
                               className='absolute right-0 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer'
                               onClick={() => setShowPassword(!showPassword)}
                               whileTap={{ scale: 0.9 }}
+                              disabled={isLoading}
                               aria-label={
                                 showPassword ? 'Hide password' : 'Show password'
                               }
@@ -567,6 +576,7 @@ const AuthModal = ({
                                   : 'border-gray-300 focus:border-black'
                               } text-gray-800 focus:outline-none`}
                               required
+                              disabled={isLoading}
                             />
                           </div>
                           {fieldErrors.email && (
@@ -598,12 +608,14 @@ const AuthModal = ({
                                   : 'border-gray-300 focus:border-black'
                               } text-gray-800 focus:outline-none`}
                               required
+                              disabled={isLoading}
                             />
                             <motion.button
                               type='button'
                               className='absolute right-0 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer'
                               onClick={() => setShowPassword(!showPassword)}
                               whileTap={{ scale: 0.9 }}
+                              disabled={isLoading}
                               aria-label={
                                 showPassword ? 'Hide password' : 'Show password'
                               }
@@ -634,6 +646,7 @@ const AuthModal = ({
                             className='text-sm text-black hover:text-zinc-600 font-medium transition-colors'
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
+                            disabled={isLoading}
                           >
                             Forgot Password?
                           </motion.button>
@@ -648,17 +661,17 @@ const AuthModal = ({
               <div className='px-4 py-2'>
                 <motion.button
                   type='submit'
-                  disabled={isSubmitting}
+                  disabled={isLoading}
                   className={`w-full py-2 px-4 flex items-center justify-center text-white font-medium shadow-md rounded-md transition-all ${
-                    isSubmitting
+                    isLoading
                       ? 'bg-black/80 cursor-not-allowed'
                       : 'bg-black hover:bg-zinc-800 active:bg-zinc-900'
                   }`}
-                  whileHover={!isSubmitting ? { scale: 1.02 } : {}}
-                  whileTap={!isSubmitting ? { scale: 0.98 } : {}}
+                  whileHover={!isLoading ? { scale: 1.02 } : {}}
+                  whileTap={!isLoading ? { scale: 0.98 } : {}}
                   onClick={handleSubmit}
                 >
-                  {isSubmitting ? (
+                  {isLoading ? (
                     <motion.div
                       className='h-5 w-5 rounded-full border-2 border-white border-t-transparent'
                       animate={{ rotate: 360 }}
@@ -693,9 +706,10 @@ const AuthModal = ({
                   <motion.button
                     type='button'
                     onClick={handleGoogleAuth}
-                    className='w-full py-1.5 px-3 border border-gray-300 shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none flex items-center justify-center transition-colors rounded-md'
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    disabled={isLoading}
+                    className='w-full py-1.5 px-3 border border-gray-300 shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none flex items-center justify-center transition-colors rounded-md disabled:opacity-50 disabled:cursor-not-allowed'
+                    whileHover={!isLoading ? { scale: 1.02 } : {}}
+                    whileTap={!isLoading ? { scale: 0.98 } : {}}
                   >
                     <svg
                       className='mr-2'
@@ -731,12 +745,13 @@ const AuthModal = ({
                       : "Don't have an account?"}
                     <motion.button
                       type='button'
-                      className='ml-1 text-black hover:text-zinc-600 font-medium transition-colors'
+                      className='ml-1 text-black hover:text-zinc-600 font-medium transition-colors disabled:opacity-50'
                       onClick={() =>
                         setView(view === 'signup' ? 'login' : 'signup')
                       }
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={!isLoading ? { scale: 1.05 } : {}}
+                      whileTap={!isLoading ? { scale: 0.95 } : {}}
+                      disabled={isLoading}
                     >
                       {view === 'signup' ? 'Log In' : 'Sign Up'}
                     </motion.button>
@@ -987,6 +1002,7 @@ const AuthModal = ({
                                         : 'border-gray-300 focus:border-black'
                                     } text-gray-800 focus:outline-none`}
                                     required
+                                    disabled={isLoading}
                                   />
                                 </div>
                                 {fieldErrors.name && (
@@ -1018,6 +1034,7 @@ const AuthModal = ({
                                         : 'border-gray-300 focus:border-black'
                                     } text-gray-800 focus:outline-none`}
                                     required
+                                    disabled={isLoading}
                                   />
                                 </div>
                                 {fieldErrors.email && (
@@ -1051,6 +1068,7 @@ const AuthModal = ({
                                         : 'border-gray-300 focus:border-black'
                                     } text-gray-800 focus:outline-none`}
                                     required
+                                    disabled={isLoading}
                                   />
                                   <motion.button
                                     type='button'
@@ -1059,6 +1077,7 @@ const AuthModal = ({
                                       setShowPassword(!showPassword)
                                     }
                                     whileTap={{ scale: 0.9 }}
+                                    disabled={isLoading}
                                     aria-label={
                                       showPassword
                                         ? 'Hide password'
@@ -1112,6 +1131,7 @@ const AuthModal = ({
                                         : 'border-gray-300 focus:border-black'
                                     } text-gray-800 focus:outline-none`}
                                     required
+                                    disabled={isLoading}
                                   />
                                 </div>
                                 {fieldErrors.email && (
@@ -1145,6 +1165,7 @@ const AuthModal = ({
                                         : 'border-gray-300 focus:border-black'
                                     } text-gray-800 focus:outline-none`}
                                     required
+                                    disabled={isLoading}
                                   />
                                   <motion.button
                                     type='button'
@@ -1153,6 +1174,7 @@ const AuthModal = ({
                                       setShowPassword(!showPassword)
                                     }
                                     whileTap={{ scale: 0.9 }}
+                                    disabled={isLoading}
                                     aria-label={
                                       showPassword
                                         ? 'Hide password'
@@ -1185,6 +1207,7 @@ const AuthModal = ({
                                   className='text-sm text-black hover:text-zinc-600 font-medium transition-colors'
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
+                                  disabled={isLoading}
                                 >
                                   Forgot Password?
                                 </motion.button>
@@ -1201,17 +1224,17 @@ const AuthModal = ({
                 <div className='mt-4'>
                   <motion.button
                     type='submit'
-                    disabled={isSubmitting}
+                    disabled={isLoading}
                     className={`w-full py-3 px-4 flex rounded-sm items-center justify-center text-white font-medium shadow-md transition-all ${
-                      isSubmitting
+                      isLoading
                         ? 'bg-black/80 cursor-not-allowed'
                         : 'bg-black hover:bg-zinc-800 active:bg-zinc-900'
                     }`}
-                    whileHover={!isSubmitting ? { scale: 1.02 } : {}}
-                    whileTap={!isSubmitting ? { scale: 0.98 } : {}}
+                    whileHover={!isLoading ? { scale: 1.02 } : {}}
+                    whileTap={!isLoading ? { scale: 0.98 } : {}}
                     onClick={handleSubmit}
                   >
-                    {isSubmitting ? (
+                    {isLoading ? (
                       <motion.div
                         className='h-5 w-5 rounded-full border-2 border-white border-t-transparent'
                         animate={{ rotate: 360 }}
@@ -1246,9 +1269,10 @@ const AuthModal = ({
                     <motion.button
                       type='button'
                       onClick={handleGoogleAuth}
-                      className='w-full py-2.5 px-4 border border-gray-300 rounded-sm shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center justify-center transition-colors'
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      disabled={isLoading}
+                      className='w-full py-2.5 px-4 border border-gray-300 rounded-sm shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                      whileHover={!isLoading ? { scale: 1.02 } : {}}
+                      whileTap={!isLoading ? { scale: 0.98 } : {}}
                     >
                       <svg
                         className='mr-2'
@@ -1286,12 +1310,13 @@ const AuthModal = ({
                         : "Don't have an account?"}
                       <motion.button
                         type='button'
-                        className='ml-1 text-black hover:text-zinc-600 font-medium transition-colors'
+                        className='ml-1 text-black hover:text-zinc-600 font-medium transition-colors disabled:opacity-50'
                         onClick={() =>
                           setView(view === 'signup' ? 'login' : 'signup')
                         }
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={!isLoading ? { scale: 1.05 } : {}}
+                        whileTap={!isLoading ? { scale: 0.95 } : {}}
+                        disabled={isLoading}
                       >
                         {view === 'signup' ? 'Log In' : 'Sign Up'}
                       </motion.button>

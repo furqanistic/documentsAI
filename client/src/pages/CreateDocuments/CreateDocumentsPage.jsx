@@ -28,8 +28,20 @@ import {
 } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
 import Layout from '../Layout/Layout'
+// Redux imports
+import {
+  loginSuccess,
+  selectCurrentUser,
+  selectIsAuthenticated,
+} from '@/redux/userSlice'
+import { useDispatch, useSelector } from 'react-redux'
+import AuthModal from '../Auth/AuthModal'
 
 const CreateDocumentsPage = () => {
+  const dispatch = useDispatch()
+  const isAuthenticated = useSelector(selectIsAuthenticated)
+  const currentUser = useSelector(selectCurrentUser)
+
   const [isLoading, setIsLoading] = useState(false)
   const [selectedDocType, setSelectedDocType] = useState(null) // Default to first option
   const [showExportOptions, setShowExportOptions] = useState(false)
@@ -58,6 +70,9 @@ const CreateDocumentsPage = () => {
   })
   const [brandingEnabled, setBrandingEnabled] = useState(false)
   const fileInputRef = useRef(null)
+
+  // Auth modal state
+  const [showAuthModal, setShowAuthModal] = useState(false)
 
   // Animation variants
   const fadeIn = {
@@ -180,8 +195,21 @@ const CreateDocumentsPage = () => {
     },
   ]
 
+  // Handle authentication success
+  const handleLoginSuccess = (userData) => {
+    dispatch(loginSuccess(userData))
+    // Save token to localStorage
+    localStorage.setItem('token', userData.token)
+  }
+
   // Simulated AI document generation
   const handleGenerate = async () => {
+    // Check authentication first
+    if (!isAuthenticated) {
+      setShowAuthModal(true)
+      return
+    }
+
     if (!promptText && !selectedFile) {
       alert('Please enter a prompt or upload a file for your document')
       return
@@ -439,6 +467,13 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
       <div className='min-h-screen bg-gray-50 text-gray-900'>
         {/* Header component */}
         <CreateDocumentsHeader />
+
+        {/* Auth Modal */}
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onLogin={handleLoginSuccess}
+        />
 
         {/* REDUCED AND CONSISTENT TOP PADDING */}
         <main className='container mx-auto px-4 py-4 md:py-6 max-w-7xl'>

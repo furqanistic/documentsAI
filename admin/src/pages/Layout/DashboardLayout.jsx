@@ -1,4 +1,9 @@
 import {
+  logout,
+  selectCurrentUser,
+  selectIsAuthenticated,
+} from '@/redux/userSlice'
+import {
   ChevronDown,
   CreditCard,
   FileText,
@@ -8,18 +13,21 @@ import {
   Menu,
   MonitorCog,
   Settings,
+  User as UserIcon,
   X,
 } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 
-const DashboardLayout = ({
-  children,
-  userName = 'Mr. Alexander',
-  userRole = 'Administrator',
-}) => {
+const DashboardLayout = ({ children }) => {
+  const dispatch = useDispatch()
+  const currentUser = useSelector(selectCurrentUser)
+  const isAuthenticated = useSelector(selectIsAuthenticated)
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
-  const sidebarRef = useRef(null) // Reference to the sidebar
+  const sidebarRef = useRef(null)
+
   const sidebarItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', url: '/' },
     {
@@ -47,6 +55,13 @@ const DashboardLayout = ({
       url: '/settings',
     },
   ]
+
+  // Redirect to home if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !currentUser) {
+      window.location.href = '/'
+    }
+  }, [isAuthenticated, currentUser])
 
   // Determine active item based on current URL (no lag)
   const getActiveItem = () => {
@@ -94,6 +109,12 @@ const DashboardLayout = ({
     }
   }
 
+  const handleLogout = () => {
+    dispatch(logout())
+    setIsUserMenuOpen(false)
+    // Redirect will happen automatically due to useEffect above
+  }
+
   // Close mobile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -108,6 +129,22 @@ const DashboardLayout = ({
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isMobileMenuOpen])
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isUserMenuOpen && !event.target.closest('.user-menu-container')) {
+        setIsUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isUserMenuOpen])
+
+  // Don't render anything if not authenticated (will redirect)
+  if (!isAuthenticated || !currentUser) {
+    return null
+  }
 
   return (
     <div className='flex h-screen bg-gray-50'>
@@ -169,16 +206,6 @@ const DashboardLayout = ({
               )
             })}
           </div>
-
-          {/* <div className='absolute bottom-3 left-0 w-full px-4'>
-            <a
-              href='/logout'
-              className='flex items-center w-full p-3 rounded-lg text-red-600 hover:bg-gray-100 transition-all duration-200 hover:scale-102'
-            >
-              <LogOut size={20} className='mr-3' />
-              <span className='font-medium'>Logout</span>
-            </a>
-          </div> */}
         </div>
       </div>
 
@@ -218,17 +245,6 @@ const DashboardLayout = ({
               )
             })}
           </div>
-
-          {/* Logout Button */}
-          {/* <div className='px-2 py-2 border-t border-gray-200'>
-            <a
-              href='/logout'
-              className='flex items-center justify-start w-full p-2.5 rounded-lg text-red-600 hover:bg-gray-100 transition-all duration-200 transform hover:scale-102'
-            >
-              <LogOut size={20} />
-              <span className='ml-3 font-medium'>Logout</span>
-            </a>
-          </div> */}
         </div>
       </div>
 
@@ -265,14 +281,19 @@ const DashboardLayout = ({
               <div className='flex-1'></div>
 
               {/* User Info */}
-              <div className='relative'>
+              <div className='relative user-menu-container'>
                 <button
                   onClick={toggleUserMenu}
                   className='flex items-center space-x-3 text-sm text-gray-700 hover:text-gray-900 focus:outline-none transition-all duration-200 transform hover:scale-105'
                 >
-                  <div className='text-right'>
-                    <div className='font-medium'>{userName}</div>
-                    <div className='text-xs text-gray-500'>{userRole}</div>
+                  <div className='flex items-center justify-center w-8 h-8 bg-gray-700 rounded-full'>
+                    <UserIcon size={16} className='text-gray-300' />
+                  </div>
+                  <div className='text-left'>
+                    <div className='font-medium'>{currentUser.name}</div>
+                    <div className='text-xs text-gray-500 capitalize'>
+                      {currentUser.role || 'User'}
+                    </div>
                   </div>
                   <ChevronDown
                     size={16}
@@ -284,31 +305,42 @@ const DashboardLayout = ({
 
                 {/* User Dropdown Menu */}
                 {isUserMenuOpen && (
-                  <>
-                    <div
-                      className='fixed inset-0 z-10'
-                      onClick={toggleUserMenu}
-                    />
-                    <div className='absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-20 transform transition-all duration-200 scale-95 animate-in fade-in zoom-in'>
-                      <div className='py-1'>
-                        <a
-                          href='/subscriptions'
-                          className='flex items-center px-4 py-2 text-sm text-gray-700  transition-colors duration-150'
-                        >
-                          <CreditCard size={16} className='mr-2' />
-                          Subscriptions
-                        </a>
-                        <hr className='my-1' />
-                        <a
-                          href='/logout'
-                          className='flex items-center px-4 py-2 text-sm text-red-600 transition-colors duration-150'
-                        >
-                          <LogOut size={16} className='mr-2' />
-                          Logout
-                        </a>
-                      </div>
+                  <div className='absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-20 transform transition-all duration-200 scale-95 animate-in fade-in zoom-in'>
+                    <div className='py-1'>
+                      <a
+                        href='/profile'
+                        className='flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150'
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <UserIcon size={16} className='mr-2' />
+                        Profile
+                      </a>
+                      <a
+                        href='/settings'
+                        className='flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150'
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <Settings size={16} className='mr-2' />
+                        Settings
+                      </a>
+                      <a
+                        href='/subscriptions'
+                        className='flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150'
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <CreditCard size={16} className='mr-2' />
+                        Subscriptions
+                      </a>
+                      <hr className='my-1' />
+                      <button
+                        onClick={handleLogout}
+                        className='flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150'
+                      >
+                        <LogOut size={16} className='mr-2' />
+                        Logout
+                      </button>
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             </div>
