@@ -3,21 +3,34 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
 import mongoose from 'mongoose'
+import passport from 'passport'
+
+// Import passport configuration (must be imported before routes)
+import './config/passport.js'
+
 import authRoute from './routes/auth.js'
 
 const app = express()
+
+// Load environment variables first
+dotenv.config()
+
 const corsOptions = {
-  origin: 'http://localhost:5173', // Replace with your frontend URL
+  origin: 'http://localhost:5173', // Your Vite frontend URL
   credentials: true, // This allows cookies and credentials to be sent
   optionsSuccessStatus: 200,
 }
 
 app.use(cors(corsOptions))
-dotenv.config()
 app.use(cookieParser())
 app.use(express.json())
 
+// Initialize Passport middleware
+app.use(passport.initialize())
+
 mongoose.set('strictQuery', true)
+
+// Routes
 app.use('/api/auth', authRoute)
 
 const connect = () => {
@@ -29,6 +42,7 @@ const connect = () => {
     .catch((err) => console.log(err))
 }
 
+// Global error handler
 app.use((err, req, res, next) => {
   const status = err.status || 500
   const message = err.message || 'Something went wrong'
@@ -38,6 +52,7 @@ app.use((err, req, res, next) => {
     message,
   })
 })
+
 app.listen(8800, () => {
   connect()
   console.log('Server running at 8800')

@@ -11,13 +11,16 @@ const UserSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
+      unique: true, // This already creates an index
       lowercase: true,
       trim: true,
     },
     password: {
       type: String,
-      required: true,
+      required: function () {
+        // Password is required only if authProvider is 'local'
+        return this.authProvider === 'local'
+      },
       select: false, // Don't return password by default in queries
     },
     role: {
@@ -28,19 +31,36 @@ const UserSchema = new mongoose.Schema(
     lastLogin: {
       type: Date,
     },
-    // This field will be used to reference appointments in the future
-    // appointments: [{
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: 'Appointment'
-    // }],
+    // Google OAuth fields
+    googleId: {
+      type: String,
+      unique: true, // This already creates an index
+      sparse: true, // Allows multiple null values
+    },
+    avatar: {
+      type: String, // Google profile picture URL
+    },
+    authProvider: {
+      type: String,
+      enum: ['local', 'google'],
+      default: 'local',
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 )
 
+// REMOVED: These duplicate index declarations
+// UserSchema.index({ email: 1 }) // Already indexed by unique: true
+// UserSchema.index({ googleId: 1 }) // Already indexed by unique: true
+
 // Pre-save middleware to hash password
 UserSchema.pre('save', async function (next) {
-  // Only hash the password if it has been modified (or is new)
-  if (!this.isModified('password')) return next()
+  // Only hash the password if it has been modified (or is new) and it exists
+  if (!this.isModified('password') || !this.password) return next()
 
   try {
     // Generate a salt and hash the password
@@ -57,7 +77,14 @@ UserSchema.methods.correctPassword = async function (
   candidatePassword,
   userPassword
 ) {
+  // If no password is set (Google users), return false
+  if (!userPassword) return false
   return await bcrypt.compare(candidatePassword, userPassword)
+}
+
+// Method to check if user can authenticate with password
+UserSchema.methods.canAuthenticateWithPassword = function () {
+  return this.authProvider === 'local' && this.password
 }
 
 export default mongoose.model('User', UserSchema)

@@ -327,7 +327,7 @@ const TestReportPage = () => {
       'Phone',
       'Organization',
       'Score',
-      'Time Taken',
+      'Time',
       'Submission Date',
     ]
     const csvContent = [
@@ -420,7 +420,7 @@ const TestReportPage = () => {
     <DashboardLayout>
       <div className='max-w-7xl mx-auto'>
         {/* Header */}
-        <div className='flex flex-col sm:flex-row justify-between items-start mb-6 gap-4'>
+        <div className='flex flex-col sm:flex-row justify-between items-center mb-3 lg:mb-6 gap-3'>
           <div className='flex items-center gap-3'>
             <div>
               <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1'>
@@ -458,7 +458,7 @@ const TestReportPage = () => {
                 placeholder='Search participants...'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className='w-full pl-10 pr-3 h-10 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black focus:border-black `'
+                className='w-full pl-10 pr-3 h-10 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black focus:border-black'
               />
             </div>
 
@@ -469,7 +469,7 @@ const TestReportPage = () => {
                 <select
                   value={filterScore}
                   onChange={(e) => setFilterScore(e.target.value)}
-                  className='appearance-none w-full flex items-center justify-between pl-2 pr-6 h-9 lg:h-10 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none bg-white text-gray-700 transition-colors text-xs lg:text-sm lg:w-[140px] '
+                  className='appearance-none w-full flex items-center justify-between pl-2 pr-6 h-9 lg:h-10 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none bg-white text-gray-700 transition-colors text-sm lg:w-[140px]'
                 >
                   <option value='All'>All Scores</option>
                   <option value='90-100'>90-100</option>
@@ -492,7 +492,7 @@ const TestReportPage = () => {
                     setSearchQuery('')
                     setFilterScore('All')
                   }}
-                  className='h-9 lg:h-10 px-2 lg:px-3 text-xs lg:text-sm font-medium lg:w-[120px]'
+                  className='h-9 lg:h-10 px-2 lg:px-3 text-sm font-medium lg:w-[120px]'
                 >
                   Clear
                 </Button>
@@ -501,7 +501,7 @@ const TestReportPage = () => {
               {/* Export Button */}
               <Button
                 onClick={handleExportReport}
-                className='h-9 lg:h-10 bg-green-600 hover:bg-green-700 text-white px-3 text-sm lg:text-sm lg:w-[120px]'
+                className='h-9 lg:h-10 bg-green-600 hover:bg-green-700 text-white px-3 text-sm lg:text-sm font-medium lg:w-[120px]'
               >
                 <Download className='h-3 w-3 lg:h-4 lg:w-4 mr-1.5' />
                 Export
@@ -534,7 +534,7 @@ const TestReportPage = () => {
                     Contact Info
                   </th>
                   <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Time Taken
+                    Time
                   </th>
                   <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Submitted
@@ -559,11 +559,11 @@ const TestReportPage = () => {
           {/* Empty State */}
           {filteredParticipants.length === 0 && (
             <div className='text-center py-12'>
-              <Users className='h-12 w-12 mx-auto mb-4 text-gray-400' />
+              <FileText className='w-16 h-16 text-gray-300 mx-auto mb-4' />
               <h3 className='text-lg font-medium text-gray-900 mb-2'>
                 No participants found
               </h3>
-              <p className='text-gray-500 mb-4'>
+              <p className='text-gray-500'>
                 {searchQuery || filterScore !== 'All'
                   ? 'Try adjusting your search or filter criteria.'
                   : 'No participants have registered for this test yet.'}

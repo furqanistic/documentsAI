@@ -1,4 +1,4 @@
-//store.js
+// /redux/store.js
 import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import {
   FLUSH,

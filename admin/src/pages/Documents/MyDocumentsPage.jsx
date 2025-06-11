@@ -299,7 +299,7 @@ const MyDocuments = () => {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className='appearance-none w-full flex items-center justify-between pl-2 pr-6 h-9 lg:h-10 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none bg-white text-gray-700 transition-colors text-xs lg:w-[120px]'
+                className='appearance-none w-full flex items-center justify-between pl-2 pr-6 h-9 lg:h-10 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none bg-white text-gray-700 transition-colors text-sm lg:w-[120px]'
               >
                 <option value='All'>Status</option>
                 <option value='completed'>Completed</option>
@@ -317,7 +317,7 @@ const MyDocuments = () => {
                   setSearchQuery('')
                   setFilterStatus('All')
                 }}
-                className='h-9 lg:h-10 px-2 lg:px-3 text-xs lg:text-sm font-medium lg:w-[120px] col-span-1'
+                className='h-9 lg:h-10 px-2 lg:px-3 text-sm font-medium lg:w-[120px] col-span-1'
               >
                 Clear
               </Button>

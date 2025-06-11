@@ -22,6 +22,279 @@ import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { axiosInstance } from '../../../config'
 
+const FormField = ({
+  id,
+  type,
+  value,
+  onChange,
+  label,
+  icon: Icon,
+  error,
+  disabled,
+  required = true,
+  showPasswordToggle,
+  onTogglePassword,
+  showPassword,
+}) => (
+  <div className='mb-4'>
+    <label
+      htmlFor={id}
+      className='block text-sm font-medium text-gray-700 mb-1'
+    >
+      {label}
+    </label>
+    <div className='relative flex items-center'>
+      <Icon
+        size={18}
+        className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'
+      />
+      <input
+        id={id}
+        type={showPasswordToggle ? (showPassword ? 'text' : 'password') : type}
+        value={value}
+        onChange={onChange}
+        className={`w-full pl-7 ${
+          showPasswordToggle ? 'pr-8' : 'pr-2'
+        } py-2 border-b transition-colors bg-transparent ${
+          error
+            ? 'border-red-300 focus:border-red-500'
+            : 'border-gray-300 focus:border-black'
+        } text-gray-800 focus:outline-none`}
+        required={required}
+        disabled={disabled}
+      />
+      {showPasswordToggle && (
+        <motion.button
+          type='button'
+          className='absolute right-0 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer'
+          onClick={onTogglePassword}
+          whileTap={{ scale: 0.9 }}
+          disabled={disabled}
+          aria-label={showPassword ? 'Hide password' : 'Show password'}
+        >
+          {showPassword ? (
+            <EyeOff size={18} className='text-gray-400 hover:text-gray-600' />
+          ) : (
+            <Eye size={18} className='text-gray-400 hover:text-gray-600' />
+          )}
+        </motion.button>
+      )}
+    </div>
+    {error && <p className='text-red-600 text-xs mt-1'>{error}</p>}
+  </div>
+)
+
+const AuthForm = ({
+  view,
+  formData,
+  setFormData,
+  fieldErrors,
+  isLoading,
+  showPassword,
+  setShowPassword,
+  onSubmit,
+}) => {
+  const fields =
+    view === 'signup'
+      ? [
+          {
+            id: 'name',
+            type: 'text',
+            label: 'Full Name',
+            icon: User,
+            key: 'name',
+          },
+          {
+            id: 'email',
+            type: 'email',
+            label: 'Email Address',
+            icon: Mail,
+            key: 'email',
+          },
+          {
+            id: 'password',
+            type: 'password',
+            label: 'Password',
+            icon: Lock,
+            key: 'password',
+            showPasswordToggle: true,
+          },
+        ]
+      : [
+          {
+            id: 'email',
+            type: 'email',
+            label: 'Email Address',
+            icon: Mail,
+            key: 'email',
+          },
+          {
+            id: 'password',
+            type: 'password',
+            label: 'Password',
+            icon: Lock,
+            key: 'password',
+            showPasswordToggle: true,
+          },
+        ]
+
+  return (
+    <motion.form
+      key={view}
+      onSubmit={onSubmit}
+      className='space-y-3 md:space-y-4 flex flex-col w-full'
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {fields.map((field) => (
+        <FormField
+          key={field.id}
+          {...field}
+          value={formData[field.key]}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, [field.key]: e.target.value }))
+          }
+          error={fieldErrors[field.key]}
+          disabled={isLoading}
+          showPassword={showPassword}
+          onTogglePassword={() => setShowPassword(!showPassword)}
+        />
+      ))}
+
+      {view === 'login' && (
+        <div className='flex justify-end'>
+          <motion.button
+            type='button'
+            className='text-sm text-black hover:text-zinc-600 font-medium transition-colors'
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            disabled={isLoading}
+          >
+            Forgot Password?
+          </motion.button>
+        </div>
+      )}
+    </motion.form>
+  )
+}
+
+const GoogleButton = ({ onClick, disabled }) => (
+  <motion.button
+    type='button'
+    onClick={onClick}
+    disabled={disabled}
+    className='w-full py-2 md:py-2.5 px-3 md:px-4 border border-gray-300 shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none flex items-center justify-center transition-colors rounded-md disabled:opacity-50 disabled:cursor-not-allowed'
+    whileHover={!disabled ? { scale: 1.02 } : {}}
+    whileTap={!disabled ? { scale: 0.98 } : {}}
+  >
+    <svg className='mr-2' width='20' height='20' viewBox='0 0 48 48'>
+      <path
+        fill='#FFC107'
+        d='M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z'
+      />
+      <path
+        fill='#FF3D00'
+        d='M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z'
+      />
+      <path
+        fill='#4CAF50'
+        d='M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z'
+      />
+      <path
+        fill='#1976D2'
+        d='M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z'
+      />
+    </svg>
+    Continue with Google
+  </motion.button>
+)
+
+const CreativeDesign = ({ view }) => (
+  <div className='hidden md:flex w-1/2 bg-black p-10 flex-col justify-between relative overflow-hidden'>
+    <div className='absolute inset-0 bg-gradient-to-br from-black to-purple-900/80 opacity-80'>
+      <div className='absolute inset-0 bg-[linear-gradient(0deg,transparent_calc(100%-1px),rgba(255,255,255,0.1)_100%),linear-gradient(90deg,transparent_calc(100%-1px),rgba(255,255,255,0.1)_100%)] bg-[size:50px_50px]'></div>
+      <motion.div
+        className='absolute w-40 h-40 rounded-full bg-purple-500/40 blur-3xl'
+        animate={{ opacity: [0.3, 0.5, 0.3] }}
+        transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
+        style={{ top: '30%', left: '60%' }}
+      />
+    </div>
+
+    <div className='relative z-10 flex flex-col h-full'>
+      <div>
+        <motion.h2
+          className='text-white text-4xl font-bold mb-6'
+          key={view}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {view === 'signup' ? 'Join Calani Today' : 'Welcome Back'}
+        </motion.h2>
+        <motion.p
+          className='text-zinc-300 text-lg mb-8'
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          Create documents, interactive tests, and more with AI-powered tools
+          designed for educators, students, and professionals.
+        </motion.p>
+      </div>
+
+      <div className='relative h-48 my-6'>
+        <div className='w-full h-full flex items-center justify-center'>
+          <motion.div
+            className='w-full h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 relative'
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 2, ease: 'easeOut' }}
+            style={{ transformOrigin: 'left' }}
+          >
+            {[0, 0.5, 1.5].map((delay, i) => (
+              <motion.div
+                key={i}
+                className={`absolute -top-${i === 1 ? '3' : '2'} ${
+                  i === 1
+                    ? 'left-1/2 w-6 h-6 -translate-x-1/2'
+                    : i === 0
+                    ? 'left-0 w-5 h-5'
+                    : 'right-0 w-5 h-5'
+                } rounded-full ${i === 1 ? 'bg-pink-500' : 'bg-purple-600'}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: delay, duration: 0.5 }}
+              />
+            ))}
+          </motion.div>
+        </div>
+      </div>
+
+      <div className='mt-auto'>
+        <p className='text-zinc-400 text-sm mb-3'>
+          Trusted by educators worldwide
+        </p>
+        <div className='flex space-x-4'>
+          {['Stanford', 'MIT', 'Harvard'].map((name, index) => (
+            <motion.div
+              key={name}
+              className='h-12 w-12 rounded-full bg-zinc-800/50 border border-zinc-700/50 flex items-center justify-center shadow-lg'
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.5 }}
+            >
+              <span className='text-white text-sm font-medium'>{name[0]}</span>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+)
+
 const AuthModal = ({
   isOpen,
   onClose,
@@ -29,50 +302,28 @@ const AuthModal = ({
   onAuthSuccess,
 }) => {
   const dispatch = useDispatch()
-
-  // Redux state
   const isLoading = useSelector(selectIsLoading)
   const currentUser = useSelector(selectCurrentUser)
   const token = useSelector(selectToken)
 
   const [view, setView] = useState(initialView)
   const [showPassword, setShowPassword] = useState(false)
-
-  // Form states
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
-
-  // Error and success states (keeping these local for UI feedback)
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    name: '',
+  })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-
-  // Form validation
   const [fieldErrors, setFieldErrors] = useState({})
-
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 0
   )
 
   const isMobile = windowWidth < 768
 
-  const getMobileModalHeight = () => {
-    if (windowWidth <= 320) {
-      return '530px'
-    } else if (windowWidth <= 375) {
-      return '550px'
-    } else {
-      return '570px'
-    }
-  }
-
-  const mobileFormHeight = '180px'
-
   useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth)
-    }
-
+    const handleResize = () => setWindowWidth(window.innerWidth)
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
@@ -85,22 +336,18 @@ const AuthModal = ({
     if (isOpen) {
       document.addEventListener('keydown', handleEscape)
       document.body.style.overflow = 'hidden'
-      document.documentElement.style.overflow = 'hidden'
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape)
       document.body.style.overflow = 'unset'
-      document.documentElement.style.overflow = 'unset'
     }
   }, [isOpen, onClose])
 
   useEffect(() => {
     if (!isOpen) {
       setTimeout(() => {
-        setEmail('')
-        setPassword('')
-        setName('')
+        setFormData({ email: '', password: '', name: '' })
         setError('')
         setSuccess('')
         setFieldErrors({})
@@ -108,56 +355,114 @@ const AuthModal = ({
     }
   }, [isOpen])
 
-  // Clear errors when switching views
   useEffect(() => {
     setError('')
     setSuccess('')
     setFieldErrors({})
   }, [view])
 
-  // Handle successful authentication
+  useEffect(() => {
+    const checkOAuthCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search)
+      const error = urlParams.get('error')
+      const success = urlParams.get('success')
+      const token = urlParams.get('token')
+      const googleAuthInitiated = sessionStorage.getItem(
+        'google_auth_initiated'
+      )
+
+      if (error) {
+        const errorMessages = {
+          authentication_failed:
+            'Google authentication failed. Please try again.',
+          server_error: 'Server error occurred. Please try again later.',
+          access_denied:
+            'Access denied. Please try again and accept the required permissions.',
+        }
+        setError(
+          errorMessages[error] || 'Authentication failed. Please try again.'
+        )
+        dispatch(loginFailure())
+        sessionStorage.removeItem('google_auth_initiated')
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        )
+      } else if (success === 'true' || token) {
+        try {
+          dispatch(loginStart())
+
+          if (token) {
+            axiosInstance.defaults.headers.common[
+              'Authorization'
+            ] = `Bearer ${token}`
+          }
+
+          const response = await axiosInstance.get('/auth/me')
+          const userData =
+            response.data.data?.user || response.data.user || response.data
+
+          dispatch(
+            loginSuccess({
+              token: token || 'cookie-based',
+              data: { user: userData },
+            })
+          )
+
+          setSuccess('Login successful!')
+          sessionStorage.removeItem('google_auth_initiated')
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+          )
+        } catch (err) {
+          console.error('Error getting user data after OAuth:', err)
+          setError('Failed to complete authentication. Please try again.')
+          dispatch(loginFailure())
+          sessionStorage.removeItem('google_auth_initiated')
+        }
+      } else if (googleAuthInitiated) {
+        dispatch(loginFailure())
+        sessionStorage.removeItem('google_auth_initiated')
+      }
+    }
+
+    checkOAuthCallback()
+  }, [dispatch])
+
   useEffect(() => {
     if (currentUser && token && success) {
-      // Call success callback if provided
-      if (onAuthSuccess) {
-        onAuthSuccess({
-          user: currentUser,
-          token: token,
-          isNewUser: view === 'signup',
-        })
-      }
-
-      // Auto close after success
-      setTimeout(() => {
-        onClose()
-      }, 1500)
+      onAuthSuccess?.({
+        user: currentUser,
+        token,
+        isNewUser: view === 'signup',
+      })
+      setTimeout(onClose, 1500)
     }
   }, [currentUser, token, success, onAuthSuccess, onClose, view])
 
-  // Validate form fields
   const validateForm = () => {
     const errors = {}
-
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!email) {
+
+    if (!formData.email) {
       errors.email = 'Email is required'
-    } else if (!emailRegex.test(email)) {
+    } else if (!emailRegex.test(formData.email)) {
       errors.email = 'Please enter a valid email address'
     }
 
-    // Password validation - only for signup
-    if (!password) {
+    if (!formData.password) {
       errors.password = 'Password is required'
-    } else if (view === 'signup' && password.length < 6) {
+    } else if (view === 'signup' && formData.password.length < 6) {
       errors.password = 'Password must be at least 6 characters'
     }
 
-    // Name validation for signup
     if (view === 'signup') {
-      if (!name) {
+      if (!formData.name) {
         errors.name = 'Full name is required'
-      } else if (name.length < 2) {
+      } else if (formData.name.length < 2) {
         errors.name = 'Name must be at least 2 characters'
       }
     }
@@ -166,1187 +471,298 @@ const AuthModal = ({
     return Object.keys(errors).length === 0
   }
 
-  // Handle authentication
+  const getErrorMessage = (err, view) => {
+    if (!err.response) {
+      return 'Unable to connect. Please check your internet connection and try again.'
+    }
+
+    const { status, data } = err.response
+    const backendMessage = data?.message || data?.error || ''
+
+    const statusMessages = {
+      400:
+        view === 'signup'
+          ? backendMessage.toLowerCase().includes('email') &&
+            backendMessage.toLowerCase().includes('exist')
+            ? 'An account with this email already exists. Try logging in instead.'
+            : 'Please check your information and try again.'
+          : 'Please check your information and try again.',
+      401: 'Invalid email or password.',
+      404:
+        view === 'login'
+          ? 'Invalid email or password.'
+          : 'Service not found. Please try again later.',
+      422: 'Please check your information and ensure all fields are valid.',
+      429: 'Too many attempts. Please wait a moment before trying again.',
+      500: 'Server error. Please try again later.',
+    }
+
+    return (
+      statusMessages[status] ||
+      (view === 'login'
+        ? 'Invalid email or password.'
+        : 'Unable to create account. Please try again.')
+    )
+  }
+
   const handleAuth = async () => {
     try {
       setError('')
       setSuccess('')
-
-      // Start loading state
       dispatch(loginStart())
 
-      if (view === 'signup') {
-        const response = await axiosInstance.post('/auth/signup', {
-          name: name.trim(),
-          email: email.trim().toLowerCase(),
-          password,
-        })
+      const endpoint = view === 'signup' ? '/auth/signup' : '/auth/signin'
+      const payload =
+        view === 'signup'
+          ? {
+              name: formData.name.trim(),
+              email: formData.email.trim().toLowerCase(),
+              password: formData.password,
+            }
+          : {
+              email: formData.email.trim().toLowerCase(),
+              password: formData.password,
+            }
 
-        // Dispatch success action with the response data
-        dispatch(loginSuccess(response.data))
-        setSuccess('Account created successfully!')
-      } else {
-        const response = await axiosInstance.post('/auth/signin', {
-          email: email.trim().toLowerCase(),
-          password,
-        })
-
-        // Dispatch success action with the response data
-        dispatch(loginSuccess(response.data))
-        setSuccess('Login successful!')
-      }
+      const response = await axiosInstance.post(endpoint, payload)
+      dispatch(loginSuccess(response.data))
+      setSuccess(
+        view === 'signup'
+          ? 'Account created successfully!'
+          : 'Login successful!'
+      )
     } catch (err) {
       console.error('Auth error:', err)
-
-      // Always dispatch failure action to reset loading state
       dispatch(loginFailure())
-
-      let errorMessage = 'An error occurred. Please try again.'
-
-      // Handle different status codes
-      if (err.response) {
-        const status = err.response.status
-        const backendMessage =
-          err.response.data?.message || err.response.data?.error || ''
-
-        switch (status) {
-          case 400:
-            if (view === 'signup') {
-              if (
-                backendMessage.toLowerCase().includes('email') &&
-                (backendMessage.toLowerCase().includes('exists') ||
-                  backendMessage.toLowerCase().includes('already'))
-              ) {
-                errorMessage =
-                  'An account with this email already exists. Try logging in instead.'
-              } else if (backendMessage.toLowerCase().includes('provide')) {
-                errorMessage = 'Please fill in all required fields.'
-              } else {
-                errorMessage = 'Please check your information and try again.'
-              }
-            } else {
-              if (backendMessage.toLowerCase().includes('provide')) {
-                errorMessage = 'Please provide both email and password.'
-              } else {
-                errorMessage = 'Please check your information and try again.'
-              }
-            }
-            break
-
-          case 401:
-            errorMessage = 'Invalid email or password.'
-            break
-
-          case 404:
-            if (view === 'login') {
-              errorMessage = 'Invalid email or password.'
-            } else {
-              errorMessage = 'Service not found. Please try again later.'
-            }
-            break
-
-          case 422:
-            errorMessage =
-              'Please check your information and ensure all fields are valid.'
-            break
-
-          case 429:
-            errorMessage =
-              'Too many attempts. Please wait a moment before trying again.'
-            break
-
-          case 500:
-            errorMessage = 'Server error. Please try again later.'
-            break
-
-          default:
-            // Try to use backend message if it's user-friendly
-            if (backendMessage && backendMessage.length < 100) {
-              // Clean up the backend message for better user experience
-              if (
-                backendMessage
-                  .toLowerCase()
-                  .includes('incorrect email or password')
-              ) {
-                errorMessage = 'Invalid email or password.'
-              } else {
-                errorMessage = backendMessage
-              }
-            } else {
-              errorMessage =
-                view === 'login'
-                  ? 'Invalid email or password.'
-                  : 'Unable to create account. Please try again.'
-            }
-        }
-
-        // Additional message refinement based on backend messages
-        if (backendMessage) {
-          const lowerMessage = backendMessage.toLowerCase()
-          if (lowerMessage.includes('user with this email already exists')) {
-            errorMessage =
-              'An account with this email already exists. Try logging in instead.'
-          } else if (lowerMessage.includes('incorrect email or password')) {
-            errorMessage = 'Invalid email or password.'
-          }
-        }
-      } else if (err.request) {
-        // Network error
-        errorMessage =
-          'Unable to connect. Please check your internet connection and try again.'
-      } else {
-        // Other error
-        errorMessage = 'An unexpected error occurred. Please try again.'
-      }
-
-      setError(errorMessage)
+      setError(getErrorMessage(err, view))
     }
   }
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    // Validate form
-    if (!validateForm()) {
-      return
-    }
-
+    if (!validateForm()) return
     await handleAuth()
   }
 
-  // Handle Google authentication (placeholder)
   const handleGoogleAuth = async () => {
     try {
       setError('')
       dispatch(loginStart())
-      // Implement Google OAuth here
-      console.log('Google auth not implemented yet')
-      setError('Google authentication coming soon!')
-      dispatch(loginFailure()) // Reset loading state
+
+      const currentUrl = window.location.origin + window.location.pathname
+      const apiUrl = import.meta.env.VITE_API_URL
+      const url = new URL(apiUrl)
+      const baseUrl = `${url.protocol}//${url.host}`
+      const googleAuthUrl = `${baseUrl}/api/auth/google?redirect=${encodeURIComponent(
+        currentUrl
+      )}`
+
+      sessionStorage.setItem('google_auth_initiated', 'true')
+      window.location.href = googleAuthUrl
     } catch (err) {
-      setError('Google authentication failed')
-      dispatch(loginFailure()) // Always reset loading state
+      console.error('Google auth error:', err)
+      setError('Google authentication failed. Please try again.')
+      dispatch(loginFailure())
     }
   }
 
   const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose()
-    }
+    if (e.target === e.currentTarget) onClose()
   }
 
   if (!isOpen) return null
 
+  const modalHeight = isMobile
+    ? windowWidth <= 320
+      ? '530px'
+      : windowWidth <= 375
+      ? '550px'
+      : '570px'
+    : '650px'
+
   return (
     <AnimatePresence>
-      {isOpen && (
+      <motion.div
+        className='fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4'
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        onClick={handleBackdropClick}
+      >
         <motion.div
-          className='fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4'
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
-          onClick={handleBackdropClick}
+          className={`bg-white rounded-2xl overflow-hidden w-full shadow-2xl flex ${
+            isMobile ? 'flex-col' : 'flex-row max-w-5xl'
+          }`}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          style={{ height: modalHeight }}
         >
-          {/* MOBILE DESIGN (< 768px) */}
-          {isMobile ? (
-            <motion.div
-              className='bg-white rounded-2xl overflow-hidden w-full shadow-2xl flex flex-col'
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              style={{
-                height: getMobileModalHeight(),
-                maxWidth: '100%',
-              }}
-            >
-              {/* Mobile header */}
-              <motion.div className='relative p-4 border-b border-gray-200'>
-                <div className='flex justify-between items-center'>
-                  <motion.h3
-                    className='text-lg font-bold text-gray-900'
-                    key={view}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {view === 'signup' ? 'Create Account' : 'Log In'}
-                  </motion.h3>
-                  <motion.button
-                    onClick={onClose}
-                    className='p-1.5 rounded-full hover:bg-gray-100 transition-colors'
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    aria-label='Close modal'
-                  >
-                    <X size={18} className='text-gray-500' />
-                  </motion.button>
-                </div>
-              </motion.div>
+          {!isMobile && <CreativeDesign view={view} />}
 
-              {/* Error/Success Messages */}
-              {(error || success) && (
-                <motion.div
-                  className={`mx-4 mt-3 p-3 rounded-lg flex items-start space-x-2 ${
-                    error
-                      ? 'bg-red-50 border border-red-200'
-                      : 'bg-green-50 border border-green-200'
+          <div
+            className={`${
+              isMobile ? 'w-full' : 'w-1/2'
+            } p-4 md:p-10 flex flex-col h-full`}
+          >
+            <div className='flex justify-between items-center mb-4 md:mb-6'>
+              <motion.h3
+                className='text-lg md:text-3xl font-bold text-gray-900'
+                key={view}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {view === 'signup' ? 'Create Account' : 'Log In'}
+              </motion.h3>
+              <motion.button
+                onClick={onClose}
+                className='p-1.5 md:p-2 rounded-full hover:bg-gray-100 transition-colors'
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label='Close modal'
+              >
+                <X size={isMobile ? 18 : 20} className='text-gray-500' />
+              </motion.button>
+            </div>
+
+            {(error || success) && (
+              <motion.div
+                className={`mb-3 md:mb-4 p-3 rounded-lg flex items-start space-x-2 ${
+                  error
+                    ? 'bg-red-50 border border-red-200'
+                    : 'bg-green-50 border border-green-200'
+                }`}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {error ? (
+                  <AlertCircle
+                    size={16}
+                    className='text-red-600 mt-0.5 flex-shrink-0'
+                  />
+                ) : (
+                  <CheckCircle
+                    size={16}
+                    className='text-green-600 mt-0.5 flex-shrink-0'
+                  />
+                )}
+                <span
+                  className={`text-sm ${
+                    error ? 'text-red-700' : 'text-green-700'
                   }`}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
                 >
-                  {error ? (
-                    <AlertCircle
-                      size={16}
-                      className='text-red-600 mt-0.5 flex-shrink-0'
-                    />
-                  ) : (
-                    <CheckCircle
-                      size={16}
-                      className='text-green-600 mt-0.5 flex-shrink-0'
-                    />
-                  )}
-                  <span
-                    className={`text-sm ${
-                      error ? 'text-red-700' : 'text-green-700'
-                    }`}
-                  >
-                    {error || success}
+                  {error || success}
+                </span>
+              </motion.div>
+            )}
+
+            <div className='flex-grow overflow-y-auto'>
+              <AnimatePresence mode='wait'>
+                <AuthForm
+                  view={view}
+                  formData={formData}
+                  setFormData={setFormData}
+                  fieldErrors={fieldErrors}
+                  isLoading={isLoading}
+                  showPassword={showPassword}
+                  setShowPassword={setShowPassword}
+                  onSubmit={handleSubmit}
+                />
+              </AnimatePresence>
+            </div>
+
+            <div className='mt-4'>
+              <motion.button
+                type='submit'
+                disabled={isLoading}
+                className={`w-full py-2 md:py-3 px-4 flex items-center justify-center text-white font-medium shadow-md rounded-md transition-all ${
+                  isLoading
+                    ? 'bg-black/80 cursor-not-allowed'
+                    : 'bg-black hover:bg-zinc-800 active:bg-zinc-900'
+                }`}
+                whileHover={!isLoading ? { scale: 1.02 } : {}}
+                whileTap={!isLoading ? { scale: 0.98 } : {}}
+                onClick={handleSubmit}
+              >
+                {isLoading ? (
+                  <motion.div
+                    className='h-5 w-5 rounded-full border-2 border-white border-t-transparent'
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: 'linear',
+                    }}
+                  />
+                ) : (
+                  <>
+                    <span>
+                      {view === 'signup' ? 'Create Account' : 'Log In'}
+                    </span>
+                    <ArrowRight size={18} className='ml-2' />
+                  </>
+                )}
+              </motion.button>
+
+              <div className='relative my-3'>
+                <div className='absolute inset-0 flex items-center'>
+                  <div className='w-full border-t border-gray-200' />
+                </div>
+                <div className='relative flex justify-center'>
+                  <span className='bg-white px-2 md:px-4 text-xs md:text-sm text-gray-500'>
+                    or continue with
                   </span>
-                </motion.div>
-              )}
-
-              {/* Form area */}
-              <div className='px-4 py-3 flex-grow overflow-y-auto'>
-                <AnimatePresence mode='wait' initial={false}>
-                  <motion.form
-                    key={view}
-                    onSubmit={handleSubmit}
-                    className='space-y-3 flex flex-col w-full'
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    style={{ minHeight: mobileFormHeight }}
-                  >
-                    {view === 'signup' ? (
-                      <div className='space-y-3'>
-                        <div>
-                          <label
-                            htmlFor='name'
-                            className='block text-sm font-medium text-gray-700 mb-1.5'
-                          >
-                            Full Name
-                          </label>
-                          <div className='relative flex items-center'>
-                            <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
-                              <User size={18} />
-                            </div>
-                            <input
-                              id='name'
-                              type='text'
-                              value={name}
-                              onChange={(e) => setName(e.target.value)}
-                              className={`w-full pl-7 pr-2 py-2 border-b transition-colors bg-transparent ${
-                                fieldErrors.name
-                                  ? 'border-red-300 focus:border-red-500'
-                                  : 'border-gray-300 focus:border-black'
-                              } text-gray-800 focus:outline-none`}
-                              required
-                              disabled={isLoading}
-                            />
-                          </div>
-                          {fieldErrors.name && (
-                            <p className='text-red-600 text-xs mt-1'>
-                              {fieldErrors.name}
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor='email'
-                            className='block text-sm font-medium text-gray-700 mb-1.5'
-                          >
-                            Email Address
-                          </label>
-                          <div className='relative flex items-center'>
-                            <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
-                              <Mail size={18} />
-                            </div>
-                            <input
-                              id='email'
-                              type='email'
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              className={`w-full pl-7 pr-2 py-2 border-b transition-colors bg-transparent ${
-                                fieldErrors.email
-                                  ? 'border-red-300 focus:border-red-500'
-                                  : 'border-gray-300 focus:border-black'
-                              } text-gray-800 focus:outline-none`}
-                              required
-                              disabled={isLoading}
-                            />
-                          </div>
-                          {fieldErrors.email && (
-                            <p className='text-red-600 text-xs mt-1'>
-                              {fieldErrors.email}
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor='password'
-                            className='block text-sm font-medium text-gray-700 mb-1.5'
-                          >
-                            Password
-                          </label>
-                          <div className='relative flex items-center'>
-                            <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
-                              <Lock size={18} />
-                            </div>
-                            <input
-                              id='password'
-                              type={showPassword ? 'text' : 'password'}
-                              value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              className={`w-full pl-7 pr-8 py-2 border-b transition-colors bg-transparent ${
-                                fieldErrors.password
-                                  ? 'border-red-300 focus:border-red-500'
-                                  : 'border-gray-300 focus:border-black'
-                              } text-gray-800 focus:outline-none`}
-                              required
-                              disabled={isLoading}
-                            />
-                            <motion.button
-                              type='button'
-                              className='absolute right-0 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer'
-                              onClick={() => setShowPassword(!showPassword)}
-                              whileTap={{ scale: 0.9 }}
-                              disabled={isLoading}
-                              aria-label={
-                                showPassword ? 'Hide password' : 'Show password'
-                              }
-                            >
-                              {showPassword ? (
-                                <EyeOff
-                                  size={18}
-                                  className='text-gray-400 hover:text-gray-600'
-                                />
-                              ) : (
-                                <Eye
-                                  size={18}
-                                  className='text-gray-400 hover:text-gray-600'
-                                />
-                              )}
-                            </motion.button>
-                          </div>
-                          {fieldErrors.password && (
-                            <p className='text-red-600 text-xs mt-1'>
-                              {fieldErrors.password}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className='space-y-3'>
-                        <div>
-                          <label
-                            htmlFor='login-email'
-                            className='block text-sm font-medium text-gray-700 mb-1.5'
-                          >
-                            Email Address
-                          </label>
-                          <div className='relative flex items-center'>
-                            <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
-                              <Mail size={18} />
-                            </div>
-                            <input
-                              id='login-email'
-                              type='email'
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              className={`w-full pl-7 pr-2 py-2 border-b transition-colors bg-transparent ${
-                                fieldErrors.email
-                                  ? 'border-red-300 focus:border-red-500'
-                                  : 'border-gray-300 focus:border-black'
-                              } text-gray-800 focus:outline-none`}
-                              required
-                              disabled={isLoading}
-                            />
-                          </div>
-                          {fieldErrors.email && (
-                            <p className='text-red-600 text-xs mt-1'>
-                              {fieldErrors.email}
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor='login-password'
-                            className='block text-sm font-medium text-gray-700 mb-1.5'
-                          >
-                            Password
-                          </label>
-                          <div className='relative flex items-center'>
-                            <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
-                              <Lock size={18} />
-                            </div>
-                            <input
-                              id='login-password'
-                              type={showPassword ? 'text' : 'password'}
-                              value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              className={`w-full pl-7 pr-8 py-2 border-b transition-colors bg-transparent ${
-                                fieldErrors.password
-                                  ? 'border-red-300 focus:border-red-500'
-                                  : 'border-gray-300 focus:border-black'
-                              } text-gray-800 focus:outline-none`}
-                              required
-                              disabled={isLoading}
-                            />
-                            <motion.button
-                              type='button'
-                              className='absolute right-0 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer'
-                              onClick={() => setShowPassword(!showPassword)}
-                              whileTap={{ scale: 0.9 }}
-                              disabled={isLoading}
-                              aria-label={
-                                showPassword ? 'Hide password' : 'Show password'
-                              }
-                            >
-                              {showPassword ? (
-                                <EyeOff
-                                  size={18}
-                                  className='text-gray-400 hover:text-gray-600'
-                                />
-                              ) : (
-                                <Eye
-                                  size={18}
-                                  className='text-gray-400 hover:text-gray-600'
-                                />
-                              )}
-                            </motion.button>
-                          </div>
-                          {fieldErrors.password && (
-                            <p className='text-red-600 text-xs mt-1'>
-                              {fieldErrors.password}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className='flex justify-end'>
-                          <motion.button
-                            type='button'
-                            className='text-sm text-black hover:text-zinc-600 font-medium transition-colors'
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            disabled={isLoading}
-                          >
-                            Forgot Password?
-                          </motion.button>
-                        </div>
-                      </div>
-                    )}
-                  </motion.form>
-                </AnimatePresence>
+                </div>
               </div>
 
-              {/* Bottom section with actions */}
-              <div className='px-4 py-2'>
-                <motion.button
-                  type='submit'
-                  disabled={isLoading}
-                  className={`w-full py-2 px-4 flex items-center justify-center text-white font-medium shadow-md rounded-md transition-all ${
-                    isLoading
-                      ? 'bg-black/80 cursor-not-allowed'
-                      : 'bg-black hover:bg-zinc-800 active:bg-zinc-900'
-                  }`}
-                  whileHover={!isLoading ? { scale: 1.02 } : {}}
-                  whileTap={!isLoading ? { scale: 0.98 } : {}}
-                  onClick={handleSubmit}
-                >
-                  {isLoading ? (
-                    <motion.div
-                      className='h-5 w-5 rounded-full border-2 border-white border-t-transparent'
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: 'linear',
-                      }}
-                    ></motion.div>
-                  ) : (
-                    <>
-                      <span>
-                        {view === 'signup' ? 'Create Account' : 'Log In'}
-                      </span>
-                      <ArrowRight size={18} className='ml-2' />
-                    </>
-                  )}
-                </motion.button>
+              <GoogleButton onClick={handleGoogleAuth} disabled={isLoading} />
 
-                <div className='relative my-3'>
-                  <div className='absolute inset-0 flex items-center'>
-                    <div className='w-full border-t border-gray-200'></div>
-                  </div>
-                  <div className='relative flex justify-center'>
-                    <span className='bg-white px-2 text-xs text-gray-500'>
-                      or continue with
-                    </span>
-                  </div>
-                </div>
-
-                <div className='w-full'>
+              <div className='mt-4 text-center'>
+                <p className='text-sm text-gray-600'>
+                  {view === 'signup'
+                    ? 'Already have an account?'
+                    : "Don't have an account?"}
                   <motion.button
                     type='button'
-                    onClick={handleGoogleAuth}
+                    className='ml-1 text-black hover:text-zinc-600 font-medium transition-colors disabled:opacity-50'
+                    onClick={() =>
+                      setView(view === 'signup' ? 'login' : 'signup')
+                    }
+                    whileHover={!isLoading ? { scale: 1.05 } : {}}
+                    whileTap={!isLoading ? { scale: 0.95 } : {}}
                     disabled={isLoading}
-                    className='w-full py-1.5 px-3 border border-gray-300 shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none flex items-center justify-center transition-colors rounded-md disabled:opacity-50 disabled:cursor-not-allowed'
-                    whileHover={!isLoading ? { scale: 1.02 } : {}}
-                    whileTap={!isLoading ? { scale: 0.98 } : {}}
                   >
-                    <svg
-                      className='mr-2'
-                      width='20'
-                      height='20'
-                      viewBox='0 0 48 48'
-                    >
-                      <path
-                        fill='#FFC107'
-                        d='M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z'
-                      />
-                      <path
-                        fill='#FF3D00'
-                        d='M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z'
-                      />
-                      <path
-                        fill='#4CAF50'
-                        d='M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z'
-                      />
-                      <path
-                        fill='#1976D2'
-                        d='M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z'
-                      />
-                    </svg>
-                    Continue with Google
+                    {view === 'signup' ? 'Log In' : 'Sign Up'}
                   </motion.button>
-                </div>
-
-                <div className='mt-4 text-center'>
-                  <p className='text-sm text-gray-600'>
-                    {view === 'signup'
-                      ? 'Already have an account?'
-                      : "Don't have an account?"}
-                    <motion.button
-                      type='button'
-                      className='ml-1 text-black hover:text-zinc-600 font-medium transition-colors disabled:opacity-50'
-                      onClick={() =>
-                        setView(view === 'signup' ? 'login' : 'signup')
-                      }
-                      whileHover={!isLoading ? { scale: 1.05 } : {}}
-                      whileTap={!isLoading ? { scale: 0.95 } : {}}
-                      disabled={isLoading}
-                    >
-                      {view === 'signup' ? 'Log In' : 'Sign Up'}
-                    </motion.button>
-                  </p>
-                </div>
-
-                <div className='mt-3 pt-2 text-xs text-gray-500 text-center'>
-                  By continuing, you agree to Calani's{' '}
-                  <motion.a
-                    href='/terms'
-                    className='text-black hover:text-zinc-600 transition-colors'
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    Terms of Service
-                  </motion.a>{' '}
-                  and{' '}
-                  <motion.a
-                    href='/privacy'
-                    className='text-black hover:text-zinc-600 transition-colors'
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    Privacy Policy
-                  </motion.a>
-                </div>
-              </div>
-            </motion.div>
-          ) : (
-            /* DESKTOP DESIGN */
-            <motion.div
-              className='bg-white rounded-2xl overflow-hidden w-full max-w-5xl shadow-2xl flex flex-col md:flex-row'
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              style={{ height: '650px' }}
-            >
-              {/* Left side - Creative Design */}
-              <div className='hidden md:flex w-1/2 bg-black p-10 flex-col justify-between relative overflow-hidden'>
-                <div className='absolute inset-0 bg-gradient-to-br from-black to-purple-900/80 opacity-80'>
-                  <div className='absolute inset-0 bg-[linear-gradient(0deg,transparent_calc(100%-1px),rgba(255,255,255,0.1)_100%),linear-gradient(90deg,transparent_calc(100%-1px),rgba(255,255,255,0.1)_100%)] bg-[size:50px_50px]'></div>
-                  <motion.div
-                    className='absolute w-40 h-40 rounded-full bg-purple-500/40 blur-3xl'
-                    animate={{ opacity: [0.3, 0.5, 0.3] }}
-                    transition={{
-                      repeat: Infinity,
-                      duration: 4,
-                      ease: 'easeInOut',
-                    }}
-                    style={{ top: '30%', left: '60%' }}
-                  ></motion.div>
-                </div>
-
-                <div className='relative z-10 flex flex-col h-full'>
-                  <div>
-                    <motion.h2
-                      className='text-white text-4xl font-bold mb-6'
-                      key={view}
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      {view === 'signup' ? 'Join Calani Today' : 'Welcome Back'}
-                    </motion.h2>
-                    <motion.p
-                      className='text-zinc-300 text-lg mb-8'
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.3, delay: 0.1 }}
-                    >
-                      Create documents, interactive tests, and more with
-                      AI-powered tools designed for educators, students, and
-                      professionals.
-                    </motion.p>
-                  </div>
-
-                  <div className='relative h-48 my-6'>
-                    <div className='w-full h-full flex items-center justify-center'>
-                      <motion.div
-                        className='w-full h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 relative'
-                        initial={{ scaleX: 0 }}
-                        animate={{ scaleX: 1 }}
-                        transition={{ duration: 2, ease: 'easeOut' }}
-                        style={{ transformOrigin: 'left' }}
-                      >
-                        <motion.div
-                          className='absolute -top-2 left-0 w-5 h-5 rounded-full bg-purple-600'
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.5, duration: 0.5 }}
-                        ></motion.div>
-                        <motion.div
-                          className='absolute -top-3 left-1/2 w-6 h-6 rounded-full bg-pink-500 -translate-x-1/2'
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 1, duration: 0.5 }}
-                        ></motion.div>
-                        <motion.div
-                          className='absolute -top-2 right-0 w-5 h-5 rounded-full bg-purple-600'
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 1.5, duration: 0.5 }}
-                        ></motion.div>
-                      </motion.div>
-                    </div>
-
-                    <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 perspective-[600px]'>
-                      <motion.div
-                        className='w-full h-full relative'
-                        style={{ transformStyle: 'preserve-3d' }}
-                        animate={{ rotateY: 360, rotateX: 180 }}
-                        transition={{
-                          duration: 10,
-                          repeat: Infinity,
-                          ease: 'linear',
-                        }}
-                      >
-                        {[0, 180, 90, -90, 90, -90].map((rotation, index) => (
-                          <div
-                            key={index}
-                            className='absolute inset-0 bg-purple-600/20 border border-white/20'
-                            style={{
-                              transform:
-                                index < 2
-                                  ? `rotateY(${rotation}deg) translateZ(20px)`
-                                  : index < 4
-                                  ? `rotateY(${rotation}deg) translateZ(20px)`
-                                  : `rotateX(${rotation}deg) translateZ(20px)`,
-                            }}
-                          ></div>
-                        ))}
-                      </motion.div>
-                    </div>
-                  </div>
-
-                  <div className='mt-auto'>
-                    <p className='text-zinc-400 text-sm mb-3'>
-                      Trusted by educators worldwide
-                    </p>
-                    <div className='flex space-x-4'>
-                      {['Stanford', 'MIT', 'Harvard'].map((name, index) => (
-                        <motion.div
-                          key={name}
-                          className='h-12 w-12 rounded-full bg-zinc-800/50 border border-zinc-700/50 flex items-center justify-center shadow-lg'
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1, duration: 0.5 }}
-                        >
-                          <span className='text-white text-sm font-medium'>
-                            {name[0]}
-                          </span>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                </p>
               </div>
 
-              {/* Right side - Auth Form */}
-              <div className='w-1/2 p-10 flex flex-col h-full'>
-                <div className='flex justify-between items-center mb-6'>
-                  <motion.h3
-                    className='text-3xl font-bold text-gray-900'
-                    key={view}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {view === 'signup' ? 'Create Account' : 'Log In'}
-                  </motion.h3>
-                  <motion.button
-                    onClick={onClose}
-                    className='p-2 rounded-full hover:bg-gray-100 transition-colors'
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    aria-label='Close modal'
-                  >
-                    <X size={20} className='text-gray-500' />
-                  </motion.button>
-                </div>
-
-                {/* Error/Success Messages */}
-                {(error || success) && (
-                  <motion.div
-                    className={`mb-4 p-3 rounded-lg flex items-start space-x-2 ${
-                      error
-                        ? 'bg-red-50 border border-red-200'
-                        : 'bg-green-50 border border-green-200'
-                    }`}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {error ? (
-                      <AlertCircle
-                        size={16}
-                        className='text-red-600 mt-0.5 flex-shrink-0'
-                      />
-                    ) : (
-                      <CheckCircle
-                        size={16}
-                        className='text-green-600 mt-0.5 flex-shrink-0'
-                      />
-                    )}
-                    <span
-                      className={`text-sm ${
-                        error ? 'text-red-700' : 'text-green-700'
-                      }`}
-                    >
-                      {error || success}
-                    </span>
-                  </motion.div>
-                )}
-
-                <div className='flex-grow flex flex-col overflow-x-hidden'>
-                  <AnimatePresence mode='wait' initial={false}>
-                    <motion.form
-                      key={view}
-                      onSubmit={handleSubmit}
-                      className='space-y-4 flex flex-col w-full flex-grow'
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <div className='form-fields-container'>
-                        {view === 'signup' ? (
-                          <div className='h-full flex flex-col'>
-                            <div>
-                              <div className='mb-4 pt-2'>
-                                <label
-                                  htmlFor='name'
-                                  className='block text-sm font-medium text-gray-700 mb-1'
-                                >
-                                  Full Name
-                                </label>
-                                <div className='relative flex items-center'>
-                                  <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
-                                    <User size={18} />
-                                  </div>
-                                  <input
-                                    id='name'
-                                    type='text'
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className={`w-full pl-7 pr-2 py-2 border-b transition-colors bg-transparent ${
-                                      fieldErrors.name
-                                        ? 'border-red-300 focus:border-red-500'
-                                        : 'border-gray-300 focus:border-black'
-                                    } text-gray-800 focus:outline-none`}
-                                    required
-                                    disabled={isLoading}
-                                  />
-                                </div>
-                                {fieldErrors.name && (
-                                  <p className='text-red-600 text-xs mt-1'>
-                                    {fieldErrors.name}
-                                  </p>
-                                )}
-                              </div>
-
-                              <div className='mb-4'>
-                                <label
-                                  htmlFor='email'
-                                  className='block text-sm font-medium text-gray-700 mb-1'
-                                >
-                                  Email Address
-                                </label>
-                                <div className='relative flex items-center'>
-                                  <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
-                                    <Mail size={18} />
-                                  </div>
-                                  <input
-                                    id='email'
-                                    type='email'
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className={`w-full pl-7 pr-2 py-2 border-b transition-colors bg-transparent ${
-                                      fieldErrors.email
-                                        ? 'border-red-300 focus:border-red-500'
-                                        : 'border-gray-300 focus:border-black'
-                                    } text-gray-800 focus:outline-none`}
-                                    required
-                                    disabled={isLoading}
-                                  />
-                                </div>
-                                {fieldErrors.email && (
-                                  <p className='text-red-600 text-xs mt-1'>
-                                    {fieldErrors.email}
-                                  </p>
-                                )}
-                              </div>
-
-                              <div className='mb-4'>
-                                <label
-                                  htmlFor='password'
-                                  className='block text-sm font-medium text-gray-700 mb-1'
-                                >
-                                  Password
-                                </label>
-                                <div className='relative flex items-center'>
-                                  <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
-                                    <Lock size={18} />
-                                  </div>
-                                  <input
-                                    id='password'
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={password}
-                                    onChange={(e) =>
-                                      setPassword(e.target.value)
-                                    }
-                                    className={`w-full pl-7 pr-8 py-2 border-b transition-colors bg-transparent ${
-                                      fieldErrors.password
-                                        ? 'border-red-300 focus:border-red-500'
-                                        : 'border-gray-300 focus:border-black'
-                                    } text-gray-800 focus:outline-none`}
-                                    required
-                                    disabled={isLoading}
-                                  />
-                                  <motion.button
-                                    type='button'
-                                    className='absolute right-0 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer'
-                                    onClick={() =>
-                                      setShowPassword(!showPassword)
-                                    }
-                                    whileTap={{ scale: 0.9 }}
-                                    disabled={isLoading}
-                                    aria-label={
-                                      showPassword
-                                        ? 'Hide password'
-                                        : 'Show password'
-                                    }
-                                  >
-                                    {showPassword ? (
-                                      <EyeOff
-                                        size={18}
-                                        className='text-gray-400 hover:text-gray-600'
-                                      />
-                                    ) : (
-                                      <Eye
-                                        size={18}
-                                        className='text-gray-400 hover:text-gray-600'
-                                      />
-                                    )}
-                                  </motion.button>
-                                </div>
-                                {fieldErrors.password && (
-                                  <p className='text-red-600 text-xs mt-1'>
-                                    {fieldErrors.password}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            <div className='flex-grow'></div>
-                          </div>
-                        ) : (
-                          <div className='h-full flex flex-col'>
-                            <div>
-                              <div className='mb-4 pt-2'>
-                                <label
-                                  htmlFor='login-email'
-                                  className='block text-sm font-medium text-gray-700 mb-1'
-                                >
-                                  Email Address
-                                </label>
-                                <div className='relative flex items-center'>
-                                  <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
-                                    <Mail size={18} />
-                                  </div>
-                                  <input
-                                    id='login-email'
-                                    type='email'
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className={`w-full pl-7 pr-2 py-2 border-b transition-colors bg-transparent ${
-                                      fieldErrors.email
-                                        ? 'border-red-300 focus:border-red-500'
-                                        : 'border-gray-300 focus:border-black'
-                                    } text-gray-800 focus:outline-none`}
-                                    required
-                                    disabled={isLoading}
-                                  />
-                                </div>
-                                {fieldErrors.email && (
-                                  <p className='text-red-600 text-xs mt-1'>
-                                    {fieldErrors.email}
-                                  </p>
-                                )}
-                              </div>
-
-                              <div className='mb-4'>
-                                <label
-                                  htmlFor='login-password'
-                                  className='block text-sm font-medium text-gray-700 mb-1'
-                                >
-                                  Password
-                                </label>
-                                <div className='relative flex items-center'>
-                                  <div className='absolute left-0 top-1/2 -translate-y-1/2 text-gray-400'>
-                                    <Lock size={18} />
-                                  </div>
-                                  <input
-                                    id='login-password'
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={password}
-                                    onChange={(e) =>
-                                      setPassword(e.target.value)
-                                    }
-                                    className={`w-full pl-7 pr-8 py-2 border-b transition-colors bg-transparent ${
-                                      fieldErrors.password
-                                        ? 'border-red-300 focus:border-red-500'
-                                        : 'border-gray-300 focus:border-black'
-                                    } text-gray-800 focus:outline-none`}
-                                    required
-                                    disabled={isLoading}
-                                  />
-                                  <motion.button
-                                    type='button'
-                                    className='absolute right-0 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer'
-                                    onClick={() =>
-                                      setShowPassword(!showPassword)
-                                    }
-                                    whileTap={{ scale: 0.9 }}
-                                    disabled={isLoading}
-                                    aria-label={
-                                      showPassword
-                                        ? 'Hide password'
-                                        : 'Show password'
-                                    }
-                                  >
-                                    {showPassword ? (
-                                      <EyeOff
-                                        size={18}
-                                        className='text-gray-400 hover:text-gray-600'
-                                      />
-                                    ) : (
-                                      <Eye
-                                        size={18}
-                                        className='text-gray-400 hover:text-gray-600'
-                                      />
-                                    )}
-                                  </motion.button>
-                                </div>
-                                {fieldErrors.password && (
-                                  <p className='text-red-600 text-xs mt-1'>
-                                    {fieldErrors.password}
-                                  </p>
-                                )}
-                              </div>
-
-                              <div className='mb-4 flex justify-end'>
-                                <motion.button
-                                  type='button'
-                                  className='text-sm text-black hover:text-zinc-600 font-medium transition-colors'
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  disabled={isLoading}
-                                >
-                                  Forgot Password?
-                                </motion.button>
-                              </div>
-                            </div>
-                            <div className='flex-grow'></div>
-                          </div>
-                        )}
-                      </div>
-                    </motion.form>
-                  </AnimatePresence>
-                </div>
-
-                <div className='mt-4'>
-                  <motion.button
-                    type='submit'
-                    disabled={isLoading}
-                    className={`w-full py-3 px-4 flex rounded-sm items-center justify-center text-white font-medium shadow-md transition-all ${
-                      isLoading
-                        ? 'bg-black/80 cursor-not-allowed'
-                        : 'bg-black hover:bg-zinc-800 active:bg-zinc-900'
-                    }`}
-                    whileHover={!isLoading ? { scale: 1.02 } : {}}
-                    whileTap={!isLoading ? { scale: 0.98 } : {}}
-                    onClick={handleSubmit}
-                  >
-                    {isLoading ? (
-                      <motion.div
-                        className='h-5 w-5 rounded-full border-2 border-white border-t-transparent'
-                        animate={{ rotate: 360 }}
-                        transition={{
-                          duration: 1,
-                          repeat: Infinity,
-                          ease: 'linear',
-                        }}
-                      ></motion.div>
-                    ) : (
-                      <>
-                        <span>
-                          {view === 'signup' ? 'Create Account' : 'Log In'}
-                        </span>
-                        <ArrowRight size={18} className='ml-2' />
-                      </>
-                    )}
-                  </motion.button>
-
-                  <div className='relative my-3'>
-                    <div className='absolute inset-0 flex items-center'>
-                      <div className='w-full border-t border-gray-200'></div>
-                    </div>
-                    <div className='relative flex justify-center'>
-                      <span className='bg-white px-4 text-sm text-gray-500'>
-                        or continue with
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className='w-full'>
-                    <motion.button
-                      type='button'
-                      onClick={handleGoogleAuth}
-                      disabled={isLoading}
-                      className='w-full py-2.5 px-4 border border-gray-300 rounded-sm shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
-                      whileHover={!isLoading ? { scale: 1.02 } : {}}
-                      whileTap={!isLoading ? { scale: 0.98 } : {}}
-                    >
-                      <svg
-                        className='mr-2'
-                        width='20'
-                        height='20'
-                        viewBox='0 0 48 48'
-                      >
-                        <path
-                          fill='#FFC107'
-                          d='M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z'
-                        />
-                        <path
-                          fill='#FF3D00'
-                          d='M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z'
-                        />
-                        <path
-                          fill='#4CAF50'
-                          d='M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z'
-                        />
-                        <path
-                          fill='#1976D2'
-                          d='M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z'
-                        />
-                      </svg>
-                      Continue with Google
-                    </motion.button>
-                  </div>
-                </div>
-
-                <div className='w-full pt-4 mt-4'>
-                  <div className='text-center'>
-                    <p className='text-sm text-gray-600'>
-                      {view === 'signup'
-                        ? 'Already have an account?'
-                        : "Don't have an account?"}
-                      <motion.button
-                        type='button'
-                        className='ml-1 text-black hover:text-zinc-600 font-medium transition-colors disabled:opacity-50'
-                        onClick={() =>
-                          setView(view === 'signup' ? 'login' : 'signup')
-                        }
-                        whileHover={!isLoading ? { scale: 1.05 } : {}}
-                        whileTap={!isLoading ? { scale: 0.95 } : {}}
-                        disabled={isLoading}
-                      >
-                        {view === 'signup' ? 'Log In' : 'Sign Up'}
-                      </motion.button>
-                    </p>
-                  </div>
-
-                  <div className='mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500 text-center'>
-                    By continuing, you agree to Calani's{' '}
-                    <motion.a
-                      href='/terms'
-                      className='text-black hover:text-zinc-600 transition-colors'
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      Terms of Service
-                    </motion.a>{' '}
-                    and{' '}
-                    <motion.a
-                      href='/privacy'
-                      className='text-black hover:text-zinc-600 transition-colors'
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      Privacy Policy
-                    </motion.a>
-                  </div>
-                </div>
+              <div className='mt-3 md:mt-4 pt-2 md:pt-4 md:border-t md:border-gray-200 text-xs text-gray-500 text-center'>
+                By continuing, you agree to Calani's{' '}
+                <motion.a
+                  href='/terms'
+                  className='text-black hover:text-zinc-600 transition-colors'
+                  whileHover={{ scale: 1.05 }}
+                >
+                  Terms of Service
+                </motion.a>{' '}
+                and{' '}
+                <motion.a
+                  href='/privacy'
+                  className='text-black hover:text-zinc-600 transition-colors'
+                  whileHover={{ scale: 1.05 }}
+                >
+                  Privacy Policy
+                </motion.a>
               </div>
-            </motion.div>
-          )}
+            </div>
+          </div>
         </motion.div>
-      )}
+      </motion.div>
     </AnimatePresence>
   )
 }

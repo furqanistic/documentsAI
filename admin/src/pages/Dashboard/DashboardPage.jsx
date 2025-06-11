@@ -1,3 +1,15 @@
+/**
+ * Dashboard Page Component
+ *
+ * This component displays the main dashboard with analytics and overview.
+ * Features:
+ * - User selection dropdown for personalized statistics
+ * - Document creation analytics and charts
+ * - Responsive design consistent with other management pages
+ * - Quick action links for easy navigation
+ * - Real-time activity feed and usage statistics
+ */
+
 import { motion } from 'framer-motion'
 import {
   Activity,
@@ -15,7 +27,7 @@ import {
   TrendingUp,
   Users,
 } from 'lucide-react'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useState } from 'react'
 import {
   Area,
   AreaChart,
@@ -189,24 +201,6 @@ const UsageTooltip = ({ active, payload, label }) => {
 
 const DashboardPage = () => {
   const [selectedPerson, setSelectedPerson] = useState('All Users')
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const dropdownRef = useRef(null)
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false)
-        setSearchQuery('')
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
 
   // People data with their usage statistics
   const peopleData = {
@@ -216,11 +210,6 @@ const DashboardPage = () => {
     'Emily Rodriguez': { used: 289, limit: 400 },
     'David Thompson': { used: 156, limit: 300 },
   }
-
-  // Filter people based on search query
-  const filteredPeople = Object.keys(peopleData).filter((person) =>
-    person.toLowerCase().includes(searchQuery.toLowerCase())
-  )
 
   // Navigation links for quick actions
   const navLinks = [
@@ -324,85 +313,40 @@ const DashboardPage = () => {
   return (
     <DashboardLayout>
       <div className='max-w-7xl mx-auto'>
-        {/* Page Header - Updated to match My Documents layout */}
-        <div className='flex flex-col sm:flex-row justify-between items-center mb-6 gap-3'>
+        {/* Page Header */}
+        <div className='flex flex-col sm:flex-row justify-between items-center mb-3 lg:mb-6 gap-3'>
           <div className='w-full sm:w-auto text-center sm:text-left'>
             <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1'>
               Dashboard
             </h1>
             <p className='text-gray-500 text-sm sm:text-base'>
-              <span className='sm:hidden'>
-                Welcome back! Here's your docs creation overview.
-              </span>
-              <span className='hidden sm:inline'>
-                Welcome back! Here's your document creation overview.
-              </span>
+              Welcome back! Here's your document creation overview.
             </p>
           </div>
 
-          {/* Person Selection Dropdown - Updated alignment */}
-          <div className='flex items-center gap-2 w-full sm:w-auto'>
-            <div className='relative flex-1 sm:w-[280px]' ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          {/* User Selection Dropdown */}
+          <div className='flex items-center gap-3 w-full sm:w-auto'>
+            <div className='relative w-full sm:w-[200px]'>
+              <select
+                value={selectedPerson}
+                onChange={(e) => setSelectedPerson(e.target.value)}
                 className='appearance-none w-full flex items-center justify-between pl-2 pr-6 h-9 lg:h-10 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none bg-white text-gray-700 transition-colors text-sm'
               >
-                <div className='flex-1 text-left'>{selectedPerson}</div>
-              </button>
-              <ChevronDown
-                className={`absolute right-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 ml-3 text-gray-400 pointer-events-none transition-transform duration-200 ${
-                  isDropdownOpen ? 'rotate-180' : ''
-                }`}
-              />
-              {isDropdownOpen && (
-                <div className='absolute z-20 right-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg'>
-                  {/* Search Input */}
-                  <div className='p-2 border-b border-gray-200'>
-                    <input
-                      type='text'
-                      placeholder='Search users...'
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className='w-full px-3 py-2 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </div>
-                  {/* Dropdown Options */}
-                  <div className='max-h-48 overflow-y-auto'>
-                    {filteredPeople.length > 0 ? (
-                      filteredPeople.map((person) => (
-                        <button
-                          key={person}
-                          onClick={() => {
-                            setSelectedPerson(person)
-                            setIsDropdownOpen(false)
-                            setSearchQuery('')
-                          }}
-                          className={`w-full px-4 py-2 text-sm text-left hover:bg-gray-50 last:rounded-b-lg transition-colors ${
-                            selectedPerson === person
-                              ? 'bg-blue-50 text-blue-700 font-medium'
-                              : 'text-gray-700'
-                          }`}
-                        >
-                          {person}
-                        </button>
-                      ))
-                    ) : (
-                      <div className='px-4 py-3 text-center text-gray-500 text-sm'>
-                        No users found
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+                <option value='All Users'>All Users</option>
+                <option value='Sarah Johnson'>Sarah Johnson</option>
+                <option value='Michael Chen'>Michael Chen</option>
+                <option value='Emily Rodriguez'>Emily Rodriguez</option>
+                <option value='David Thompson'>David Thompson</option>
+              </select>
+              <ChevronDown className='absolute right-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 ml-3 text-gray-400 pointer-events-none' />
             </div>
           </div>
         </div>
 
-        {/* Settings Sections - Fixed consistent gaps */}
+        {/* Settings Sections */}
         <div className='space-y-3 sm:space-y-6'>
-          {/* Stats Grid - Added margin top to drop it down a bit */}
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mt-4'>
+          {/* Stats Grid */}
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6'>
             <StatCard
               icon={FileText}
               title='Documents Created'

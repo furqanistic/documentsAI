@@ -9,75 +9,25 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+
+// Import shadcn components
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+
+import { updateProfile } from '@/redux/userSlice' // Updated import path
+import { axiosInstance } from '../../config'
 import DashboardLayout from '../Layout/DashboardLayout'
-
-// Simple UI components
-const Button = ({
-  children,
-  onClick,
-  variant = 'default',
-  size = 'default',
-  className = '',
-  disabled = false,
-  ...props
-}) => {
-  const baseClasses =
-    'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none disabled:opacity-50 disabled:pointer-events-none'
-  const variants = {
-    default: 'bg-blue-600 text-white hover:bg-blue-700',
-    outline:
-      'border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800',
-    ghost:
-      'text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-800',
-  }
-  const sizes = {
-    default: 'h-10 px-4 py-2',
-    sm: 'h-8 px-3 text-sm',
-  }
-
-  return (
-    <button
-      className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
-      onClick={onClick}
-      disabled={disabled}
-      {...props}
-    >
-      {children}
-    </button>
-  )
-}
-
-const Card = ({ children, className = '' }) => (
-  <div
-    className={`bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 ${className}`}
-  >
-    {children}
-  </div>
-)
-
-const CardHeader = ({ children, className = '' }) => (
-  <div className={`px-6 py-4 ${className}`}>{children}</div>
-)
-
-const CardTitle = ({ children, className = '' }) => (
-  <h3 className={`font-semibold text-lg ${className}`}>{children}</h3>
-)
-
-const CardContent = ({ children, className = '' }) => (
-  <div className={`px-6 pb-6 ${className}`}>{children}</div>
-)
-
-const Input = ({ className = '', ...props }) => (
-  <input
-    className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none ${className}`}
-    {...props}
-  />
-)
-
-const Label = ({ children, className = '' }) => (
-  <label className={`block text-sm font-medium ${className}`}>{children}</label>
-)
 
 // Password Modal Component
 const PasswordModal = ({
@@ -90,34 +40,20 @@ const PasswordModal = ({
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
 
-  if (!isOpen) return null
-
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
-      {/* Backdrop */}
-      <div
-        className='fixed inset-0 bg-black/50 transition-opacity duration-300'
-        onClick={onClose}
-      />
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className='sm:max-w-md'>
+        <DialogHeader>
+          <DialogTitle>Change Password</DialogTitle>
+        </DialogHeader>
 
-      {/* Modal */}
-      <div className='relative bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-gray-700 transform transition-all duration-300 scale-100'>
-        {/* Header */}
-        <div className='flex items-center justify-center p-2 border-b border-gray-200 dark:border-gray-700'>
-          <h2 className='text-lg font-semibold text-gray-900 dark:text-white'>
-            Change Password
-          </h2>
-        </div>
-
-        {/* Content */}
-        <div className='p-6 space-y-4'>
+        <div className='space-y-4 py-4'>
           {/* Current Password */}
           <div className='space-y-2'>
-            <Label className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-              Current Password
-            </Label>
+            <Label htmlFor='current-password'>Current Password</Label>
             <div className='relative'>
               <Input
+                id='current-password'
                 type={showCurrentPassword ? 'text' : 'password'}
                 value={passwordData.currentPassword}
                 onChange={(e) =>
@@ -126,30 +62,31 @@ const PasswordModal = ({
                     currentPassword: e.target.value,
                   }))
                 }
-                className='bg-white dark:bg-gray-800 pr-10'
                 placeholder='Enter current password'
+                className='pr-10'
               />
-              <button
+              <Button
                 type='button'
+                variant='ghost'
+                size='sm'
+                className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600'
               >
                 {showCurrentPassword ? (
-                  <Eye className='h-5 w-5' />
+                  <Eye className='h-4 w-4' />
                 ) : (
-                  <EyeOff className='h-5 w-5' />
+                  <EyeOff className='h-4 w-4' />
                 )}
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* New Password */}
           <div className='space-y-2'>
-            <Label className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-              New Password
-            </Label>
+            <Label htmlFor='new-password'>New Password</Label>
             <div className='relative'>
               <Input
+                id='new-password'
                 type={showNewPassword ? 'text' : 'password'}
                 value={passwordData.newPassword}
                 onChange={(e) =>
@@ -158,29 +95,30 @@ const PasswordModal = ({
                     newPassword: e.target.value,
                   }))
                 }
-                className='bg-white dark:bg-gray-800 pr-10'
                 placeholder='Enter new password'
+                className='pr-10'
               />
-              <button
+              <Button
                 type='button'
+                variant='ghost'
+                size='sm'
+                className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600'
               >
                 {showNewPassword ? (
-                  <Eye className='h-5 w-5' />
+                  <Eye className='h-4 w-4' />
                 ) : (
-                  <EyeOff className='h-5 w-5' />
+                  <EyeOff className='h-4 w-4' />
                 )}
-              </button>
+              </Button>
             </div>
-            <p className='text-xs text-gray-500 dark:text-gray-400'>
+            <p className='text-xs text-muted-foreground'>
               Password must be at least 8 characters long
             </p>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className='flex justify-end gap-3 pb-3 pr-3 border-gray-200 dark:border-gray-700'>
+        <DialogFooter>
           <Button variant='outline' onClick={onClose}>
             Cancel
           </Button>
@@ -189,13 +127,12 @@ const PasswordModal = ({
             disabled={
               !passwordData.currentPassword || !passwordData.newPassword
             }
-            className='bg-blue-600 hover:bg-blue-700 text-white'
           >
             Update Password
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -205,11 +142,11 @@ const SettingsSection = ({ icon: Icon, title, children, delay = 0 }) => (
     className='animate-fadeIn'
     style={{ animationDelay: `${delay * 100}ms` }}
   >
-    <Card className='border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-300'>
+    <Card className='shadow-sm hover:shadow-md transition-shadow duration-300'>
       <CardHeader className='pb-2'>
-        <CardTitle className='flex items-center gap-3 text-lg font-semibold text-gray-900 dark:text-white'>
-          <div className='rounded-lg bg-gray-100 dark:bg-gray-800 p-2'>
-            <Icon className='h-5 w-5 text-gray-600 dark:text-gray-400' />
+        <CardTitle className='flex items-center gap-3 text-lg'>
+          <div className='rounded-lg bg-muted p-2'>
+            <Icon className='h-5 w-5 text-muted-foreground' />
           </div>
           {title}
         </CardTitle>
@@ -220,14 +157,14 @@ const SettingsSection = ({ icon: Icon, title, children, delay = 0 }) => (
 )
 
 // Reusable Form Field Component
-const FormField = ({ label, children, description }) => (
+const FormField = ({ label, children, description, htmlFor }) => (
   <div className='space-y-2'>
-    <Label className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+    <Label htmlFor={htmlFor} className='text-sm font-medium'>
       {label}
     </Label>
     {children}
     {description && (
-      <p className='text-xs text-gray-500 dark:text-gray-400'>{description}</p>
+      <p className='text-xs text-muted-foreground'>{description}</p>
     )}
   </div>
 )
@@ -243,58 +180,41 @@ const TeamMember = ({ member, onRemove }) => {
     : member.email.charAt(0).toUpperCase()
 
   return (
-    <div className='flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 transition-all duration-200 hover:shadow-sm'>
+    <div className='flex items-center justify-between p-3 bg-muted/50 rounded-lg border transition-all duration-200 hover:shadow-sm'>
       <div className='flex items-center gap-3'>
-        <div className='h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-medium text-gray-600 dark:text-gray-300 text-xs'>
+        <div className='h-8 w-8 rounded-full bg-muted flex items-center justify-center font-medium text-muted-foreground text-xs'>
           {initials}
         </div>
         <div>
-          <p className='text-sm font-medium text-gray-900 dark:text-white'>
-            {member.name || member.email}
-          </p>
-          <p className='text-xs text-gray-500 dark:text-gray-400'>
-            {member.email}
-          </p>
+          <p className='text-sm font-medium'>{member.name || member.email}</p>
+          <p className='text-xs text-muted-foreground'>{member.email}</p>
         </div>
       </div>
-      <div className='flex items-center gap-2'>
-        <Button
-          size='sm'
-          variant='ghost'
-          onClick={() => onRemove(member.id)}
-          className='text-red-50 bg-red-600 hover:bg-red-700 '
-        >
-          Delete
-        </Button>
-      </div>
+      <Button
+        size='sm'
+        variant='destructive'
+        onClick={() => onRemove(member.id)}
+      >
+        Delete
+      </Button>
     </div>
   )
 }
 
 const ProfileSettingsPage = () => {
+  const { currentUser } = useSelector((state) => state.user)
+  const dispatch = useDispatch()
+
   const [profileData, setProfileData] = useState({
-    name: 'Alex Johnson',
-    email: 'alex.johnson@calani.com',
-    avatar: '',
+    name: currentUser?.name || '',
+    email: currentUser?.email || '',
   })
 
-  const [teamMembers, setTeamMembers] = useState([
-    {
-      id: 1,
-      name: 'Sarah Chen',
-      email: 'sarah.chen@company.com',
-      avatar: '',
-    },
-    {
-      id: 2,
-      name: 'Mike Rodriguez',
-      email: 'mike.r@company.com',
-      avatar: '',
-    },
-  ])
+  const [teamMembers, setTeamMembers] = useState([])
 
   const [newMemberEmail, setNewMemberEmail] = useState('')
   const [isAddingMember, setIsAddingMember] = useState(false)
+
   const [saveStatus, setSaveStatus] = useState('')
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [passwordData, setPasswordData] = useState({
@@ -302,8 +222,82 @@ const ProfileSettingsPage = () => {
     newPassword: '',
   })
 
+  // Update profile data when currentUser changes
+  useEffect(() => {
+    if (currentUser) {
+      setProfileData({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+      })
+    }
+  }, [currentUser])
+
   const handleProfileUpdate = (field, value) => {
     setProfileData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleSaveSettings = async () => {
+    // Try different possible ID fields from Redux user
+    const userId = currentUser?.id || currentUser?._id
+
+    if (!userId) {
+      console.error('No user ID available. Current user:', currentUser)
+      setSaveStatus('error')
+      setTimeout(() => setSaveStatus(''), 2000)
+      return
+    }
+
+    setSaveStatus('saving')
+
+    try {
+      const response = await axiosInstance.put(
+        `/auth/update/${userId}`,
+        profileData
+      )
+
+      if (response.data) {
+        setSaveStatus('saved')
+        setTimeout(() => setSaveStatus(''), 2000)
+
+        // Update Redux store with new profile data
+        dispatch(
+          updateProfile({
+            name: profileData.name,
+            email: profileData.email,
+          })
+        )
+
+        console.log('Profile updated successfully:', response.data)
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      setSaveStatus('error')
+      setTimeout(() => setSaveStatus(''), 2000)
+    }
+  }
+
+  const handlePasswordChange = async () => {
+    try {
+      const response = await axiosInstance.put(
+        '/auth/change-password',
+        passwordData
+      )
+
+      if (response.data) {
+        alert('Password changed successfully!')
+        setShowPasswordModal(false)
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+        })
+      }
+    } catch (error) {
+      console.error('Error changing password:', error)
+      const errorMessage =
+        error.response?.data?.message ||
+        'Failed to change password. Please try again.'
+      alert(errorMessage)
+    }
   }
 
   const handleAddTeamMember = () => {
@@ -313,7 +307,6 @@ const ProfileSettingsPage = () => {
       id: Date.now(),
       name: '',
       email: newMemberEmail.trim(),
-      avatar: '',
     }
 
     setTeamMembers((prev) => [...prev, newMember])
@@ -323,26 +316,6 @@ const ProfileSettingsPage = () => {
 
   const handleRemoveTeamMember = (memberId) => {
     setTeamMembers((prev) => prev.filter((member) => member.id !== memberId))
-  }
-
-  const handleSaveSettings = () => {
-    setSaveStatus('saving')
-    // Simulate API call
-    setTimeout(() => {
-      setSaveStatus('saved')
-      setTimeout(() => setSaveStatus(''), 2000)
-    }, 1000)
-  }
-
-  const handlePasswordChange = () => {
-    // Handle password change logic here
-    console.log('Changing password...', passwordData)
-    alert('Password changed successfully!')
-    setShowPasswordModal(false)
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-    })
   }
 
   return (
@@ -378,18 +351,18 @@ const ProfileSettingsPage = () => {
         {/* Page Header */}
         <div className='flex flex-col sm:flex-row justify-between items-center mb-6 gap-3'>
           <div className='w-full sm:w-auto text-center sm:text-left'>
-            <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1'>
+            <h1 className='text-2xl sm:text-3xl font-bold mb-1'>
               Profile Settings
             </h1>
-            <p className='text-gray-500 dark:text-gray-400 text-sm sm:text-base'>
-              Manage your account settings and team access.
+            <p className='text-muted-foreground text-sm sm:text-base'>
+              Manage your account settings and preferences.
             </p>
           </div>
           <div className='flex items-center gap-2 w-full sm:w-auto'>
-            <button
+            <Button
               onClick={handleSaveSettings}
               disabled={saveStatus === 'saving'}
-              className='flex-1 sm:flex-none px-4 py-2 bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-lg font-medium flex items-center transition-all duration-200 justify-center hover:scale-105 active:scale-95 disabled:opacity-50'
+              className='flex-1 sm:flex-none bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900'
             >
               {saveStatus === 'saving' ? (
                 <div className='animate-spin mr-2'>
@@ -397,6 +370,8 @@ const ProfileSettingsPage = () => {
                 </div>
               ) : saveStatus === 'saved' ? (
                 <Check className='h-4 w-4 mr-2' />
+              ) : saveStatus === 'error' ? (
+                <X className='h-4 w-4 mr-2' />
               ) : (
                 <Save className='h-4 w-4 mr-2' />
               )}
@@ -404,8 +379,10 @@ const ProfileSettingsPage = () => {
                 ? 'Saving...'
                 : saveStatus === 'saved'
                 ? 'Saved!'
+                : saveStatus === 'error'
+                ? 'Error!'
                 : 'Save Changes'}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -414,42 +391,72 @@ const ProfileSettingsPage = () => {
           {/* Profile Information */}
           <SettingsSection icon={User} title='Profile Information' delay={0.1}>
             <div className='space-y-6'>
-              {/* Form Fields */}
-              <div className='space-y-6'>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                  <FormField label='Full Name'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <FormField label='Full Name' htmlFor='full-name'>
+                  <Input
+                    id='full-name'
+                    value={profileData.name}
+                    onChange={(e) =>
+                      handleProfileUpdate('name', e.target.value)
+                    }
+                    placeholder='Enter your full name'
+                    className='h-10'
+                  />
+                </FormField>
+
+                <FormField label='Email Address' htmlFor='email'>
+                  <Input
+                    id='email'
+                    type='email'
+                    value={profileData.email}
+                    onChange={(e) =>
+                      handleProfileUpdate('email', e.target.value)
+                    }
+                    placeholder='Enter your email'
+                    className='h-10'
+                  />
+                </FormField>
+              </div>
+
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <FormField label='Password'>
+                  <Button
+                    variant='outline'
+                    className='w-full justify-start h-10'
+                    onClick={() => setShowPasswordModal(true)}
+                  >
+                    Change Password
+                  </Button>
+                </FormField>
+
+                {currentUser?.lastLogin && (
+                  <FormField label='Last Login' htmlFor='last-login'>
                     <Input
-                      value={profileData.name}
-                      onChange={(e) =>
-                        handleProfileUpdate('name', e.target.value)
+                      id='last-login'
+                      value={
+                        new Date(currentUser.lastLogin).toLocaleDateString(
+                          'en-US',
+                          {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          }
+                        ) +
+                        ' at ' +
+                        new Date(currentUser.lastLogin).toLocaleTimeString(
+                          'en-US',
+                          {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true,
+                          }
+                        )
                       }
-                      className='bg-white dark:bg-gray-900'
+                      disabled
+                      className='bg-muted cursor-not-allowed h-10'
                     />
                   </FormField>
-
-                  <FormField label='Email Address'>
-                    <Input
-                      type='email'
-                      value={profileData.email}
-                      onChange={(e) =>
-                        handleProfileUpdate('email', e.target.value)
-                      }
-                      className='bg-white dark:bg-gray-900'
-                    />
-                  </FormField>
-                </div>
-
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                  <FormField label='Password'>
-                    <Button
-                      variant='outline'
-                      className='w-full justify-start h-10 bg-white dark:bg-gray-900'
-                      onClick={() => setShowPasswordModal(true)}
-                    >
-                      Change Password
-                    </Button>
-                  </FormField>
-                </div>
+                )}
               </div>
             </div>
           </SettingsSection>
@@ -459,10 +466,8 @@ const ProfileSettingsPage = () => {
             <div className='space-y-6'>
               <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
                 <div>
-                  <h3 className='font-medium text-gray-900 dark:text-white'>
-                    Team Members
-                  </h3>
-                  <p className='text-sm text-gray-500 dark:text-gray-400'>
+                  <h3 className='font-medium'>Team Members</h3>
+                  <p className='text-sm text-muted-foreground'>
                     Invite team members to collaborate on documents.
                   </p>
                 </div>
@@ -470,12 +475,11 @@ const ProfileSettingsPage = () => {
                   onClick={() => setIsAddingMember(!isAddingMember)}
                   variant='outline'
                   size='sm'
-                  className='flex items-center gap-2'
                 >
                   {isAddingMember ? (
-                    <X className='h-4 w-4' />
+                    <X className='h-4 w-4 mr-2' />
                   ) : (
-                    <Plus className='h-4 w-4' />
+                    <Plus className='h-4 w-4 mr-2' />
                   )}
                   {isAddingMember ? 'Cancel' : 'Add Member'}
                 </Button>
@@ -483,36 +487,38 @@ const ProfileSettingsPage = () => {
 
               {/* Add Member Form */}
               {isAddingMember && (
-                <div className='p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 transition-all duration-300'>
-                  <div className='space-y-4'>
-                    <FormField label='Email Address'>
-                      <Input
-                        type='email'
-                        placeholder='colleague@company.com'
-                        value={newMemberEmail}
-                        onChange={(e) => setNewMemberEmail(e.target.value)}
-                        className='bg-white dark:bg-gray-900'
-                      />
-                    </FormField>
-                    <div className='flex justify-end gap-2'>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => setIsAddingMember(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        size='sm'
-                        onClick={handleAddTeamMember}
-                        disabled={!newMemberEmail.trim()}
-                        className='bg-gray-900 hover:bg-gray-800 text-white'
-                      >
-                        Send Invite
-                      </Button>
+                <Card className='bg-muted/50'>
+                  <CardContent className='pt-4'>
+                    <div className='space-y-4'>
+                      <FormField label='Email Address' htmlFor='member-email'>
+                        <Input
+                          id='member-email'
+                          type='email'
+                          placeholder='colleague@company.com'
+                          value={newMemberEmail}
+                          onChange={(e) => setNewMemberEmail(e.target.value)}
+                          className='h-10'
+                        />
+                      </FormField>
+                      <div className='flex justify-end gap-2'>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => setIsAddingMember(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size='sm'
+                          onClick={handleAddTeamMember}
+                          disabled={!newMemberEmail.trim()}
+                        >
+                          Send Invite
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               )}
 
               {/* Team Members List */}
@@ -525,7 +531,7 @@ const ProfileSettingsPage = () => {
                   />
                 ))}
                 {teamMembers.length === 0 && (
-                  <div className='text-center py-8 text-gray-500 dark:text-gray-400'>
+                  <div className='text-center py-8 text-muted-foreground'>
                     <Users className='h-12 w-12 mx-auto mb-3 opacity-50' />
                     <p>No team members yet. Invite someone to get started!</p>
                   </div>

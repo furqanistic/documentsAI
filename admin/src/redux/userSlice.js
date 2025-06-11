@@ -26,6 +26,15 @@ export const userSlice = createSlice({
       state.loading = false
       state.error = true
     },
+    updateProfile: (state, action) => {
+      // Update the current user with new profile data
+      if (state.currentUser) {
+        state.currentUser = {
+          ...state.currentUser,
+          ...action.payload,
+        }
+      }
+    },
     logout: (state) => {
       localStorage.removeItem('token')
       return initialState
@@ -34,7 +43,7 @@ export const userSlice = createSlice({
 })
 
 // Export actions
-export const { loginStart, loginSuccess, loginFailure, logout } =
+export const { loginStart, loginSuccess, loginFailure, updateProfile, logout } =
   userSlice.actions
 
 // Selectors for easy access to state
