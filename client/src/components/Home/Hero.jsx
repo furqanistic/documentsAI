@@ -104,7 +104,7 @@ const Hero = () => {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
               >
-                Calani AI helps educators, students, and professionals generate{' '}
+                Documnt AI helps educators, students, and professionals generate{' '}
                 <span className='whitespace-nowrap'>high-quality</span>{' '}
                 materials instantly with powerful AI. Effortlessly produce
                 everything from exams and Q&As to{' '}
@@ -257,7 +257,7 @@ const EnhancedDocumentInterface = () => {
             <div className='flex items-center justify-center w-8 h-8 bg-black rounded-md'>
               <FileCheck size={16} className='text-white' />
             </div>
-            <span className='font-semibold text-gray-800'>Calani AI</span>
+            <span className='font-semibold text-gray-800'>Documnt AI</span>
           </div>
           <div className='flex items-center space-x-3'>
             <motion.div
@@ -586,7 +586,7 @@ const EnhancedDocumentInterface = () => {
                       </div>
                       <div className='flex items-center space-x-2'>
                         <div className='px-2 py-1 text-xs bg-gray-100 rounded truncate'>
-                          exam.calani.ai/sci10-28fj3
+                          exam.documnt.ai/sci10-28fj3
                         </div>
                       </div>
                     </div>

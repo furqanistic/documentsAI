@@ -254,19 +254,20 @@ const Topbar = () => {
     <>
       <header className='w-full bg-black text-white fixed top-0 left-0 z-50 h-16'>
         <div className='container mx-auto h-full px-2 md:px-4 flex items-center justify-between'>
-          {/* Logo */}
+          {/* Logo with Text */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
             className='flex items-center pl-2'
           >
-            <a href='/' className='block'>
+            <a href='/' className='flex items-center space-x-1'>
               <img
-                src='./logo.png'
+                src='./logo-white.png'
                 alt='Logo'
                 className='h-12 object-contain lg:h-12'
               />
+              <span className='text-4xl font-semibold text-white'>documnt</span>
             </a>
           </motion.div>
 

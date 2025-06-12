@@ -92,9 +92,9 @@ const Hero = () => (
         transition={{ duration: 0.4, delay: 0.1 }}
       >
         <p className='text-base text-gray-600 mb-3'>
-          At Calani, we take your privacy seriously. This policy outlines how we
-          collect, use, and protect your information when using our AI-powered
-          document creation platform.
+          At Documnt, we take your privacy seriously. This policy outlines how
+          we collect, use, and protect your information when using our
+          AI-powered document creation platform.
         </p>
       </motion.div>
 
@@ -170,7 +170,7 @@ const PrivacyPolicy = () => {
             id='information-collection'
           >
             <Paragraph>
-              Calani collects various types of information to provide and
+              Documnt collects various types of information to provide and
               improve our AI-powered document creation services:
             </Paragraph>
 
@@ -215,7 +215,7 @@ const PrivacyPolicy = () => {
             id='information-usage'
           >
             <Paragraph>
-              Calani uses the collected information for the following purposes:
+              Documnt uses the collected information for the following purposes:
             </Paragraph>
 
             <BulletList
@@ -244,7 +244,7 @@ const PrivacyPolicy = () => {
             id='ai-data'
           >
             <Paragraph>
-              As an AI-powered platform, Calani uses advanced algorithms and
+              As an AI-powered platform, Documnt uses advanced algorithms and
               machine learning technologies:
             </Paragraph>
 
@@ -309,7 +309,7 @@ const PrivacyPolicy = () => {
             id='third-party'
           >
             <Paragraph>
-              Calani works with select third-party service providers to deliver
+              Documnt works with select third-party service providers to deliver
               our platform:
             </Paragraph>
 
@@ -385,7 +385,7 @@ const PrivacyPolicy = () => {
 
             <Paragraph>
               We encourage you to review our Privacy Policy regularly. Your
-              continued use of Calani after policy changes constitutes
+              continued use of Documnt after policy changes constitutes
               acceptance of the updated terms.
             </Paragraph>
           </PolicySection>
@@ -405,7 +405,7 @@ const PrivacyPolicy = () => {
               <ContactItem
                 icon={<Mail size={16} />}
                 title='Email Address'
-                value='help@calani.ai'
+                value='help@documnt.ai'
               />
             </div>
 
@@ -423,7 +423,7 @@ const PrivacyPolicy = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 1.0 }}
           >
-            <p>© 2025 Calani AI Inc. All rights reserved.</p>
+            <p>© 2025 Documnt AI Inc. All rights reserved.</p>
           </motion.div>
         </div>
       </div>

@@ -27,7 +27,7 @@ const Footer = () => {
           {/* Logo and tagline - centered on mobile */}
           <div className='flex items-center mb-2 md:mb-0 w-full md:w-1/4 justify-center md:justify-start'>
             <div className='flex items-center sm:space-x-4'>
-              <img src='./logo.png' alt='Calani Logo' className='h-10' />
+              <img src='./logo.png' alt='Documnt Logo' className='h-10' />
               <div className='hidden sm:block text-xs text-gray-400'>
                 <p className='m-0'>AI-Powered Document Creation</p>
                 <p className='m-0'>& Interactive Testing</p>
@@ -78,10 +78,10 @@ const Footer = () => {
               ))}
               <span className='text-gray-500 mx-3'>|</span>
               <a
-                href='mailto:help@calani.ai'
+                href='mailto:help@documnt.ai'
                 className='text-xs text-gray-400 hover:text-white'
               >
-                help@calani.ai
+                help@documnt.ai
               </a>
             </div>
           </div>
@@ -89,7 +89,7 @@ const Footer = () => {
           {/* Copyright on new line - centered without border */}
           <div className='w-full mt-3 pt-2 flex justify-center'>
             <span className='text-xs text-gray-500'>
-              © {new Date().getFullYear()} Calani AI. All rights reserved.
+              © {new Date().getFullYear()} Documnt AI. All rights reserved.
             </span>
           </div>
         </div>
