@@ -263,11 +263,10 @@ const Topbar = () => {
           >
             <a href='/' className='flex items-center space-x-1'>
               <img
-                src='./logo-white.png'
+                src='./logo-3.png'
                 alt='Logo'
-                className='h-12 object-contain lg:h-12'
+                className='h-12 object-contain lg:h-10'
               />
-              <span className='text-4xl font-semibold text-white'>documnt</span>
             </a>
           </motion.div>
 
