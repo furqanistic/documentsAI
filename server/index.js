@@ -17,10 +17,18 @@ const app = express()
 dotenv.config()
 
 const corsOptions = {
-  origin: 'https://doucmnt.ai', // Your Vite frontend URL
-  credentials: true, // This allows cookies and credentials to be sent
-  optionsSuccessStatus: 200,
+  origin: [
+    'http://localhost:5173', // Dev
+    'https://dashboard.documnt.ai', // Prod
+    'https://documnt.ai',
+    'https://www.documnt.ai',
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }
+
+app.use(cors(corsOptions))
 
 app.use(cors(corsOptions))
 app.use(cookieParser())
