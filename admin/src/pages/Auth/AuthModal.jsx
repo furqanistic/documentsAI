@@ -10,12 +10,15 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   AlertCircle,
   ArrowRight,
+  Brain,
   CheckCircle,
   Eye,
   EyeOff,
+  FileText,
   Lock,
   Mail,
   User,
+  Zap,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -123,18 +126,109 @@ const GoogleButton = ({ onClick, disabled }) => (
 
 const CreativeDesign = ({ view }) => (
   <div className='hidden md:flex w-1/2 bg-black p-10 flex-col justify-between relative overflow-hidden'>
-    <div className='absolute inset-0 bg-gradient-to-br from-black to-purple-900/80 opacity-80'>
-      <div className='absolute inset-0 bg-[linear-gradient(0deg,transparent_calc(100%-1px),rgba(255,255,255,0.1)_100%),linear-gradient(90deg,transparent_calc(100%-1px),rgba(255,255,255,0.1)_100%)] bg-[size:50px_50px]'></div>
+    {/* Enhanced Background with Multiple Layers */}
+    <div className='absolute inset-0 bg-gradient-to-br from-black via-purple-900/60 to-blue-900/40'>
+      {/* Grid Pattern */}
+      <div className='absolute inset-0 bg-[linear-gradient(0deg,transparent_calc(100%-1px),rgba(255,255,255,0.08)_100%),linear-gradient(90deg,transparent_calc(100%-1px),rgba(255,255,255,0.08)_100%)] bg-[size:60px_60px]'></div>
+
+      {/* Floating Orbs */}
       <motion.div
-        className='absolute w-40 h-40 rounded-full bg-purple-500/40 blur-3xl'
-        animate={{ opacity: [0.3, 0.5, 0.3] }}
-        transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
-        style={{ top: '30%', left: '60%' }}
+        className='absolute w-32 h-32 rounded-full bg-purple-500/30 blur-3xl'
+        animate={{
+          opacity: [0.3, 0.6, 0.3],
+          scale: [1, 1.2, 1],
+          x: [0, 30, 0],
+          y: [0, -20, 0],
+        }}
+        transition={{ repeat: Infinity, duration: 8, ease: 'easeInOut' }}
+        style={{ top: '20%', left: '70%' }}
       />
+      <motion.div
+        className='absolute w-24 h-24 rounded-full bg-blue-400/25 blur-2xl'
+        animate={{
+          opacity: [0.2, 0.5, 0.2],
+          scale: [1, 1.3, 1],
+          x: [0, -25, 0],
+          y: [0, 15, 0],
+        }}
+        transition={{
+          repeat: Infinity,
+          duration: 6,
+          ease: 'easeInOut',
+          delay: 2,
+        }}
+        style={{ top: '60%', left: '10%' }}
+      />
+      <motion.div
+        className='absolute w-20 h-20 rounded-full bg-cyan-400/20 blur-xl'
+        animate={{
+          opacity: [0.1, 0.4, 0.1],
+          scale: [1, 1.4, 1],
+          x: [0, 20, 0],
+          y: [0, -30, 0],
+        }}
+        transition={{
+          repeat: Infinity,
+          duration: 10,
+          ease: 'easeInOut',
+          delay: 4,
+        }}
+        style={{ top: '75%', left: '60%' }}
+      />
+
+      {/* Animated Document Icons */}
+
+      <motion.div
+        className='absolute top-1/2 right-1/3'
+        animate={{
+          y: [5, -5, 5],
+          rotate: [0, -2, 0, 2, 0],
+        }}
+        transition={{
+          repeat: Infinity,
+          duration: 5,
+          ease: 'easeInOut',
+          delay: 1,
+        }}
+      >
+        <Brain className='w-5 h-5 text-blue-300/30' />
+      </motion.div>
+      <motion.div
+        className='absolute top-3/4 right-1/5'
+        animate={{
+          y: [-3, 3, -3],
+          rotate: [0, 3, 0, -3, 0],
+        }}
+        transition={{
+          repeat: Infinity,
+          duration: 6,
+          ease: 'easeInOut',
+          delay: 2,
+        }}
+      >
+        <Zap className='w-4 h-4 text-cyan-300/35' />
+      </motion.div>
     </div>
 
     <div className='relative z-10 flex flex-col h-full'>
+      {/* Brand Section */}
       <div>
+        <motion.div
+          className='flex items-center mb-6'
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div
+            className='w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center mr-3'
+            animate={{ rotate: [0, 360] }}
+            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+          >
+            <FileText className='w-6 h-6 text-white' />
+          </motion.div>
+          <span className='text-2xl font-bold text-white'>Documnt.ai</span>
+        </motion.div>
+
         <motion.h2
           className='text-white text-4xl font-bold mb-6'
           key={view}
@@ -142,7 +236,7 @@ const CreativeDesign = ({ view }) => (
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {view === 'signup' ? 'Join Calani Today' : 'Welcome Back'}
+          {view === 'signup' ? 'Join Documnt.ai' : 'Welcome Back'}
         </motion.h2>
         <motion.p
           className='text-zinc-300 text-lg mb-8'
@@ -150,32 +244,55 @@ const CreativeDesign = ({ view }) => (
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.1 }}
         >
-          Create documents, interactive tests, and more with AI-powered tools
-          designed for educators, students, and professionals.
+          Transform your ideas into intelligent documents with AI-powered
+          creation, editing, and collaboration tools designed for the future of
+          work.
         </motion.p>
       </div>
 
+      {/* Enhanced Central Animation */}
       <div className='relative h-48 my-6'>
         <div className='w-full h-full flex items-center justify-center'>
+          {/* Main Connection Line */}
           <motion.div
-            className='w-full h-0.5 bg-gradient-to-r from-purple-600 to-pink-500 relative'
+            className='w-full h-0.5 bg-gradient-to-r from-purple-600 via-blue-500 to-cyan-400 relative'
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{ duration: 2, ease: 'easeOut' }}
             style={{ transformOrigin: 'left' }}
           >
-            {[0, 0.5, 1.5].map((delay, i) => (
+            {/* Enhanced Nodes with Icons */}
+            {[
+              {
+                delay: 0,
+                position: 'left-0 -translate-x-1/2',
+                icon: FileText,
+                color: 'purple',
+              },
+              {
+                delay: 0.5,
+                position: 'left-1/2 -translate-x-1/2',
+                icon: Brain,
+                color: 'blue',
+              },
+              {
+                delay: 1.5,
+                position: 'right-0 translate-x-1/2',
+                icon: Zap,
+                color: 'cyan',
+              },
+            ].map((node, i) => (
               <motion.div
                 key={i}
                 className={`absolute ${
-                  i === 1
-                    ? 'left-1/2 w-6 h-6 -translate-x-1/2 -translate-y-1/2 top-1/2'
-                    : i === 0
-                    ? 'left-0 w-5 h-5 -translate-y-1/2 top-1/2 -translate-x-1/2'
-                    : 'right-0 w-5 h-5 -translate-y-1/2 top-1/2 translate-x-1/2'
-                } rounded-full ${
-                  i === 1 ? 'bg-pink-500' : 'bg-purple-600'
-                } shadow-lg`}
+                  node.position
+                } top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-gradient-to-br ${
+                  node.color === 'purple'
+                    ? 'from-purple-600 to-purple-700'
+                    : node.color === 'blue'
+                    ? 'from-blue-500 to-blue-600'
+                    : 'from-cyan-400 to-cyan-500'
+                } shadow-lg flex items-center justify-center`}
                 initial={{
                   opacity: 0,
                   scale: 0,
@@ -185,7 +302,7 @@ const CreativeDesign = ({ view }) => (
                   scale: [0, 1.2, 1],
                 }}
                 transition={{
-                  delay: delay,
+                  delay: node.delay,
                   duration: 0.8,
                   ease: [0.68, -0.55, 0.265, 1.55],
                   scale: {
@@ -198,51 +315,116 @@ const CreativeDesign = ({ view }) => (
                   transition: { duration: 0.2 },
                 }}
                 style={{
-                  filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.4))',
+                  filter: `drop-shadow(0 0 10px ${
+                    node.color === 'purple'
+                      ? 'rgba(168, 85, 247, 0.4)'
+                      : node.color === 'blue'
+                      ? 'rgba(59, 130, 246, 0.4)'
+                      : 'rgba(34, 211, 238, 0.4)'
+                  })`,
                 }}
               >
+                <node.icon className='w-6 h-6 text-white' />
+
+                {/* Pulsing Ring Effect */}
                 <motion.div
                   className='absolute inset-0 rounded-full'
                   animate={{
-                    scale: [1, 1.5, 1],
+                    scale: [1, 1.8, 1],
                     opacity: [0.7, 0, 0.7],
                   }}
                   transition={{
                     duration: 2,
                     repeat: Infinity,
-                    delay: delay + 2,
+                    delay: node.delay + 2,
                     ease: 'easeInOut',
                   }}
                   style={{
-                    background:
-                      i === 1
-                        ? 'radial-gradient(circle, rgba(236, 72, 153, 0.6) 0%, transparent 70%)'
-                        : 'radial-gradient(circle, rgba(168, 85, 247, 0.6) 0%, transparent 70%)',
+                    background: `radial-gradient(circle, ${
+                      node.color === 'purple'
+                        ? 'rgba(168, 85, 247, 0.6)'
+                        : node.color === 'blue'
+                        ? 'rgba(59, 130, 246, 0.6)'
+                        : 'rgba(34, 211, 238, 0.6)'
+                    } 0%, transparent 70%)`,
                   }}
                 />
               </motion.div>
+            ))}
+
+            {/* Data Flow Particles */}
+            {[...Array(3)].map((_, i) => (
+              <motion.div
+                key={`particle-${i}`}
+                className='absolute top-1/2 -translate-y-1/2 w-1 h-1 bg-white rounded-full'
+                initial={{ left: '0%', opacity: 0 }}
+                animate={{
+                  left: ['0%', '100%'],
+                  opacity: [0, 1, 1, 0],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  delay: i * 1,
+                  ease: 'easeInOut',
+                }}
+              />
             ))}
           </motion.div>
         </div>
       </div>
 
+      {/* Enhanced Footer */}
       <div className='mt-auto'>
-        <p className='text-zinc-400 text-sm mb-3'>
-          Trusted by educators worldwide
-        </p>
+        <motion.p
+          className='text-zinc-400 text-sm mb-4'
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.5 }}
+        >
+          Trusted by teams worldwide
+        </motion.p>
         <div className='flex space-x-4'>
-          {['Stanford', 'MIT', 'Harvard'].map((name, index) => (
+          {[
+            { name: 'OpenAI', initial: 'O', color: 'bg-green-600' },
+            { name: 'Microsoft', initial: 'M', color: 'bg-blue-600' },
+            { name: 'Google', initial: 'G', color: 'bg-red-600' },
+          ].map((company, index) => (
             <motion.div
-              key={name}
-              className='h-12 w-12 rounded-full bg-zinc-800/50 border border-zinc-700/50 flex items-center justify-center shadow-lg'
+              key={company.name}
+              className={`h-12 w-12 rounded-full ${company.color}/20 border border-zinc-700/50 flex items-center justify-center shadow-lg backdrop-blur-sm`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
+              transition={{ delay: 1.2 + index * 0.1, duration: 0.5 }}
+              whileHover={{
+                scale: 1.1,
+                backgroundColor: company.color.replace('/20', '/30'),
+                transition: { duration: 0.2 },
+              }}
             >
-              <span className='text-white text-sm font-medium'>{name[0]}</span>
+              <span className='text-white text-sm font-bold'>
+                {company.initial}
+              </span>
             </motion.div>
           ))}
         </div>
+
+        {/* Additional Features Highlight */}
+        <motion.div
+          className='mt-6 flex items-center space-x-4 text-zinc-400 text-xs'
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5, duration: 0.5 }}
+        >
+          <div className='flex items-center space-x-1'>
+            <div className='w-2 h-2 bg-green-400 rounded-full animate-pulse'></div>
+            <span>AI-Powered</span>
+          </div>
+          <div className='flex items-center space-x-1'>
+            <div className='w-2 h-2 bg-blue-400 rounded-full animate-pulse'></div>
+            <span>Real-time Collaboration</span>
+          </div>
+        </motion.div>
       </div>
     </div>
   </div>
@@ -747,7 +929,7 @@ const AuthModal = ({ isOpen = true, initialView = 'login', onAuthSuccess }) => {
               </div>
 
               <div className='mt-3 md:mt-4 pt-2 md:pt-4 md:border-t md:border-gray-200 text-xs text-gray-500 text-center'>
-                By continuing, you agree to Calani's{' '}
+                By continuing, you agree to Documnt.ai's{' '}
                 <motion.a
                   href='/terms'
                   className='text-black hover:text-zinc-600 transition-colors'
