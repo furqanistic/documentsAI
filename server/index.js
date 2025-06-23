@@ -17,7 +17,7 @@ const app = express()
 dotenv.config()
 
 const corsOptions = {
-  origin: 'http://localhost:5173', // Your Vite frontend URL
+  origin: 'https://doucmnt.ai', // Your Vite frontend URL
   credentials: true, // This allows cookies and credentials to be sent
   optionsSuccessStatus: 200,
 }
