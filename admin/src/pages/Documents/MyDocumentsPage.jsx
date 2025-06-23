@@ -14,114 +14,202 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ChevronDown,
   Download,
-  Eye,
   FileText,
+  Loader2,
   MoreVertical,
+  RefreshCw,
   Search,
   Trash2,
 } from 'lucide-react'
-import React, { useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
+import { toast } from 'react-hot-toast'
+import { axiosInstance } from '../../../config'
+import DashboardLayout from '../Layout/DashboardLayout'
 
-// Mock data - replace with actual API calls
-const mockDocuments = [
-  {
-    id: '1',
-    title: 'Advanced Mathematics Exam',
-    type: 'Exam',
-    createdAt: '2025-05-20T14:45:00',
-    lastModified: '2025-05-22T09:30:00',
-    fileSize: '2.4 MB',
-    status: 'completed',
-    questions: 25,
-  },
-  {
-    id: '2',
-    title: 'History Study Guide - World War II',
-    type: 'Study Guide',
-    createdAt: '2025-05-18T10:15:00',
-    lastModified: '2025-05-21T16:20:00',
-    fileSize: '1.8 MB',
-    status: 'completed',
-    pages: 12,
-  },
-  {
-    id: '3',
-    title: 'Business Interview Questions',
-    type: 'Interview',
-    createdAt: '2025-05-15T08:30:00',
-    lastModified: '2025-05-15T11:45:00',
-    fileSize: '856 KB',
-    status: 'draft',
-    questions: 15,
-  },
-  {
-    id: '4',
-    title: 'Trade Analysis Report Q1 2025',
-    type: 'Report',
-    createdAt: '2025-05-10T13:20:00',
-    lastModified: '2025-05-12T15:10:00',
-    fileSize: '3.2 MB',
-    status: 'completed',
-    pages: 24,
-  },
-  {
-    id: '5',
-    title: 'Chemistry Lab Assessment',
-    type: 'Exam',
-    createdAt: '2025-05-08T07:45:00',
-    lastModified: '2025-05-09T12:00:00',
-    fileSize: '1.1 MB',
-    status: 'completed',
-    questions: 18,
-  },
-  {
-    id: '6',
-    title: 'Project Management Guidelines',
-    type: 'Guide',
-    createdAt: '2025-05-05T17:30:00',
-    lastModified: '2025-05-06T09:15:00',
-    fileSize: '2.7 MB',
-    status: 'draft',
-    pages: 16,
-  },
-]
+// Constants
+const DOCUMENT_TYPES = ['All', 'Professional', 'Exam', 'Interview', 'Report']
 
-const DeleteConfirmationDialog = ({ isOpen, onClose, onConfirm, document }) => {
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className='sm:max-w-md'>
-        <DialogHeader>
-          <DialogTitle className='text-lg font-semibold'>
-            Delete Document
-          </DialogTitle>
-          <DialogDescription className='text-gray-600'>
-            Are you sure you want to delete "{document?.title}"? This action
-            cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className='flex space-x-2'>
-          <Button variant='outline' onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            variant='destructive'
-            onClick={onConfirm}
-            className='bg-red-600 hover:bg-red-700'
-          >
-            Delete
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
+// Custom hooks
+const useDocuments = (page = 1, limit = 50) => {
+  return useQuery({
+    queryKey: ['documents', page, limit],
+    queryFn: async () => {
+      const response = await axiosInstance.get('/documents/my-documents', {
+        params: { page, limit },
+      })
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to load documents')
+      }
+
+      return response.data.documents
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+  })
 }
 
-const DocumentViewerDialog = ({ isOpen, onClose, document }) => {
+const useDeleteDocument = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (documentId) => {
+      const response = await axiosInstance.delete(`/documents/${documentId}`)
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to delete document')
+      }
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['documents'])
+      toast.success('Document deleted successfully!')
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          'Failed to delete document'
+      )
+    },
+  })
+}
+
+const useDocumentDetails = () => {
+  return useMutation({
+    mutationFn: async (documentId) => {
+      const response = await axiosInstance.get(`/documents/${documentId}`)
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to load document')
+      }
+      return response.data.document
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || 'Failed to load document details'
+      )
+    },
+    // Ensure each call is fresh and not cached
+    cacheTime: 0,
+    retry: false,
+  })
+}
+
+// Utility functions
+const getDocumentTypeDisplay = (type) => {
+  const typeMap = {
+    professional: 'Professional',
+    exam: 'Exam',
+    interview: 'Interview',
+    report: 'Report',
+  }
+  return typeMap[type] || type
+}
+
+const getDocumentStatus = (doc) => {
+  return doc.content && doc.content.trim() ? 'completed' : 'draft'
+}
+
+const getDocumentDetails = (doc) => {
+  if (!doc.content) return 'No content'
+
+  const wordCount = doc.content.trim().split(/\s+/).length
+  const estimatedPages = Math.ceil(wordCount / 250)
+
+  if (doc.documentType === 'exam') {
+    const questionMatches = doc.content.match(/^\d+\.|Question \d+|Q\d+/gm)
+    const questionCount = questionMatches
+      ? questionMatches.length
+      : Math.ceil(wordCount / 50)
+    return `${questionCount} questions`
+  }
+
+  return `${estimatedPages} pages`
+}
+
+const formatDateTime = (dateTimeString) => {
+  const date = new Date(dateTimeString)
+  const time = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
+  const dateStr = date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  return { time, date: dateStr }
+}
+
+const downloadDocument = (document) => {
+  if (!document?.content) {
+    toast.error('No content available to download')
+    return
+  }
+
+  try {
+    const element = document.createElement('a')
+    const file = new Blob([document.content], { type: 'text/plain' })
+    element.href = URL.createObjectURL(file)
+    element.download = `${document.title
+      .replace(/[^a-z0-9]/gi, '_')
+      .toLowerCase()}.txt`
+    document.body.appendChild(element)
+    element.click()
+    document.body.removeChild(element)
+    toast.success('Document downloaded successfully!')
+  } catch (error) {
+    toast.error('Failed to download document')
+  }
+}
+
+// Components
+const DeleteConfirmationDialog = React.memo(
+  ({ isOpen, onClose, onConfirm, document, isDeleting }) => {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className='sm:max-w-md'>
+          <DialogHeader>
+            <DialogTitle className='text-lg font-semibold'>
+              Delete Document
+            </DialogTitle>
+            <DialogDescription className='text-gray-600'>
+              Are you sure you want to delete "{document?.title}"? This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className='flex space-x-2'>
+            <Button variant='outline' onClick={onClose} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button
+              variant='destructive'
+              onClick={onConfirm}
+              disabled={isDeleting}
+              className='bg-red-600 hover:bg-red-700'
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+)
+
+const DocumentViewerDialog = React.memo(({ isOpen, onClose, document }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className='max-w-4xl max-h-[90vh] p-0'>
@@ -129,43 +217,247 @@ const DocumentViewerDialog = ({ isOpen, onClose, document }) => {
           <DialogTitle className='text-lg font-semibold'>
             {document?.title}
           </DialogTitle>
-          <DialogDescription className='text-gray-600'>
-            {document?.type} • {document?.fileSize}
+          <DialogDescription className='text-gray-600 flex items-center gap-2'>
+            <span className='capitalize'>{document?.documentType}</span>
+            {document?.isInteractive && (
+              <Badge variant='secondary' className='bg-blue-100 text-blue-800'>
+                Interactive
+              </Badge>
+            )}
+            <span>•</span>
+            <span>{new Date(document?.createdAt).toLocaleDateString()}</span>
           </DialogDescription>
         </DialogHeader>
         <div className='px-6 pb-6'>
-          <div className='w-full h-[70vh] bg-gray-100 rounded-lg flex items-center justify-center border'>
-            <div className='text-center'>
-              <FileText className='w-16 h-16 text-gray-400 mx-auto mb-4' />
-              <h3 className='text-lg font-medium text-gray-900 mb-2'>
-                Document Preview
-              </h3>
-              <p className='text-gray-500 mb-4'>{document?.title}</p>
-              <div className='flex gap-2 justify-center'>
-                <Button
-                  variant='outline'
-                  onClick={() => {
-                    // Implement actual download
-                    console.log('Download document:', document)
-                  }}
-                >
-                  <Download className='w-4 h-4 mr-2' />
-                  Download
-                </Button>
-                <Button onClick={onClose}>Close</Button>
+          <div className='w-full h-[70vh] bg-gray-50 rounded-lg border overflow-hidden'>
+            {document?.content ? (
+              <div className='h-full overflow-y-auto p-6'>
+                <div className='prose prose-sm max-w-none'>
+                  <pre className='whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-800'>
+                    {document.content.substring(0, 2000)}
+                    {document.content.length > 2000 && '...'}
+                  </pre>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className='h-full flex items-center justify-center'>
+                <div className='text-center'>
+                  <FileText className='w-16 h-16 text-gray-400 mx-auto mb-4' />
+                  <h3 className='text-lg font-medium text-gray-900 mb-2'>
+                    Document Preview
+                  </h3>
+                  <p className='text-gray-500 mb-4'>No content available</p>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className='flex justify-between items-center mt-4'>
+            <Button
+              onClick={() => downloadDocument(document)}
+              disabled={!document?.content}
+              className='bg-green-600 hover:bg-green-700 text-white'
+            >
+              <Download className='w-4 h-4 mr-2' />
+              Download
+            </Button>
+            <Button variant='outline' onClick={onClose}>
+              Close
+            </Button>
           </div>
         </div>
       </DialogContent>
     </Dialog>
   )
-}
+})
 
+const DocumentsTable = React.memo(({ documents, onView, onDelete }) => {
+  if (documents.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className='text-center py-12'
+      >
+        <FileText className='w-16 h-16 text-gray-300 mx-auto mb-4' />
+        <h3 className='text-lg font-medium text-gray-900 mb-2'>
+          No documents found
+        </h3>
+        <p className='text-gray-500 mb-4'>
+          Try adjusting your search or filter criteria.
+        </p>
+      </motion.div>
+    )
+  }
+
+  return (
+    <div className='bg-white rounded-lg border border-gray-200 overflow-hidden'>
+      <div className='overflow-x-auto'>
+        <table className='min-w-full divide-y divide-gray-200'>
+          <thead className='bg-gray-50'>
+            <tr>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                Document
+              </th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                Status
+              </th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                Created
+              </th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                Type
+              </th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                Details
+              </th>
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className='bg-white divide-y divide-gray-200'>
+            <AnimatePresence>
+              {documents.map((document) => {
+                const createdDateTime = formatDateTime(document.createdAt)
+                const modifiedDateTime = formatDateTime(document.updatedAt)
+                const status = getDocumentStatus(document)
+
+                return (
+                  <motion.tr
+                    key={document._id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className='hover:bg-gray-50 transition-colors duration-200'
+                  >
+                    <td className='px-6 py-4 whitespace-nowrap'>
+                      <div className='flex items-center'>
+                        <div className='flex-1'>
+                          <div className='text-sm font-medium text-gray-900 max-w-xs truncate'>
+                            {document.title}
+                          </div>
+                          <div className='text-sm text-gray-500 flex items-center gap-2'>
+                            <span>
+                              Modified: {modifiedDateTime.date} ·{' '}
+                              {modifiedDateTime.time}
+                            </span>
+                            {document.isInteractive && (
+                              <Badge
+                                variant='secondary'
+                                className='bg-blue-100 text-blue-800 text-xs'
+                              >
+                                Interactive
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className='px-6 py-4 whitespace-nowrap'>
+                      <Badge
+                        variant='secondary'
+                        className={
+                          status === 'completed'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }
+                      >
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </Badge>
+                    </td>
+                    <td className='px-6 py-4 whitespace-nowrap'>
+                      <div className='text-sm text-gray-900 font-medium'>
+                        {createdDateTime.date}
+                      </div>
+                      <div className='text-sm text-gray-500'>
+                        {createdDateTime.time}
+                      </div>
+                    </td>
+                    <td className='px-6 py-4 whitespace-nowrap'>
+                      <span className='text-sm text-gray-900'>
+                        {getDocumentTypeDisplay(document.documentType)}
+                      </span>
+                    </td>
+                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                      {getDocumentDetails(document)}
+                    </td>
+                    <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
+                      <div className='flex items-center gap-2'>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => onView(document)}
+                          className='h-8 px-4 text-xs font-medium bg-gradient-to-br from-blue-600 to-blue-800 text-white border-blue-600 hover:from-blue-700 hover:to-blue-900 hover:text-white transition-all duration-200'
+                        >
+                          View
+                        </Button>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              className='h-8 w-8 p-0 ml-2 focus:ring-0 focus:outline-none active:ring-0 focus-visible:ring-0'
+                            >
+                              <MoreVertical className='w-4 h-4' />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='end'>
+                            <DropdownMenuItem
+                              onClick={() => downloadDocument(document)}
+                            >
+                              <Download className='w-4 h-4 mr-2' />
+                              Download
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => onDelete(document)}
+                              className='text-red-600 focus:text-red-600'
+                            >
+                              <Trash2 className='w-4 h-4 mr-2' />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </td>
+                  </motion.tr>
+                )
+              })}
+            </AnimatePresence>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+})
+
+const EmptyState = React.memo(() => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className='text-center py-12'
+  >
+    <FileText className='w-16 h-16 text-gray-300 mx-auto mb-4' />
+    <h3 className='text-lg font-medium text-gray-900 mb-2'>No documents yet</h3>
+    <p className='text-gray-500 mb-4'>
+      You haven't created any documents yet. Start by generating your first AI
+      document!
+    </p>
+    <Button
+      onClick={() => (window.location.href = 'https://documnt.ai/create')}
+      className='bg-blue-600 hover:bg-blue-700'
+    >
+      Create Your First Document
+    </Button>
+  </motion.div>
+))
+
+// Main component
 const MyDocuments = () => {
-  const [documents, setDocuments] = useState(mockDocuments)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState('All')
+  const [filterType, setFilterType] = useState('All')
   const [deleteDialog, setDeleteDialog] = useState({
     isOpen: false,
     document: null,
@@ -175,84 +467,173 @@ const MyDocuments = () => {
     document: null,
   })
 
-  const handleExportExcel = () => {
-    // Create CSV content from filtered documents
-    const headers = [
-      'Document Title',
-      'Type',
-      'Status',
-      'Created Date',
-      'Last Modified',
-      'File Size',
-      'Details',
-    ]
-    const csvContent = [
-      headers.join(','),
-      ...filteredDocuments.map((doc) =>
-        [
-          `"${doc.title}"`,
-          `"${doc.type}"`,
-          doc.status,
-          doc.createdAt,
-          doc.lastModified,
-          `"${doc.fileSize}"`,
-          doc.questions
-            ? `${doc.questions} questions`
-            : doc.pages
-            ? `${doc.pages} pages`
-            : '',
-        ].join(',')
-      ),
-    ].join('\n')
+  // React Query hooks
+  const { data: documents = [], isLoading, error, refetch } = useDocuments()
+  const deleteMutation = useDeleteDocument()
+  const documentDetailsMutation = useDocumentDetails()
 
-    // Create and download file
-    const blob = new Blob([csvContent], { type: 'text/csv' })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'documents-export.csv'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    window.URL.revokeObjectURL(url)
-  }
+  // Memoized filtered documents
+  const filteredDocuments = useMemo(() => {
+    return documents.filter((doc) => {
+      const matchesSearch =
+        doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        getDocumentTypeDisplay(doc.documentType)
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
 
-  const filteredDocuments = documents.filter((doc) => {
-    const matchesSearch =
-      doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.type.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = filterStatus === 'All' || doc.status === filterStatus
-    return matchesSearch && matchesStatus
-  })
+      const status = getDocumentStatus(doc)
+      const matchesStatus =
+        filterStatus === 'All' || status === filterStatus.toLowerCase()
 
-  const handleDelete = (document) => {
+      const matchesType =
+        filterType === 'All' || doc.documentType === filterType.toLowerCase()
+
+      return matchesSearch && matchesStatus && matchesType
+    })
+  }, [documents, searchQuery, filterStatus, filterType])
+
+  // Callback functions
+  const handleDelete = useCallback((document) => {
     setDeleteDialog({ isOpen: true, document })
-  }
+  }, [])
 
-  const confirmDelete = () => {
-    setDocuments((docs) =>
-      docs.filter((doc) => doc.id !== deleteDialog.document.id)
-    )
+  const confirmDelete = useCallback(async () => {
+    if (!deleteDialog.document) return
+    await deleteMutation.mutateAsync(deleteDialog.document._id)
     setDeleteDialog({ isOpen: false, document: null })
-  }
+  }, [deleteDialog.document, deleteMutation])
 
-  const handleView = (document) => {
-    setViewerDialog({ isOpen: true, document })
-  }
+  const handleView = useCallback(async (document) => {
+    try {
+      // Clear any existing viewer dialog first
+      setViewerDialog({ isOpen: false, document: null })
 
-  const formatDateTime = (dateTimeString) => {
-    const date = new Date(dateTimeString)
-    const time = date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    })
-    const dateStr = date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-    return { time, date: dateStr }
+      // Add timestamp to prevent caching
+      const timestamp = new Date().getTime()
+      console.log('Fetching document:', document._id, document.title) // Debug log
+
+      const response = await axiosInstance.get(
+        `/documents/${document._id}?t=${timestamp}`,
+        {
+          // Add headers to prevent caching
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+            Expires: '0',
+          },
+        }
+      )
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to load document')
+      }
+
+      const docWithContent = response.data.document
+      console.log('Fetched document:', docWithContent._id, docWithContent.title) // Debug log
+      console.log(
+        'Document content preview:',
+        docWithContent.content?.substring(0, 100)
+      ) // Debug log
+
+      // Small delay to ensure state is cleared, then set new document
+      setTimeout(() => {
+        setViewerDialog({ isOpen: true, document: docWithContent })
+      }, 50)
+    } catch (error) {
+      console.error('Error loading document:', error)
+      toast.error(
+        error.response?.data?.message || 'Failed to load document details'
+      )
+    }
+  }, [])
+
+  const handleExportExcel = useCallback(() => {
+    if (filteredDocuments.length === 0) {
+      toast.error('No documents to export')
+      return
+    }
+
+    try {
+      const headers = [
+        'Document Title',
+        'Type',
+        'Status',
+        'Created Date',
+        'Last Modified',
+        'Interactive',
+        'Details',
+      ]
+      const csvContent = [
+        headers.join(','),
+        ...filteredDocuments.map((doc) =>
+          [
+            `"${doc.title}"`,
+            `"${getDocumentTypeDisplay(doc.documentType)}"`,
+            getDocumentStatus(doc),
+            new Date(doc.createdAt).toLocaleDateString(),
+            new Date(doc.updatedAt).toLocaleDateString(),
+            doc.isInteractive ? 'Yes' : 'No',
+            `"${getDocumentDetails(doc)}"`,
+          ].join(',')
+        ),
+      ].join('\n')
+
+      const blob = new Blob([csvContent], { type: 'text/csv' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `documents-export-${
+        new Date().toISOString().split('T')[0]
+      }.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+
+      toast.success('Documents exported successfully!')
+    } catch (error) {
+      toast.error('Failed to export documents')
+    }
+  }, [filteredDocuments])
+
+  const clearFilters = useCallback(() => {
+    setSearchQuery('')
+    setFilterStatus('All')
+    setFilterType('All')
+  }, [])
+
+  const handleRefresh = useCallback(() => {
+    refetch()
+    toast.success('Documents refreshed!')
+  }, [refetch])
+
+  // Show error state
+  if (error) {
+    return (
+      <motion.div
+        className='max-w-7xl mx-auto'
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <div className='flex items-center justify-center py-12'>
+          <div className='text-center'>
+            <h3 className='text-lg font-medium text-red-600 mb-2'>
+              Error loading documents
+            </h3>
+            <p className='text-gray-500 mb-4'>
+              {error.message || 'Something went wrong. Please try again.'}
+            </p>
+            <Button
+              onClick={handleRefresh}
+              className='bg-blue-600 hover:bg-blue-700'
+            >
+              <RefreshCw className='w-4 h-4 mr-2' />
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+    )
   }
 
   return (
@@ -277,7 +658,6 @@ const MyDocuments = () => {
       {/* Filters and Search */}
       <div className='mb-6 animate-fadeIn'>
         <div className='flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4'>
-          {/* Search Bar - Takes all available space on desktop */}
           <div className='relative group flex-1'>
             <Search
               size={18}
@@ -292,9 +672,22 @@ const MyDocuments = () => {
             />
           </div>
 
-          {/* Filters and Actions - Right aligned group */}
           <div className='grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:gap-3 lg:items-center'>
-            {/* Status Filter */}
+            <div className='relative'>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className='appearance-none w-full flex items-center justify-between pl-2 pr-6 h-9 lg:h-10 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none bg-white text-gray-700 transition-colors text-sm lg:w-[120px]'
+              >
+                {DOCUMENT_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className='absolute right-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 ml-3 text-gray-400 pointer-events-none' />
+            </div>
+
             <div className='relative'>
               <select
                 value={filterStatus}
@@ -302,31 +695,29 @@ const MyDocuments = () => {
                 className='appearance-none w-full flex items-center justify-between pl-2 pr-6 h-9 lg:h-10 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none bg-white text-gray-700 transition-colors text-sm lg:w-[120px]'
               >
                 <option value='All'>Status</option>
-                <option value='completed'>Completed</option>
-                <option value='draft'>Draft</option>
+                <option value='Completed'>Completed</option>
+                <option value='Draft'>Draft</option>
               </select>
               <ChevronDown className='absolute right-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 ml-3 text-gray-400 pointer-events-none' />
             </div>
 
-            {/* Clear Button */}
-            {(filterStatus !== 'All' || searchQuery) && (
+            {(filterStatus !== 'All' ||
+              filterType !== 'All' ||
+              searchQuery) && (
               <Button
                 variant='outline'
                 size='sm'
-                onClick={() => {
-                  setSearchQuery('')
-                  setFilterStatus('All')
-                }}
+                onClick={clearFilters}
                 className='h-9 lg:h-10 px-2 lg:px-3 text-sm font-medium lg:w-[120px] col-span-1'
               >
                 Clear
               </Button>
             )}
 
-            {/* Export Button */}
             <Button
               onClick={handleExportExcel}
               className='h-9 lg:h-10 bg-green-600 hover:bg-green-700 text-white px-3 text-sm lg:text-sm font-medium lg:w-[120px]'
+              disabled={filteredDocuments.length === 0}
             >
               <Download className='h-3 w-3 lg:h-4 lg:w-4 mr-1.5' />
               Export
@@ -336,178 +727,55 @@ const MyDocuments = () => {
       </div>
 
       {/* Document Count */}
-      <div className='mb-4'>
-        <p className='text-gray-600 dark:text-gray-400 text-sm'>
-          Showing {filteredDocuments.length} of {documents.length} documents
-        </p>
-      </div>
-
-      {/* Documents Table */}
-      {filteredDocuments.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className='text-center py-12'
-        >
-          <FileText className='w-16 h-16 text-gray-300 mx-auto mb-4' />
-          <h3 className='text-lg font-medium text-gray-900 mb-2'>
-            No documents found
-          </h3>
-          <p className='text-gray-500'>
-            {searchQuery || filterStatus !== 'All'
-              ? 'Try adjusting your search or filter criteria.'
-              : "You haven't created any documents yet."}
+      {!isLoading && (
+        <div className='mb-4'>
+          <p className='text-gray-600 dark:text-gray-400 text-sm'>
+            Showing {filteredDocuments.length} of {documents.length} documents
+            {filteredDocuments.length > 0 && searchQuery && (
+              <span className='ml-2 text-blue-600'>for "{searchQuery}"</span>
+            )}
           </p>
-        </motion.div>
-      ) : (
-        <div className='bg-white rounded-lg border border-gray-200 overflow-hidden'>
-          <div className='overflow-x-auto'>
-            <table className='min-w-full divide-y divide-gray-200'>
-              <thead className='bg-gray-50'>
-                <tr>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Document
-                  </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Status
-                  </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Created
-                  </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Type
-                  </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Details
-                  </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className='bg-white divide-y divide-gray-200'>
-                <AnimatePresence>
-                  {filteredDocuments.map((document, index) => {
-                    const createdDateTime = formatDateTime(document.createdAt)
-                    const modifiedDateTime = formatDateTime(
-                      document.lastModified
-                    )
-
-                    return (
-                      <motion.tr
-                        key={document.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                        className='hover:bg-gray-50 transition-colors duration-200'
-                      >
-                        <td className='px-6 py-4 whitespace-nowrap'>
-                          <div className='flex items-center'>
-                            <div>
-                              <div className='text-sm font-medium text-gray-900 max-w-xs truncate'>
-                                {document.title}
-                              </div>
-                              <div className='text-sm text-gray-500'>
-                                Modified: {modifiedDateTime.date} ·{' '}
-                                {modifiedDateTime.time}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className='px-6 py-4 whitespace-nowrap'>
-                          <Badge
-                            variant='secondary'
-                            className={
-                              document.status === 'completed'
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-yellow-100 text-yellow-800'
-                            }
-                          >
-                            {document.status.charAt(0).toUpperCase() +
-                              document.status.slice(1)}
-                          </Badge>
-                        </td>
-                        <td className='px-6 py-4 whitespace-nowrap'>
-                          <div className='text-sm text-gray-900 font-medium'>
-                            {createdDateTime.date}
-                          </div>
-                          <div className='text-sm text-gray-500'>
-                            {createdDateTime.time}
-                          </div>
-                        </td>
-                        <td className='px-6 py-4 whitespace-nowrap'>
-                          <span className='text-sm text-gray-900'>
-                            {document.type}
-                          </span>
-                        </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                          {document.questions && (
-                            <span>{document.questions} questions</span>
-                          )}
-                          {document.pages && (
-                            <span>{document.pages} pages</span>
-                          )}
-                        </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
-                          <div className='flex items-center gap-2'>
-                            {/* View Button */}
-                            <Button
-                              variant='outline'
-                              size='sm'
-                              onClick={() => handleView(document)}
-                              className='h-8 px-4 text-xs font-medium bg-gradient-to-br from-blue-600 to-blue-800 text-white border-blue-600 hover:from-blue-700 hover:to-blue-900 hover:text-white transition-all duration-200'
-                            >
-                              View
-                            </Button>
-
-                            {/* More Actions Dropdown */}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  className='h-8 w-8 p-0 ml-2 focus:ring-0 focus:outline-none active:ring-0 focus-visible:ring-0'
-                                >
-                                  <MoreVertical className='w-4 h-4' />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align='end'>
-                                <DropdownMenuItem>
-                                  <Download className='w-4 h-4 mr-2' />
-                                  Download
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleDelete(document)}
-                                  className='text-red-600 focus:text-red-600'
-                                >
-                                  <Trash2 className='w-4 h-4 mr-2' />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    )
-                  })}
-                </AnimatePresence>
-              </tbody>
-            </table>
-          </div>
         </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
+      {/* Content */}
+      {isLoading ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className='flex items-center justify-center py-16'
+        >
+          <div className='text-center'>
+            <Loader2 className='w-12 h-12 animate-spin text-blue-600 mx-auto mb-4' />
+            <h3 className='text-lg font-medium text-gray-900 mb-2'>
+              Loading your documents...
+            </h3>
+            <p className='text-gray-500'>
+              Please wait while we fetch your documents.
+            </p>
+          </div>
+        </motion.div>
+      ) : documents.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <DocumentsTable
+          documents={filteredDocuments}
+          onView={handleView}
+          onDelete={handleDelete}
+        />
+      )}
+
+      {/* Dialogs */}
       <DeleteConfirmationDialog
         isOpen={deleteDialog.isOpen}
         onClose={() => setDeleteDialog({ isOpen: false, document: null })}
         onConfirm={confirmDelete}
         document={deleteDialog.document}
+        isDeleting={deleteMutation.isLoading}
       />
 
-      {/* Document Viewer Dialog */}
       <DocumentViewerDialog
+        key={viewerDialog.document?._id || 'empty'} // Force re-render when document changes
         isOpen={viewerDialog.isOpen}
         onClose={() => setViewerDialog({ isOpen: false, document: null })}
         document={viewerDialog.document}
@@ -517,8 +785,6 @@ const MyDocuments = () => {
 }
 
 // Wrap with DashboardLayout
-import DashboardLayout from '../Layout/DashboardLayout'
-
 export default function MyDocumentsPage() {
   return (
     <DashboardLayout>

@@ -9,6 +9,7 @@ import passport from 'passport'
 import './config/passport.js'
 
 import authRoute from './routes/auth.js'
+import documentRoute from './routes/document.js'
 
 const app = express()
 
@@ -32,6 +33,7 @@ mongoose.set('strictQuery', true)
 
 // Routes
 app.use('/api/auth', authRoute)
+app.use('/api/documents', documentRoute)
 
 const connect = () => {
   mongoose

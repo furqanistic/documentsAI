@@ -46,6 +46,238 @@ const DocumentPreview = ({ content, onContentChange }) => {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  // Enhanced markdown parsing function
+  const parseMarkdown = (text) => {
+    if (!text) return ''
+
+    // First, handle code blocks to prevent interference with other formatting
+    const codeBlocks = []
+    let codeBlockIndex = 0
+    text = text.replace(/```[\s\S]*?```/g, (match) => {
+      const placeholder = `__CODE_BLOCK_${codeBlockIndex}__`
+      codeBlocks[codeBlockIndex] = match
+      codeBlockIndex++
+      return placeholder
+    })
+
+    // Handle inline code
+    const inlineCode = []
+    let inlineCodeIndex = 0
+    text = text.replace(/`([^`]+)`/g, (match, code) => {
+      const placeholder = `__INLINE_CODE_${inlineCodeIndex}__`
+      inlineCode[inlineCodeIndex] = code
+      inlineCodeIndex++
+      return placeholder
+    })
+
+    // Convert markdown to HTML-like structure
+    let html = text
+      // Headers
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+
+      // Bold and italic
+      .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+
+      // Links
+      .replace(
+        /\[([^\]]+)\]\(([^)]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+      )
+
+      // Lists - handle both unordered and ordered
+      .replace(/^(\s*)- (.+)$/gim, '$1<li class="unordered">$2</li>')
+      .replace(/^(\s*)\d+\. (.+)$/gim, '$1<li class="ordered">$2</li>')
+
+      // Line breaks and paragraphs
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br>')
+
+    // Restore code blocks
+    codeBlocks.forEach((codeBlock, index) => {
+      const placeholder = `__CODE_BLOCK_${index}__`
+      const match = codeBlock.match(/```(\w+)?\n?([\s\S]*?)```/)
+      const language = match?.[1] || ''
+      const code = match?.[2] || codeBlock.replace(/```/g, '')
+      html = html.replace(
+        placeholder,
+        `<pre><code class="language-${language}">${code.trim()}</code></pre>`
+      )
+    })
+
+    // Restore inline code
+    inlineCode.forEach((code, index) => {
+      const placeholder = `__INLINE_CODE_${index}__`
+      html = html.replace(placeholder, `<code class="inline">${code}</code>`)
+    })
+
+    // Wrap in paragraphs if not already wrapped
+    if (!html.startsWith('<')) {
+      html = '<p>' + html + '</p>'
+    }
+
+    return html
+  }
+
+  // Enhanced rendering component
+  const renderContent = (htmlContent) => {
+    if (!htmlContent) return null
+
+    // Split by major HTML tags for processing
+    const parts = htmlContent.split(
+      /(<\/?(?:h[1-6]|p|pre|ul|ol|li|div|blockquote)(?:\s[^>]*)?>)/gi
+    )
+
+    return parts
+      .map((part, index) => {
+        // Handle different HTML elements
+        if (part.match(/^<h1>/i)) {
+          const content = parts[index + 1] || ''
+          return (
+            <h1
+              key={index}
+              className='text-3xl font-bold mt-8 mb-4 text-gray-900 border-b border-gray-200 pb-2'
+            >
+              {renderInlineContent(content)}
+            </h1>
+          )
+        } else if (part.match(/^<h2>/i)) {
+          const content = parts[index + 1] || ''
+          return (
+            <h2
+              key={index}
+              className='text-2xl font-semibold mt-6 mb-3 text-gray-800'
+            >
+              {renderInlineContent(content)}
+            </h2>
+          )
+        } else if (part.match(/^<h3>/i)) {
+          const content = parts[index + 1] || ''
+          return (
+            <h3
+              key={index}
+              className='text-xl font-semibold mt-5 mb-2 text-gray-800'
+            >
+              {renderInlineContent(content)}
+            </h3>
+          )
+        } else if (part.match(/^<pre>/i)) {
+          const content = parts[index + 1] || ''
+          const codeMatch = content.match(
+            /<code(?:\s+class="language-(\w+)")?>([\s\S]*?)<\/code>/
+          )
+          const language = codeMatch?.[1] || ''
+          const code = codeMatch?.[2] || content.replace(/<\/?code[^>]*>/g, '')
+
+          return (
+            <div key={index} className='my-4'>
+              {language && (
+                <div className='bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 rounded-t-md border-b'>
+                  {language}
+                </div>
+              )}
+              <pre
+                className={`bg-gray-50 p-4 rounded-md overflow-x-auto text-sm font-mono border ${
+                  language ? 'rounded-t-none' : ''
+                }`}
+              >
+                <code>{code.trim()}</code>
+              </pre>
+            </div>
+          )
+        } else if (part.match(/^<p>/i)) {
+          const content = parts[index + 1] || ''
+          if (!content.trim() || content.match(/^<\//)) return null
+
+          return (
+            <p key={index} className='mb-4 text-gray-700 leading-relaxed'>
+              {renderInlineContent(content)}
+            </p>
+          )
+        } else if (part.match(/^<li class="unordered">/i)) {
+          const content = parts[index + 1] || ''
+          return (
+            <li key={index} className='ml-6 mb-2 text-gray-700 list-disc'>
+              {renderInlineContent(content)}
+            </li>
+          )
+        } else if (part.match(/^<li class="ordered">/i)) {
+          const content = parts[index + 1] || ''
+          return (
+            <li key={index} className='ml-6 mb-2 text-gray-700 list-decimal'>
+              {renderInlineContent(content)}
+            </li>
+          )
+        }
+
+        return null
+      })
+      .filter(Boolean)
+  }
+
+  // Helper function to render inline content (bold, italic, links, etc.)
+  const renderInlineContent = (content) => {
+    if (!content) return ''
+
+    // Split by inline HTML tags
+    const parts = content.split(/(<\/?(?:strong|em|a|code|br)(?:\s[^>]*)?>)/gi)
+
+    return parts
+      .map((part, index) => {
+        if (part.match(/^<strong>/i)) {
+          const text = parts[index + 1] || ''
+          return (
+            <strong key={index} className='font-semibold'>
+              {text}
+            </strong>
+          )
+        } else if (part.match(/^<em>/i)) {
+          const text = parts[index + 1] || ''
+          return (
+            <em key={index} className='italic'>
+              {text}
+            </em>
+          )
+        } else if (part.match(/^<a\s/i)) {
+          const hrefMatch = part.match(/href="([^"]+)"/)
+          const href = hrefMatch?.[1] || '#'
+          const text = parts[index + 1] || ''
+          return (
+            <a
+              key={index}
+              href={href}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-blue-600 hover:text-blue-800 underline'
+            >
+              {text}
+            </a>
+          )
+        } else if (part.match(/^<code class="inline">/i)) {
+          const text = parts[index + 1] || ''
+          return (
+            <code
+              key={index}
+              className='bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800'
+            >
+              {text}
+            </code>
+          )
+        } else if (part.match(/^<br>/i)) {
+          return <br key={index} />
+        } else if (!part.match(/^<\/?/)) {
+          // Regular text
+          return part
+        }
+
+        return null
+      })
+      .filter((item) => item !== null && item !== '')
+  }
+
   // Parse content into pages for better display
   useEffect(() => {
     if (!content) return
@@ -55,9 +287,9 @@ const DocumentPreview = ({ content, onContentChange }) => {
     setEditContent(content)
 
     // More sophisticated page splitting - by headers or meaningful chunks
-    // This improved algorithm looks for markdown headers or chunks of appropriate size
     const splitByHeaders = (text) => {
-      const headerRegex = /^#{1,6}\s+.+$/gm
+      // Look for main headers (# and ##) as natural break points
+      const headerRegex = /^#{1,2}\s+.+$/gm
       const matches = [...text.matchAll(headerRegex)]
 
       if (matches.length <= 1) {
@@ -69,32 +301,37 @@ const DocumentPreview = ({ content, onContentChange }) => {
       for (let i = 0; i < matches.length; i++) {
         const start = matches[i].index
         const end = i < matches.length - 1 ? matches[i + 1].index : text.length
-        pages.push(text.substring(start, end))
+        const pageContent = text.substring(start, end).trim()
+        if (pageContent) {
+          pages.push(pageContent)
+        }
       }
 
-      return pages
+      return pages.length > 0 ? pages : [text]
     }
 
     const splitBySize = (text) => {
-      const paragraphs = text.split('\n\n').filter((p) => p.trim())
+      const sections = text.split(/\n\s*\n/).filter((section) => section.trim())
       const pages = []
       let currentPage = ''
 
-      paragraphs.forEach((paragraph) => {
-        // Consider a reasonable page size, adjusted for reading on screen
-        if (currentPage.length + paragraph.length > 1500) {
-          pages.push(currentPage)
-          currentPage = paragraph
+      sections.forEach((section) => {
+        // Consider a reasonable page size for reading
+        if (currentPage.length + section.length > 2000) {
+          if (currentPage.trim()) {
+            pages.push(currentPage.trim())
+          }
+          currentPage = section
         } else {
-          currentPage += (currentPage ? '\n\n' : '') + paragraph
+          currentPage += (currentPage ? '\n\n' : '') + section
         }
       })
 
-      if (currentPage) {
-        pages.push(currentPage)
+      if (currentPage.trim()) {
+        pages.push(currentPage.trim())
       }
 
-      return pages
+      return pages.length > 0 ? pages : [text]
     }
 
     // Try header-based splitting first, fall back to size-based
@@ -108,7 +345,7 @@ const DocumentPreview = ({ content, onContentChange }) => {
     setTimeout(() => {
       setContentPages(pages)
       setIsLoading(false)
-    }, 300) // Small delay to allow for animation
+    }, 300)
   }, [content])
 
   // Perform search when searchTerm changes
@@ -221,10 +458,6 @@ const DocumentPreview = ({ content, onContentChange }) => {
 
   const highlightSearchResult = (result) => {
     if (!contentRef.current) return
-
-    // This would normally involve more complex DOM manipulation
-    // For a real implementation, you might use a library or create a more sophisticated
-    // mechanism to scroll to and highlight the specific text
     console.log('Highlighting result:', result)
   }
 
@@ -266,53 +499,103 @@ const DocumentPreview = ({ content, onContentChange }) => {
 
     if (printWindow) {
       const combinedContent = contentPages.join('\n\n')
+      const parsedContent = parseMarkdown(combinedContent)
 
       printWindow.document.write(`
         <html>
           <head>
             <title>Document Print</title>
             <style>
-              body { font-family: Arial, sans-serif; margin: 2cm; }
-              h1, h2, h3, h4, h5, h6 { margin-top: 1.5em; margin-bottom: 0.5em; }
-              p { margin-bottom: 1em; line-height: 1.5; }
-              pre { background: #f5f5f5; padding: 1em; border-radius: 4px; overflow-x: auto; }
-              code { font-family: monospace; background: #f5f5f5; padding: 0.2em 0.4em; border-radius: 3px; }
-              ul, ol { margin-bottom: 1em; padding-left: 2em; }
-              li { margin-bottom: 0.5em; }
-              table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
-              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-              th { background-color: #f0f0f0; }
+              body { 
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                margin: 2cm; 
+                line-height: 1.6;
+                color: #333;
+              }
+              h1 { 
+                font-size: 28px; 
+                font-weight: bold; 
+                margin: 2em 0 1em 0; 
+                border-bottom: 2px solid #eee; 
+                padding-bottom: 0.5em;
+                color: #1a1a1a;
+              }
+              h2 { 
+                font-size: 22px; 
+                font-weight: 600; 
+                margin: 1.5em 0 0.75em 0; 
+                color: #2a2a2a;
+              }
+              h3 { 
+                font-size: 18px; 
+                font-weight: 600; 
+                margin: 1.25em 0 0.5em 0; 
+                color: #2a2a2a;
+              }
+              p { 
+                margin-bottom: 1em; 
+                line-height: 1.6; 
+              }
+              pre { 
+                background: #f8f9fa; 
+                padding: 1em; 
+                border-radius: 4px; 
+                overflow-x: auto; 
+                border: 1px solid #e9ecef;
+                margin: 1em 0;
+              }
+              code { 
+                font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; 
+                background: #f1f3f4; 
+                padding: 0.2em 0.4em; 
+                border-radius: 3px; 
+                font-size: 0.9em;
+              }
+              pre code {
+                background: transparent;
+                padding: 0;
+              }
+              ul, ol { 
+                margin-bottom: 1em; 
+                padding-left: 2em; 
+              }
+              li { 
+                margin-bottom: 0.5em; 
+              }
+              strong { 
+                font-weight: 600; 
+              }
+              em { 
+                font-style: italic; 
+              }
+              a { 
+                color: #0066cc; 
+                text-decoration: underline; 
+              }
+              table { 
+                border-collapse: collapse; 
+                width: 100%; 
+                margin-bottom: 1em; 
+              }
+              th, td { 
+                border: 1px solid #ddd; 
+                padding: 8px; 
+                text-align: left; 
+              }
+              th { 
+                background-color: #f8f9fa; 
+                font-weight: 600;
+              }
               @media print {
                 @page { margin: 2cm; }
                 h1, h2, h3 { break-after: avoid; }
-                img, table { break-inside: avoid; }
+                img, table, pre { break-inside: avoid; }
               }
             </style>
           </head>
           <body>
             <div class="markdown-content">
-              ${combinedContent
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;')
-                .replace(
-                  /```(\w+)?\n([\s\S]*?)```/g,
-                  (_, lang, code) =>
-                    `<pre><code>${code
-                      .replace(/&/g, '&amp;')
-                      .replace(/</g, '&lt;')
-                      .replace(/>/g, '&gt;')
-                      .replace(/"/g, '&quot;')
-                      .replace(/'/g, '&#039;')}</code></pre>`
-                )
-                .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-                .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-                .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-                .replace(/\n\n/g, '</p><p>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')}
+              ${parsedContent}
             </div>
             <script>
               window.onload = function() {
@@ -329,14 +612,10 @@ const DocumentPreview = ({ content, onContentChange }) => {
   }
 
   // Calculate appropriate height for content area
-  // FIXED: Proper handling for both overflow and maintaining correct boundaries
   const getContentHeight = () => {
     if (!fullscreen) {
-      // Fixed height with overflow-auto to prevent content from bleeding into footer
       return 'h-96 md:h-[28rem] overflow-auto'
     }
-
-    // In fullscreen, use available space but ensure content doesn't overflow
     return 'flex-grow overflow-auto'
   }
 
@@ -439,7 +718,7 @@ const DocumentPreview = ({ content, onContentChange }) => {
               </div>
             )}
 
-            {/* Primary action buttons - right aligned with same spacing as bottom row */}
+            {/* Primary action buttons */}
             <div className='flex items-center space-x-2.5 md:space-x-3 sm:border-l sm:border-gray-200 sm:pl-2 justify-end'>
               <button
                 onClick={handleSearchToggle}
@@ -476,7 +755,6 @@ const DocumentPreview = ({ content, onContentChange }) => {
                 )}
               </button>
 
-              {/* Added Print button to header icons */}
               <button
                 onClick={handlePrint}
                 className={`p-1.5 rounded-md hover:bg-gray-200 transition-colors`}
@@ -564,7 +842,7 @@ const DocumentPreview = ({ content, onContentChange }) => {
         </div>
       </div>
 
-      {/* Document content with improved rendering and overflow handling */}
+      {/* Document content with enhanced markdown rendering */}
       <div className={`bg-white relative ${getContentHeight()}`}>
         {isLoading ? (
           <div className='flex items-center justify-center h-full p-8'>
@@ -601,52 +879,11 @@ const DocumentPreview = ({ content, onContentChange }) => {
             ref={contentRef}
           >
             <div className='prose prose-sm sm:prose max-w-none'>
-              {/* Basic markdown-like rendering */}
-              <div className='markdown-content whitespace-pre-wrap'>
-                {/* This creates a basic markdown-like rendering */}
-                {contentPages[currentPage - 1]?.split('\n').map((line, i) => {
-                  // Very basic markdown-like rendering
-                  if (line.startsWith('# ')) {
-                    return (
-                      <h1 key={i} className='text-2xl font-bold mt-6 mb-4'>
-                        {line.substring(2)}
-                      </h1>
-                    )
-                  } else if (line.startsWith('## ')) {
-                    return (
-                      <h2 key={i} className='text-xl font-bold mt-5 mb-3'>
-                        {line.substring(3)}
-                      </h2>
-                    )
-                  } else if (line.startsWith('### ')) {
-                    return (
-                      <h3 key={i} className='text-lg font-bold mt-4 mb-2'>
-                        {line.substring(4)}
-                      </h3>
-                    )
-                  } else if (line.startsWith('- ')) {
-                    return (
-                      <li key={i} className='ml-4 mb-1'>
-                        {line.substring(2)}
-                      </li>
-                    )
-                  } else if (line.match(/^\d+\. /)) {
-                    const textContent = line.replace(/^\d+\. /, '')
-                    return (
-                      <li key={i} className='ml-4 mb-1 list-decimal'>
-                        {textContent}
-                      </li>
-                    )
-                  } else if (line.trim() === '') {
-                    return <div key={i} className='h-4'></div>
-                  } else {
-                    return (
-                      <p key={i} className='mb-2'>
-                        {line}
-                      </p>
-                    )
-                  }
-                })}
+              {/* Enhanced markdown rendering */}
+              <div className='markdown-content leading-relaxed'>
+                {renderContent(
+                  parseMarkdown(contentPages[currentPage - 1] || '')
+                )}
               </div>
             </div>
           </div>
@@ -671,7 +908,7 @@ const DocumentPreview = ({ content, onContentChange }) => {
         )}
       </div>
 
-      {/* Footer with only the status message - now properly fixed at the bottom */}
+      {/* Footer with status message */}
       <div
         className={`bg-gray-50 px-2 py-1 md:px-3 md:py-1.5 border-t border-gray-200 flex-shrink-0 z-10 ${
           fullscreen ? 'mt-auto' : ''
@@ -685,8 +922,7 @@ const DocumentPreview = ({ content, onContentChange }) => {
                 {searchResults.length === 1 ? 'match' : 'matches'} found
               </span>
             )}
-            {!isMobile && <span>Preview Mode • </span>}Document will render
-            differently when exported
+            {!isMobile && <span>Enhanced Preview • </span>}Powered by Documnt AI
           </span>
         </div>
       </div>

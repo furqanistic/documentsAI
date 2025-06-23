@@ -1,12 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit'
-
 const initialState = {
   currentUser: null,
   token: null,
   loading: false,
   error: false,
 }
-
 export const userSlice = createSlice({
   name: 'user',
   initialState,
@@ -41,16 +39,13 @@ export const userSlice = createSlice({
     },
   },
 })
-
 // Export actions
 export const { loginStart, loginSuccess, loginFailure, updateProfile, logout } =
   userSlice.actions
-
 // Selectors for easy access to state
 export const selectCurrentUser = (state) => state.user.currentUser
 export const selectIsAdmin = (state) => state.user.currentUser?.role === 'admin'
 export const selectIsAuthenticated = (state) => !!state.user.currentUser
 export const selectToken = (state) => state.user.token
 export const selectIsLoading = (state) => state.user.loading
-
 export default userSlice.reducer

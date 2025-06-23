@@ -27,6 +27,7 @@ import {
   Zap,
 } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
+import { axiosInstance } from '../../../config' // Import your existing axios instance
 import Layout from '../Layout/Layout'
 // Redux imports
 import {
@@ -34,6 +35,7 @@ import {
   selectCurrentUser,
   selectIsAuthenticated,
 } from '@/redux/userSlice'
+import { toast } from 'react-hot-toast' // For notifications
 import { useDispatch, useSelector } from 'react-redux'
 import AuthModal from '../Auth/AuthModal'
 
@@ -43,7 +45,9 @@ const CreateDocumentsPage = () => {
   const currentUser = useSelector(selectCurrentUser)
 
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedDocType, setSelectedDocType] = useState(null) // Default to first option
+  const [progress, setProgress] = useState(0)
+  const [progressMessage, setProgressMessage] = useState('')
+  const [selectedDocType, setSelectedDocType] = useState(0)
   const [showExportOptions, setShowExportOptions] = useState(false)
   const [selectedExportFormat, setSelectedExportFormat] = useState('pdf')
   const [generationComplete, setGenerationComplete] = useState(false)
@@ -60,6 +64,9 @@ const CreateDocumentsPage = () => {
     generateLink: false,
   })
   const [interactiveLink, setInteractiveLink] = useState('')
+  const [currentDocumentId, setCurrentDocumentId] = useState(null)
+  const [userDocuments, setUserDocuments] = useState([])
+
   // Document branding/metadata state
   const [documentMetadata, setDocumentMetadata] = useState({
     logo: null,
@@ -99,10 +106,55 @@ const CreateDocumentsPage = () => {
     },
   }
 
+  // Simulate realistic progress for AI generation
+  const simulateProgress = () => {
+    setProgress(0)
+    setProgressMessage('Initializing AI request...')
+
+    const progressSteps = [
+      { progress: 15, message: 'Initialization...', delay: 500 },
+      { progress: 30, message: 'Processing your prompt...', delay: 800 },
+      { progress: 50, message: 'AI is generating content...', delay: 1200 },
+      {
+        progress: 70,
+        message: 'Optimizing document structure...',
+        delay: 1000,
+      },
+      { progress: 85, message: 'Finalizing formatting...', delay: 800 },
+      { progress: 95, message: 'Almost ready...', delay: 500 },
+    ]
+
+    let currentStep = 0
+
+    const updateProgress = () => {
+      if (currentStep < progressSteps.length) {
+        const step = progressSteps[currentStep]
+        setTimeout(() => {
+          setProgress(step.progress)
+          setProgressMessage(step.message)
+          currentStep++
+          updateProgress()
+        }, step.delay)
+      }
+    }
+
+    updateProgress()
+  }
+
+  // Reset progress
+  const resetProgress = () => {
+    setProgress(0)
+    setProgressMessage('')
+  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadUserDocuments()
+    }
+  }, [isAuthenticated])
+
   useEffect(() => {
     // Reset convert to interactive option when document type changes
     if (selectedDocType !== 1) {
-      // Changed from 0 to 1
       setConvertToInteractive(false)
       setShowInteractiveOptions(false)
     }
@@ -122,24 +174,24 @@ const CreateDocumentsPage = () => {
   // AI prompt suggestions based on selected document type
   const promptSuggestions = {
     0: [
-      'Create a final exam for an Introduction to Psychology course with 30 multiple choice questions and 5 essay questions',
-      'Generate a technical interview question set for a senior JavaScript developer position',
-      'Make a quiz about world history focusing on the 20th century events',
+      'Create a formal business proposal for a software development project including scope, timeline, budget, and team structure',
+      'Generate a legal contract template for consulting services with payment terms and deliverables',
+      'Draft a professional memo to stakeholders about new company policies and procedures',
     ],
     1: [
-      'Create a formal business proposal for a software development project',
-      'Generate a legal contract for a consulting agreement',
-      'Draft a professional memo to all department heads about the upcoming fiscal year',
+      'Create a final exam for Introduction to Psychology course with 25 multiple choice questions and 3 essay questions covering cognitive psychology and research methods',
+      'Generate a technical assessment for senior JavaScript developer position with coding challenges and system design questions',
+      'Make a comprehensive quiz about world history focusing on 20th century events with varied question types',
     ],
     2: [
-      'Create interview questions for a marketing manager position',
-      'Generate a structured interview guide for technical candidates',
-      'Design a behavioral interview assessment for customer service roles',
+      'Create structured interview questions for a marketing manager position including behavioral, situational, and skills-based assessments',
+      'Generate a comprehensive interview guide for senior software engineer role with technical and cultural fit questions',
+      'Design a behavioral interview framework for customer service roles with scenario-based questions',
     ],
     3: [
-      'Create a quarterly business performance report for a tech startup',
-      'Generate a market research report on renewable energy trends in Europe',
-      "Create a financial analysis report for company XYZ's 2024 fiscal year",
+      'Create a quarterly business performance report for a tech startup showing KPIs, growth metrics, and strategic recommendations',
+      'Generate a detailed market research report on renewable energy trends in Europe with data analysis and forecasts',
+      'Develop a financial analysis report for Q4 2024 including revenue breakdown, cost analysis, and growth projections',
     ],
   }
 
@@ -149,21 +201,25 @@ const CreateDocumentsPage = () => {
       icon: <FileText className='h-5 w-5' />,
       name: 'Professional Documents',
       description: 'Formal business and official documents',
+      type: 'professional',
     },
     {
       icon: <FileQuestion className='h-5 w-5' />,
       name: 'Exams & Quizzes',
       description: 'Create assessments',
+      type: 'exam',
     },
     {
       icon: <Users className='h-5 w-5' />,
       name: 'Interviews',
       description: 'Any type of Interview questions',
+      type: 'interview',
     },
     {
       icon: <FilePlus className='h-5 w-5' />,
       name: 'Reports',
       description: 'Comprehensive data analysis reports',
+      type: 'report',
     },
   ]
 
@@ -195,14 +251,30 @@ const CreateDocumentsPage = () => {
     },
   ]
 
+  // Load user documents
+  const loadUserDocuments = async (page = 1, limit = 5) => {
+    try {
+      const response = await axiosInstance.get('/documents/my-documents', {
+        params: { page, limit },
+      })
+
+      if (response.data.success) {
+        setUserDocuments(response.data.documents)
+      }
+    } catch (error) {
+      console.error('Error loading documents:', error)
+      // Don't show error toast for this, as it's background loading
+    }
+  }
+
   // Handle authentication success
   const handleLoginSuccess = (userData) => {
     dispatch(loginSuccess(userData))
-    // Save token to localStorage
     localStorage.setItem('token', userData.token)
+    loadUserDocuments() // Load documents after successful login
   }
 
-  // Simulated AI document generation
+  // Real AI document generation
   const handleGenerate = async () => {
     // Check authentication first
     if (!isAuthenticated) {
@@ -210,8 +282,8 @@ const CreateDocumentsPage = () => {
       return
     }
 
-    if (!promptText && !selectedFile) {
-      alert('Please enter a prompt or upload a file for your document')
+    if (!promptText.trim() && !selectedFile) {
+      toast.error('Please enter a prompt or upload a file for your document')
       return
     }
 
@@ -219,186 +291,165 @@ const CreateDocumentsPage = () => {
     setShowExportOptions(false)
     setGenerationComplete(false)
     setInteractiveLink('')
+    setCurrentDocumentId(null)
+
+    // Start progress simulation
+    simulateProgress()
 
     try {
-      // Simulate API call to AI service
-      await new Promise((resolve) => setTimeout(resolve, 2500))
+      // Prepare the request data
+      let finalPrompt = promptText.trim()
 
-      // Generate document content based on prompt or file
-      const generatedContent = generateSampleContent()
-      setDocumentContent(generatedContent)
+      // If file is uploaded, add file context to prompt
+      if (selectedFile) {
+        if (finalPrompt) {
+          finalPrompt += `\n\nAdditional context: Based on the uploaded file "${selectedFile.name}"`
+        } else {
+          finalPrompt = `Process and analyze the uploaded file "${
+            selectedFile.name
+          }" to create a ${documentTypes[
+            selectedDocType
+          ].description.toLowerCase()}.`
+        }
+      }
 
-      setIsLoading(false)
-      setGenerationComplete(true)
-      setShowExportOptions(true)
+      const requestData = {
+        prompt: finalPrompt,
+        documentType: documentTypes[selectedDocType].type,
+        metadata: brandingEnabled ? documentMetadata : {},
+        isInteractive: convertToInteractive,
+        interactiveSettings: convertToInteractive ? interactiveSettings : {},
+      }
+
+      console.log('Sending generation request:', requestData)
+
+      // Call the AI generation API
+      const response = await axiosInstance.post(
+        '/documents/generate',
+        requestData
+      )
+
+      if (response.data.success) {
+        // Complete the progress
+        setProgress(100)
+        setProgressMessage('Document generated successfully!')
+
+        // Small delay to show completion
+        setTimeout(() => {
+          setDocumentContent(response.data.document.content)
+          setCurrentDocumentId(response.data.document.id)
+          setGenerationComplete(true)
+          setShowExportOptions(true)
+
+          // Reload documents list to show the new document
+          loadUserDocuments()
+
+          toast.success('Document generated successfully with Documnt AI!')
+
+          // Reset progress after a brief moment
+          setTimeout(resetProgress, 1000)
+        }, 500)
+      } else {
+        throw new Error(response.data.message || 'Failed to generate document')
+      }
     } catch (error) {
       console.error('Error generating document:', error)
-      setIsLoading(false)
-      alert('Failed to generate document. Please try again.')
-    }
-  }
 
-  // Simulate document content generation based on type
-  const generateSampleContent = () => {
-    const docTypes = ['exam', 'professional', 'interview', 'report']
-    const selectedType = docTypes[selectedDocType]
+      // Reset progress on error
+      resetProgress()
 
-    // Create header content if branding is enabled
-    let headerContent = ''
-    if (brandingEnabled) {
-      const dateDisplay = documentMetadata.date
-        ? `Date: ${documentMetadata.date}`
-        : ''
-      const timeDisplay = documentMetadata.time
-        ? `Time: ${documentMetadata.time}`
-        : ''
+      // Handle specific error types based on status codes
+      const errorMessage = error.response?.data?.message || error.message
 
-      headerContent = `
-# ${documentMetadata.orgName || 'Organization Name'}
-${documentMetadata.additionalInfo ? documentMetadata.additionalInfo + '\n' : ''}
-${dateDisplay} ${timeDisplay}
-
----
-
-`
-    }
-
-    let mainContent = ''
-    if (selectedType === 'exam') {
-      mainContent = `
-## Introduction to Psychology - Final Examination
-
-**Instructions:** This exam consists of 30 multiple choice questions and 3 essay questions. You have 2 hours to complete this exam.
-
-### Multiple Choice (2 points each)
-
-1. Which of the following is NOT one of the main perspectives in psychology?
-   a) Cognitive
-   b) Behavioral
-   c) Mathematical
-   d) Psychodynamic
-
-2. The tendency to attribute other people's behavior to their personality and to attribute our own behavior to the situation is known as:
-   a) Fundamental attribution error
-   b) Self-serving bias
-   c) Hindsight bias
-   d) Confirmation bias
-
-[... remaining questions would appear here ...]
-
-### Essay Questions (10 points each)
-
-1. Compare and contrast classical and operant conditioning. Provide examples of how each might be applied in educational settings.
-
-2. Explain the major theories of cognitive development, highlighting the key contributions and limitations of each approach.
-
-3. Discuss the biological and environmental factors that contribute to the development of psychological disorders.
-      `
-    } else if (selectedType === 'professional') {
-      mainContent = `
-# Professional Business Proposal
-## Project: Enterprise CRM Implementation
-
-### Executive Summary
-This proposal outlines our approach to implementing a customized Customer Relationship Management (CRM) system for XYZ Corporation. Our solution will address the specific requirements identified during our preliminary analysis and is designed to increase sales efficiency by 25% and improve customer retention by 15%.
-
-### Scope of Work
-- Requirements gathering and analysis (2 weeks)
-- System design and architecture (3 weeks)
-- Development and customization (8 weeks)
-- Testing and quality assurance (3 weeks)
-- Deployment and training (2 weeks)
-- Post-implementation support (ongoing)
-
-### Budget and Timeline
-- Total project cost: $175,000
-- Timeline: 18 weeks from contract signing
-- Payment schedule: 30% upfront, 40% at midpoint, 30% upon completion
-
-### Team and Resources
-Our implementation team consists of:
-- 1 Project Manager
-- 2 Business Analysts
-- 3 Senior Developers
-- 1 UX/UI Specialist
-- 2 QA Engineers
-
-[... remaining content would appear here ...]
-    `
-    } else if (selectedType === 'interview') {
-      mainContent = `
-# Senior Software Engineer Interview Guide
-## Technical Assessment and Behavioral Questions
-
-### Introduction (5 minutes)
-- Brief introduction of the interview panel
-- Overview of the interview process
-- Candidate introduction and background
-
-### Technical Questions (30 minutes)
-
-#### Programming Fundamentals
-1. Explain the difference between object-oriented and functional programming paradigms.
-2. How would you optimize a SQL query that's performing poorly?
-3. Describe a complex technical problem you've solved recently. What approach did you take?
-
-#### System Design
-1. How would you design a distributed caching system?
-2. Draw the architecture for a high-traffic web application with multiple microservices.
-3. Explain how you would implement authentication across a microservices architecture.
-
-#### Coding Assessment
-Please implement a function that finds the longest palindromic substring in a given string.
-
-### Behavioral Questions (15 minutes)
-
-1. Describe a situation where you disagreed with a team member. How did you resolve it?
-2. Tell me about a time when you had to meet a tight deadline. How did you manage your time?
-3. How do you stay updated with the latest technologies and industry trends?
-
-[... remaining content would appear here ...]
-    `
-    } else {
-      mainContent = `
-# Quarterly Business Performance Report
-## Q1 2025 - XYZ Technology Inc.
-
-### Executive Summary
-This report presents an analysis of XYZ Technology's performance in Q1 2025. Overall revenue increased by 15.3% compared to Q4 2024, exceeding projections by 7.2%. The cloud services division showed the strongest growth at 22.1%, while hardware sales slightly underperformed projections by 3.5%.
-
-### Financial Highlights
-- Total Revenue: $124.7M (+15.3% QoQ)
-- Operating Expenses: $87.2M (+8.1% QoQ)
-- Net Profit: $27.3M (+23.4% QoQ)
-- Cash Reserves: $215.6M (+5.2% QoQ)
-
-### Department Performance
-#### Cloud Services
-Cloud services continued its strong performance with revenue of $68.3M, representing a 22.1% increase over the previous quarter. The introduction of the new enterprise security features contributed significantly to this growth, adding approximately $7.2M in new contracts.
-
-[... remaining content would appear here ...]
-      `
-    }
-
-    return headerContent + mainContent
-  }
-
-  // File upload handler
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0]
-    if (file) {
-      setSelectedFile(file)
-
-      // Read file content for preview (simplified for demo)
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setPromptText(
-          `Process this ${
-            file.type.split('/')[1]
-          } file and create a similar document with improved content.`
+      if (error.response?.status === 429) {
+        toast.error(
+          'Rate limit exceeded. Please wait a few minutes before trying again.'
+        )
+      } else if (error.response?.status === 401) {
+        toast.error('Authentication failed. Please log in again.')
+        setShowAuthModal(true)
+      } else if (error.response?.status === 400) {
+        toast.error(
+          errorMessage ||
+            'Invalid request. Please check your input and try again.'
+        )
+      } else if (error.response?.status === 503) {
+        toast.error(
+          'AI service temporarily unavailable. Please try again later.'
+        )
+      } else if (errorMessage.includes('API key')) {
+        toast.error('AI service configuration error. Please contact support.')
+      } else {
+        toast.error(
+          errorMessage || 'Failed to generate document. Please try again.'
         )
       }
-      reader.readAsText(file)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // File upload handler with better file processing
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0]
+    if (file) {
+      // Check file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('File size must be less than 10MB')
+        return
+      }
+
+      // Check file type
+      const allowedTypes = [
+        'text/plain',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ]
+      if (
+        !allowedTypes.includes(file.type) &&
+        !file.name.match(/\.(txt|pdf|doc|docx|rtf)$/i)
+      ) {
+        toast.error(
+          'Please upload a valid document file (PDF, DOC, DOCX, TXT, RTF)'
+        )
+        return
+      }
+
+      setSelectedFile(file)
+
+      // For text files, try to read content for preview
+      if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+        try {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            const fileContent = e.target.result
+            const preview = fileContent.substring(0, 300)
+            const filePrompt = `Analyze and improve this document content:\n\n"${preview}${
+              fileContent.length > 300 ? '...' : ''
+            }"\n\nCreate a professional ${documentTypes[
+              selectedDocType
+            ].description.toLowerCase()} based on this content.`
+            setPromptText(filePrompt)
+            toast.success('File uploaded and analyzed successfully!')
+          }
+          reader.onerror = () => {
+            toast.error('Error reading file content')
+          }
+          reader.readAsText(file)
+        } catch (error) {
+          toast.error('Error processing file')
+        }
+      } else {
+        // For other file types, just set a generic prompt
+        const filePrompt = `Process the uploaded ${
+          file.type.split('/')[1]
+        } file "${file.name}" and create a ${documentTypes[
+          selectedDocType
+        ].description.toLowerCase()} based on its content.`
+        setPromptText(filePrompt)
+        toast.success('File uploaded successfully!')
+      }
     }
   }
 
@@ -410,47 +461,71 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
   const handleDrop = (e) => {
     e.preventDefault()
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setSelectedFile(e.dataTransfer.files[0])
+      const fakeEvent = { target: { files: [e.dataTransfer.files[0]] } }
+      handleFileUpload(fakeEvent)
     }
   }
 
-  // Handle export action
+  // Handle export action (this would still be simulated for now)
   const handleExport = (format) => {
+    if (!documentContent) {
+      toast.error('No document content to export')
+      return
+    }
+
     setIsLoading(true)
 
     // Simulate export process
     setTimeout(() => {
       setIsLoading(false)
 
-      // In a real implementation, this would trigger the actual file download
-      console.log(`Exporting document as ${format}...`)
+      try {
+        // Create a download
+        const element = document.createElement('a')
+        const file = new Blob([documentContent], { type: 'text/plain' })
+        element.href = URL.createObjectURL(file)
+        element.download = `document-${Date.now()}.${format}`
+        document.body.appendChild(element)
+        element.click()
+        document.body.removeChild(element)
 
-      // Create a simulated download for demonstration purposes
-      const element = document.createElement('a')
-      const file = new Blob([documentContent], { type: 'text/plain' })
-      element.href = URL.createObjectURL(file)
-      element.download = `document.${format}`
-      document.body.appendChild(element)
-      element.click()
-      document.body.removeChild(element)
-    }, 1500)
+        toast.success(`Document exported as ${format.toUpperCase()}`)
+      } catch (error) {
+        toast.error('Error exporting document')
+      }
+    }, 1000)
   }
 
-  // Generate interactive test link
-  const handleGenerateInteractiveLink = () => {
+  // Generate interactive test link (Real API call)
+  const handleGenerateInteractiveLink = async () => {
+    if (!currentDocumentId) {
+      toast.error('No document available to create interactive link')
+      return
+    }
+
     if (!interactiveSettings.generateLink) {
       setInteractiveSettings({ ...interactiveSettings, generateLink: true })
-
-      // Simulate link generation
       setIsLoading(true)
-      setTimeout(() => {
-        setIsLoading(false)
-        // Generate a fake unique URL
-        const uniqueId = Math.random().toString(36).substring(2, 10)
-        setInteractiveLink(
-          `https://yourdomain.com/interactive-test/${uniqueId}`
+
+      try {
+        const response = await axiosInstance.post(
+          `/documents/${currentDocumentId}/interactive-link`
         )
-      }, 1500)
+
+        if (response.data.success) {
+          setInteractiveLink(response.data.shareLink)
+          toast.success('Interactive link generated successfully!')
+        } else {
+          throw new Error(response.data.message || 'Failed to generate link')
+        }
+      } catch (error) {
+        console.error('Error generating interactive link:', error)
+        const errorMessage = error.response?.data?.message || error.message
+        toast.error(errorMessage || 'Failed to generate interactive link')
+        setInteractiveSettings({ ...interactiveSettings, generateLink: false })
+      } finally {
+        setIsLoading(false)
+      }
     } else {
       setInteractiveSettings({ ...interactiveSettings, generateLink: false })
       setInteractiveLink('')
@@ -460,6 +535,112 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
   // Apply AI suggestion to prompt
   const applyPromptSuggestion = (suggestion) => {
     setPromptText(suggestion)
+  }
+
+  // Save document updates
+  const handleDocumentUpdate = async (newContent) => {
+    if (!currentDocumentId) {
+      // If no document ID, just update local state
+      setDocumentContent(newContent)
+      return
+    }
+
+    try {
+      const response = await axiosInstance.put(
+        `/documents/${currentDocumentId}`,
+        {
+          content: newContent,
+          metadata: brandingEnabled ? documentMetadata : {},
+        }
+      )
+
+      if (response.data.success) {
+        setDocumentContent(newContent)
+        toast.success('Document updated successfully!')
+        // Reload documents list
+        loadUserDocuments()
+      }
+    } catch (error) {
+      console.error('Error updating document:', error)
+      const errorMessage = error.response?.data?.message || error.message
+      toast.error(errorMessage || 'Failed to update document')
+    }
+  }
+
+  // Load a specific document
+  const loadDocument = async (documentId) => {
+    try {
+      setIsLoading(true)
+      const response = await axiosInstance.get(`/documents/${documentId}`)
+
+      if (response.data.success) {
+        const doc = response.data.document
+        setDocumentContent(doc.content)
+        setCurrentDocumentId(doc._id)
+        setPromptText(doc.prompt)
+        setDocumentMetadata(doc.metadata || {})
+        setBrandingEnabled(!!doc.metadata?.orgName)
+        setGenerationComplete(true)
+        setShowExportOptions(true)
+
+        // Set document type
+        const typeIndex = documentTypes.findIndex(
+          (type) => type.type === doc.documentType
+        )
+        if (typeIndex !== -1) {
+          setSelectedDocType(typeIndex)
+        }
+
+        // Set interactive settings
+        if (doc.isInteractive) {
+          setConvertToInteractive(true)
+          setInteractiveSettings(doc.interactiveSettings || interactiveSettings)
+          if (doc.shareLink) {
+            setInteractiveLink(
+              `${
+                import.meta.env.VITE_FRONTEND_URL || 'http://localhost:3000'
+              }/interactive-test/${doc.shareLink}`
+            )
+          }
+        }
+
+        toast.success('Document loaded successfully!')
+      }
+    } catch (error) {
+      console.error('Error loading document:', error)
+      const errorMessage = error.response?.data?.message || error.message
+      toast.error(errorMessage || 'Failed to load document')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Delete a document
+  const deleteDocument = async (documentId) => {
+    if (!window.confirm('Are you sure you want to delete this document?')) {
+      return
+    }
+
+    try {
+      const response = await axiosInstance.delete(`/documents/${documentId}`)
+
+      if (response.data.success) {
+        toast.success('Document deleted successfully!')
+        loadUserDocuments() // Reload the list
+
+        // If the current document was deleted, clear the form
+        if (documentId === currentDocumentId) {
+          setDocumentContent('')
+          setCurrentDocumentId(null)
+          setGenerationComplete(false)
+          setShowExportOptions(false)
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting document:', error)
+      const errorMessage = error.response?.data?.message || error.message
+      toast.error(errorMessage || 'Failed to delete document')
+    }
   }
 
   return (
@@ -493,9 +674,52 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                   animate='visible'
                   variants={staggerContainer}
                 >
+                  {/* Recent Documents Section */}
+                  {isAuthenticated && userDocuments.length > 0 && (
+                    <motion.div variants={itemVariant} className='mb-6'>
+                      <h3 className='text-lg font-bold text-black mb-3'>
+                        Recent Documents
+                      </h3>
+                      <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
+                        {userDocuments.slice(0, 4).map((doc) => (
+                          <div
+                            key={doc._id}
+                            className='flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer'
+                            onClick={() => loadDocument(doc._id)}
+                          >
+                            <div className='flex items-center space-x-3'>
+                              <div className='w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center'>
+                                {documentTypes.find(
+                                  (type) => type.type === doc.documentType
+                                )?.icon || <FileText className='h-4 w-4' />}
+                              </div>
+                              <div>
+                                <p className='text-sm font-medium text-gray-900 truncate max-w-32'>
+                                  {doc.title}
+                                </p>
+                                <p className='text-xs text-gray-500'>
+                                  {new Date(doc.createdAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                deleteDocument(doc._id)
+                              }}
+                              className='text-gray-400 hover:text-red-500 p-1'
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+
                   {/* Document Type - CONSISTENT SPACING */}
                   <motion.div variants={itemVariant} className='mb-5'>
-                    <h3 className='text-lg  font-bold text-black mb-3'>
+                    <h3 className='text-lg font-bold text-black mb-3'>
                       Document Type
                     </h3>
                     <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4'>
@@ -552,6 +776,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                       <p className='text-xs md:text-sm text-gray-700'>
                         You can create documents in two ways: upload a file or
                         describe what you need in the text prompt below.
+                        Documents are generated using Documnt AI.
                       </p>
                     </div>
                   </motion.div>
@@ -559,7 +784,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                   {/* FILE UPLOAD SECTION - CONSISTENT SPACING */}
                   <motion.div variants={itemVariant} className='mb-5'>
                     <div className='flex items-center justify-between mb-3'>
-                      <label className='block text-lg  font-bold text-black'>
+                      <label className='block text-lg font-bold text-black'>
                         Upload a File (Optional)
                       </label>
                     </div>
@@ -567,7 +792,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                       className='border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-gray-400 transition-colors'
                       onDragOver={handleDragOver}
                       onDrop={handleDrop}
-                      onClick={() => fileInputRef.current.click()}
+                      onClick={() => fileInputRef.current?.click()}
                     >
                       <input
                         type='file'
@@ -598,6 +823,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                             onClick={(e) => {
                               e.stopPropagation()
                               setSelectedFile(null)
+                              setPromptText('')
                             }}
                           >
                             Remove
@@ -609,7 +835,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
 
                   <motion.div variants={itemVariant} className='mb-5'>
                     <div className='flex items-center justify-between mb-3'>
-                      <label className='block text-lg  font-bold text-black'>
+                      <label className='block text-lg font-bold text-black'>
                         Describe What You Need
                       </label>
                       <div className='flex items-center space-x-1'>
@@ -624,7 +850,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                     <div className='relative h-35 md:h-40'>
                       <textarea
                         className='w-full h-full p-3 md:p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none resize-none text-xs md:text-sm shadow-sm placeholder:text-xs md:placeholder:text-sm'
-                        placeholder='E.g., Create a mid-term exam for a college-level Intro to Psychology course. Include 30 multiple choice questions and 3 essay questions covering topics like cognitive development, research methods, and behavioral psychology.'
+                        placeholder='E.g., Create a comprehensive business proposal for developing a mobile app for a restaurant chain. Include executive summary, market analysis, technical requirements, project timeline, budget breakdown, team structure, and risk assessment.'
                         value={promptText}
                         onChange={(e) => setPromptText(e.target.value)}
                       ></textarea>
@@ -632,9 +858,10 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                         <button
                           className='p-1.5 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors'
                           title='Copy to clipboard'
-                          onClick={() =>
+                          onClick={() => {
                             navigator.clipboard.writeText(promptText)
-                          }
+                            toast.success('Copied to clipboard!')
+                          }}
                         >
                           <Copy className='h-4 w-4 text-gray-600' />
                         </button>
@@ -656,15 +883,37 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                     className='mt-6 flex justify-end'
                   >
                     <div className='flex items-center space-x-3 md:space-x-4 w-full'>
-                      <button className='text-gray-700 py-2 px-3 md:px-4 rounded-md text-sm font-medium flex items-center hover:bg-gray-100 transition-all border border-gray-300'>
+                      <button
+                        className='text-gray-700 py-2 px-3 md:px-4 rounded-md text-sm font-medium flex items-center hover:bg-gray-100 transition-all border border-gray-300'
+                        onClick={() => {
+                          setPromptText('')
+                          setDocumentContent('')
+                          setSelectedFile(null)
+                          setGenerationComplete(false)
+                          setShowExportOptions(false)
+                          setCurrentDocumentId(null)
+                          setInteractiveLink('')
+                          setConvertToInteractive(false)
+                          setBrandingEnabled(false)
+                          setDocumentMetadata({
+                            logo: null,
+                            orgName: '',
+                            date: '',
+                            time: '',
+                            additionalInfo: '',
+                          })
+                          resetProgress()
+                          toast.success('Form cleared!')
+                        }}
+                      >
                         <div className='flex items-center space-x-1 md:space-x-2'>
-                          <Clock className='h-4 w-4' />
-                          <span>Save Draft</span>
+                          <RefreshCw className='h-4 w-4' />
+                          <span>Clear All</span>
                         </div>
                       </button>
 
                       <button
-                        className='bg-gradient-to-br from-blue-600 to-blue-800 text-white py-2 px-4 md:px-6 rounded-md text-sm font-medium flex items-center justify-center shadow-sm hover:bg-gray-800 transition-all ml-auto'
+                        className='bg-gradient-to-br from-blue-600 to-blue-800 text-white py-2 px-4 md:px-6 rounded-md text-sm font-medium flex items-center justify-center shadow-sm hover:bg-gray-800 transition-all ml-auto disabled:opacity-50 disabled:cursor-not-allowed'
                         onClick={handleGenerate}
                         disabled={isLoading}
                       >
@@ -693,6 +942,77 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                     </div>
                   </motion.div>
 
+                  {/* AI Generation Progress Bar */}
+                  {isLoading && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3 }}
+                      className='mt-4'
+                    >
+                      <div className='bg-white border border-blue-200 rounded-lg p-4 shadow-sm'>
+                        <div className='flex items-center space-x-3 mb-3'>
+                          <div className='w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center'>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: 'linear',
+                              }}
+                            >
+                              <Sparkles className='h-5 w-5 text-blue-600' />
+                            </motion.div>
+                          </div>
+                          <div className='flex-1'>
+                            <h4 className='text-sm font-medium text-gray-900'>
+                              Documnt AI is generating your document
+                            </h4>
+                            <p className='text-xs text-gray-600 mt-1'>
+                              {progressMessage ||
+                                'Please wait while we create your document...'}
+                            </p>
+                          </div>
+                          <div className='text-right'>
+                            <span className='text-sm font-medium text-blue-600'>
+                              {progress}%
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className='w-full bg-gray-200 rounded-full h-2 overflow-hidden'>
+                          <motion.div
+                            className='h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full'
+                            initial={{ width: '0%' }}
+                            animate={{ width: `${progress}%` }}
+                            transition={{
+                              duration: 0.5,
+                              ease: 'easeOut',
+                            }}
+                          />
+                        </div>
+
+                        {/* Progress Details */}
+                        <div className='flex justify-between items-center mt-2 text-xs text-gray-500'>
+                          <span>Processing with AI...</span>
+                          <span className='flex items-center space-x-1'>
+                            <div className='w-1 h-1 bg-blue-500 rounded-full animate-pulse'></div>
+                            <div
+                              className='w-1 h-1 bg-blue-500 rounded-full animate-pulse'
+                              style={{ animationDelay: '0.1s' }}
+                            ></div>
+                            <div
+                              className='w-1 h-1 bg-blue-500 rounded-full animate-pulse'
+                              style={{ animationDelay: '0.2s' }}
+                            ></div>
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
                   {/* Document Branding Options - Add after generation button but before preview */}
                   {generationComplete && (
                     <DocumentBranding
@@ -701,9 +1021,9 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                       enabled={brandingEnabled}
                       onToggleEnabled={(value) => {
                         setBrandingEnabled(value)
-                        // Regenerate document content with or without branding when toggled
-                        if (value !== brandingEnabled) {
-                          setDocumentContent(generateSampleContent())
+                        // Update document with new branding when toggled
+                        if (currentDocumentId && documentContent) {
+                          handleDocumentUpdate(documentContent)
                         }
                       }}
                     />
@@ -719,13 +1039,10 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                     >
                       <DocumentPreview
                         content={documentContent}
-                        onContentChange={(newContent) => {
-                          setDocumentContent(newContent)
-                        }}
+                        onContentChange={handleDocumentUpdate}
                       />
 
                       {/* Interactive Test Conversion Option - Only for Exam/Quiz types */}
-
                       {selectedDocType === 1 && (
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
@@ -879,7 +1196,7 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                                     navigator.clipboard.writeText(
                                       interactiveLink
                                     )
-                                    // You could add a toast notification here
+                                    toast.success('Link copied to clipboard!')
                                   }}
                                   className='flex-1 sm:flex-initial flex items-center justify-center py-2 px-4 bg-white border border-gray-200 rounded-md text-gray-700 hover:bg-gray-200 hover:border-gray-300 transition-all text-sm font-medium'
                                 >
@@ -911,12 +1228,11 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                       transition={{ duration: 0.3 }}
                       className='mt-5 pt-4 border-t border-gray-100'
                     >
-                      <h3 className='text-lg  font-medium text-black mb-3'>
+                      <h3 className='text-lg font-medium text-black mb-3'>
                         Export Options
                       </h3>
 
                       <div className='mb-4'>
-                        {/* Removed "Select Format" text */}
                         <div className='grid grid-cols-2 sm:grid-cols-4 gap-2'>
                           {exportFormats.map((format) => (
                             <button
@@ -941,22 +1257,35 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
                         </div>
                       </div>
 
-                      {/* Updated button layout */}
                       <div className='grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4'>
-                        {/* Share button positioned under PDF */}
                         <button
                           className='bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md text-sm font-medium flex items-center justify-center hover:bg-gray-50 transition-all col-span-1 sm:col-start-1'
-                          onClick={() => {}}
+                          onClick={() => {
+                            if (interactiveLink) {
+                              navigator.clipboard.writeText(interactiveLink)
+                              toast.success('Share link copied!')
+                            } else if (documentContent) {
+                              const shareText = `Check out this document I created with RadiantAI:\n\n${documentContent.substring(
+                                0,
+                                200
+                              )}...`
+                              navigator.clipboard.writeText(shareText)
+                              toast.success(
+                                'Document preview copied for sharing!'
+                              )
+                            } else {
+                              toast.info('Generate a document first to share')
+                            }
+                          }}
                         >
                           <Share className='h-4 w-4 mr-2' />
                           <span>Share</span>
                         </button>
 
-                        {/* Download button positioned under Plain Text */}
                         <button
-                          className='bg-green-600 text-white py-2 px-4 rounded-md text-sm font-medium flex items-center justify-center shadow-sm hover:bg-green-700 transition-all col-span-1 sm:col-start-4'
+                          className='bg-green-600 text-white py-2 px-4 rounded-md text-sm font-medium flex items-center justify-center shadow-sm hover:bg-green-700 transition-all col-span-1 sm:col-start-4 disabled:opacity-50'
                           onClick={() => handleExport(selectedExportFormat)}
-                          disabled={isLoading}
+                          disabled={isLoading || !documentContent}
                         >
                           {isLoading ? (
                             <motion.div
@@ -982,7 +1311,12 @@ Cloud services continued its strong performance with revenue of $68.3M, represen
 
             {/* Right Sidebar Component */}
             <div className='lg:col-span-4'>
-              <SidebarCreateDocument />
+              <SidebarCreateDocument
+                userDocuments={userDocuments}
+                onLoadDocument={loadDocument}
+                onDeleteDocument={deleteDocument}
+                isLoading={isLoading}
+              />
             </div>
           </div>
         </main>

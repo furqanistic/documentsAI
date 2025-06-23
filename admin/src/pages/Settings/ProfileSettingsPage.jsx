@@ -26,7 +26,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 import { updateProfile } from '@/redux/userSlice' // Updated import path
-import { axiosInstance } from '../../config'
+import { axiosInstance } from '../../../config'
 import DashboardLayout from '../Layout/DashboardLayout'
 
 // Password Modal Component
