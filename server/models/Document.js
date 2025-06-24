@@ -44,7 +44,7 @@ const DocumentSchema = new mongoose.Schema(
     },
     shareLink: {
       type: String,
-      unique: true,
+      unique: true, // This creates the index automatically
       sparse: true,
     },
     isDeleted: {
@@ -55,9 +55,10 @@ const DocumentSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-// Index for faster queries
+// Index for faster queries (keep these - they're not duplicates)
 DocumentSchema.index({ userId: 1, createdAt: -1 })
-DocumentSchema.index({ shareLink: 1 })
 DocumentSchema.index({ documentType: 1 })
+
+// REMOVED: DocumentSchema.index({ shareLink: 1 }) - this was the duplicate!
 
 export default mongoose.model('Document', DocumentSchema)
