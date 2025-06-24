@@ -4,10 +4,8 @@ import dotenv from 'dotenv'
 import express from 'express'
 import mongoose from 'mongoose'
 import passport from 'passport'
-
 // Import passport configuration (must be imported before routes)
 import './config/passport.js'
-
 import authRoute from './routes/auth.js'
 import documentRoute from './routes/document.js'
 
@@ -16,19 +14,44 @@ const app = express()
 // Load environment variables first
 dotenv.config()
 
-const corsOptions = {
-  origin: [
+// Function to check if origin is allowed
+const isOriginAllowed = (origin) => {
+  // Allow requests with no origin (mobile apps, etc.)
+  if (!origin) return true
+
+  // List of specific allowed origins
+  const allowedOrigins = [
     'http://localhost:5173', // Dev
-    'https://dashboard.documnt.ai', // Prod
     'https://documnt.ai',
     'https://www.documnt.ai',
-  ],
+  ]
+
+  // Check if origin is in the specific allowed list
+  if (allowedOrigins.includes(origin)) {
+    return true
+  }
+
+  // Check if origin is a subdomain of documnt.ai
+  const subdomainPattern = /^https:\/\/[\w-]+\.documnt\.ai$/
+  if (subdomainPattern.test(origin)) {
+    return true
+  }
+
+  return false
+}
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (isOriginAllowed(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }
-
-app.use(cors(corsOptions))
 
 app.use(cors(corsOptions))
 app.use(cookieParser())

@@ -326,11 +326,10 @@ export const googleAuth = (req, res, next) => {
 export const googleCallback = async (req, res, next) => {
   try {
     const user = req.user
-
     if (!user) {
       console.error('No user in Google callback')
       return res.redirect(
-        `${process.env.CLIENT_URL}?error=authentication_failed`
+        `${getValidRedirectUrl(req)}?error=authentication_failed`
       )
     }
 
@@ -355,9 +354,8 @@ export const googleCallback = async (req, res, next) => {
     // Set the JWT cookie
     res.cookie('jwt', token, cookieOptions)
 
-    // Get the redirect URL from the query parameters (set by frontend)
-    const redirectUrl =
-      req.query.redirect || req.query.state || process.env.CLIENT_URL
+    // Get and validate the redirect URL
+    const redirectUrl = getValidRedirectUrl(req)
 
     // Include token and success in URL parameters for frontend detection
     const separator = redirectUrl.includes('?') ? '&' : '?'
@@ -367,10 +365,67 @@ export const googleCallback = async (req, res, next) => {
     res.redirect(finalRedirectUrl)
   } catch (error) {
     console.error('Error in Google callback:', error)
-    const redirectUrl =
-      req.query.redirect || req.query.state || process.env.CLIENT_URL
+    const redirectUrl = getValidRedirectUrl(req)
     const separator = redirectUrl.includes('?') ? '&' : '?'
     res.redirect(`${redirectUrl}${separator}error=server_error`)
+  }
+}
+
+// Helper function to validate and get redirect URL
+const getValidRedirectUrl = (req) => {
+  const requestedRedirect = req.query.redirect || req.query.state
+
+  // If no redirect requested, use default CLIENT_URL
+  if (!requestedRedirect) {
+    return process.env.CLIENT_URL
+  }
+
+  // Validate that the redirect URL is safe
+  if (isValidRedirectUrl(requestedRedirect)) {
+    return requestedRedirect
+  }
+
+  // If invalid, fall back to CLIENT_URL
+  console.warn(`Invalid redirect URL attempted: ${requestedRedirect}`)
+  return process.env.CLIENT_URL
+}
+
+// Helper function to validate redirect URLs
+const isValidRedirectUrl = (url) => {
+  try {
+    const urlObj = new URL(url)
+
+    // Allow localhost for development
+    if (urlObj.hostname === 'localhost' && urlObj.protocol === 'http:') {
+      return true
+    }
+
+    // Must be HTTPS for production domains
+    if (urlObj.protocol !== 'https:') {
+      return false
+    }
+
+    // Check if it's documnt.ai or a subdomain
+    const hostname = urlObj.hostname
+
+    // Allow exact matches
+    if (hostname === 'documnt.ai' || hostname === 'www.documnt.ai') {
+      return true
+    }
+
+    // Allow subdomains of documnt.ai
+    if (hostname.endsWith('.documnt.ai')) {
+      // Additional check to ensure it's a proper subdomain
+      const subdomain = hostname.replace('.documnt.ai', '')
+      // Subdomain should only contain letters, numbers, and hyphens
+      const subdomainPattern = /^[a-zA-Z0-9-]+$/
+      return subdomainPattern.test(subdomain) && subdomain.length > 0
+    }
+
+    return false
+  } catch (error) {
+    // Invalid URL format
+    return false
   }
 }
 
