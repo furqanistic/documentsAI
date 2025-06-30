@@ -2,12 +2,17 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   AlertCircle,
   BookOpen,
+  Calendar,
   CheckCircle,
   Clock,
   FileText,
+  Play,
+  Shield,
   Target,
   Timer,
   Trophy,
+  Users,
+  Zap,
 } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { toast } from 'react-hot-toast'
@@ -22,6 +27,7 @@ const TestViewerPage = () => {
   const [answers, setAnswers] = useState({})
   const [timeLeft, setTimeLeft] = useState(0)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [testStarted, setTestStarted] = useState(false)
   const [score, setScore] = useState(null)
   const [loading, setLoading] = useState(true)
   const [answeredCount, setAnsweredCount] = useState(0)
@@ -31,14 +37,19 @@ const TestViewerPage = () => {
   }, [testId])
 
   useEffect(() => {
-    if (test && test.interactiveSettings?.timeLimit && !isSubmitted) {
+    if (
+      test &&
+      test.interactiveSettings?.timeLimit &&
+      !isSubmitted &&
+      testStarted
+    ) {
       setTimeLeft(test.interactiveSettings.timeLimit * 60)
 
       const timer = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(timer)
-            handleSubmit(true) // Auto-submit when time runs out
+            handleSubmit(true)
             return 0
           }
           return prev - 1
@@ -47,7 +58,7 @@ const TestViewerPage = () => {
 
       return () => clearInterval(timer)
     }
-  }, [test, isSubmitted])
+  }, [test, isSubmitted, testStarted])
 
   const loadTest = async () => {
     try {
@@ -61,13 +72,9 @@ const TestViewerPage = () => {
         const testData = response.data.document
         setTest(testData)
 
-        // Clean the content by removing any <think> tags and extra headers
         let cleanContent = testData.content
-
-        // Remove <think> blocks
         cleanContent = cleanContent.replace(/<think>[\s\S]*?<\/think>/g, '')
 
-        // Remove the header metadata section (everything before the first question)
         const firstQuestionMatch = cleanContent.match(/^(\d+)\./m)
         if (firstQuestionMatch) {
           const firstQuestionIndex = cleanContent.indexOf(firstQuestionMatch[0])
@@ -78,7 +85,6 @@ const TestViewerPage = () => {
         console.log('Parsed questions:', parsedQuestions)
         setQuestions(parsedQuestions)
 
-        // Initialize answers object
         const initialAnswers = {}
         parsedQuestions.forEach((_, index) => {
           initialAnswers[index] = ''
@@ -114,7 +120,6 @@ const TestViewerPage = () => {
     lines.forEach((line) => {
       line = line.trim()
 
-      // Skip headers, markdown, and metadata
       if (
         line.startsWith('#') ||
         line.startsWith('**') ||
@@ -127,7 +132,6 @@ const TestViewerPage = () => {
         return
       }
 
-      // Check if it's a question (starts with number and period)
       const questionMatch = line.match(/^(\d+)\.\s*(.+)/)
       if (questionMatch) {
         if (currentQuestion) {
@@ -140,9 +144,7 @@ const TestViewerPage = () => {
           options: [],
           type: 'multiple-choice',
         }
-      }
-      // Check if it's a multiple choice option
-      else if (line.match(/^[A-D]\.\s*/) && currentQuestion) {
+      } else if (line.match(/^[A-D]\.\s*/) && currentQuestion) {
         const optionMatch = line.match(/^([A-D])\.\s*(.+?)(\s*\[CORRECT\])?$/)
         if (optionMatch) {
           currentQuestion.options.push({
@@ -151,9 +153,7 @@ const TestViewerPage = () => {
             isCorrect: !!optionMatch[3],
           })
         }
-      }
-      // If no options detected, it might be an essay question
-      else if (
+      } else if (
         currentQuestion &&
         currentQuestion.options.length === 0 &&
         !line.match(/^[A-D]\./) &&
@@ -175,7 +175,6 @@ const TestViewerPage = () => {
       questions.push(currentQuestion)
     }
 
-    // Filter out questions without proper content
     questions = questions.filter(
       (q) =>
         q.text &&
@@ -186,11 +185,14 @@ const TestViewerPage = () => {
     return questions
   }
 
+  const handleStartTest = () => {
+    setTestStarted(true)
+  }
+
   const handleAnswerChange = (questionIndex, answer) => {
     const newAnswers = { ...answers, [questionIndex]: answer }
     setAnswers(newAnswers)
 
-    // Count answered questions
     const answered = Object.values(newAnswers).filter(
       (answer) => answer.trim() !== ''
     ).length
@@ -242,32 +244,22 @@ const TestViewerPage = () => {
   }
 
   const getTimerColor = () => {
-    if (timeLeft <= 300) return 'bg-gradient-to-r from-red-500 to-red-600' // Last 5 minutes
-    if (timeLeft <= 600) return 'bg-gradient-to-r from-yellow-500 to-orange-500' // Last 10 minutes
-    return 'bg-gradient-to-r from-green-500 to-emerald-600'
+    if (timeLeft <= 300) return 'bg-red-500 text-white'
+    if (timeLeft <= 600) return 'bg-orange-500 text-white'
+    return 'bg-green-500 text-white'
   }
 
   if (loading) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center'>
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
         <div className='text-center'>
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-            className='w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-6'
-          />
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <h2 className='text-xl font-semibold text-gray-700 mb-2'>
-              Loading Test
-            </h2>
-            <p className='text-gray-500'>
-              Please wait while we prepare your assessment...
-            </p>
-          </motion.div>
+          <div className='w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
+          <h2 className='text-lg font-semibold text-gray-700 mb-2'>
+            Loading Test
+          </h2>
+          <p className='text-gray-500 text-sm'>
+            Please wait while we prepare your assessment...
+          </p>
         </div>
       </div>
     )
@@ -275,230 +267,291 @@ const TestViewerPage = () => {
 
   if (!test) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center'>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className='text-center bg-white rounded-2xl shadow-xl p-12 max-w-md mx-4'
-        >
-          <FileText className='w-20 h-20 text-gray-400 mx-auto mb-6' />
-          <h2 className='text-2xl font-bold text-gray-900 mb-4'>
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center p-4'>
+        <div className='text-center bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto border'>
+          <FileText className='w-16 h-16 text-gray-400 mx-auto mb-4' />
+          <h2 className='text-xl font-bold text-gray-800 mb-3'>
             Test Not Found
           </h2>
-          <p className='text-gray-600 leading-relaxed'>
+          <p className='text-gray-600 text-sm'>
             The test you're looking for doesn't exist or has been removed.
             Please check the link and try again.
           </p>
-        </motion.div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!testStarted) {
+    return (
+      <div className='min-h-screen bg-gray-50'>
+        <div className='max-w-4xl mx-auto p-4'>
+          <div className='bg-white rounded-lg shadow-lg border p-6 mt-8'>
+            {/* Header */}
+            <div className='text-center border-b border-gray-200 pb-6 mb-6'>
+              <div className='inline-flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium mb-3'>
+                <BookOpen className='w-4 h-4 mr-2' />
+                Assessment Ready
+              </div>
+
+              <h1 className='text-2xl font-bold text-gray-800 mb-3'>
+                {test.title}
+              </h1>
+
+              <p className='text-gray-600 text-sm max-w-2xl mx-auto'>
+                {test.metadata?.additionalInfo ||
+                  'Complete this assessment to test your knowledge and understanding.'}
+              </p>
+            </div>
+
+            <div className='grid md:grid-cols-2 gap-6 mb-6'>
+              {/* Test Information */}
+              <div className='bg-gray-50 rounded-lg p-4'>
+                <h3 className='font-semibold text-gray-800 mb-3 flex items-center'>
+                  <Target className='w-4 h-4 mr-2 text-blue-600' />
+                  Test Information
+                </h3>
+                <div className='space-y-2 text-sm'>
+                  <div className='flex justify-between'>
+                    <span className='text-gray-600'>Questions:</span>
+                    <span className='text-gray-800 font-medium'>
+                      {questions.length}
+                    </span>
+                  </div>
+                  {test.interactiveSettings?.timeLimit && (
+                    <div className='flex justify-between'>
+                      <span className='text-gray-600'>Time Limit:</span>
+                      <span className='text-gray-800 font-medium'>
+                        {test.interactiveSettings.timeLimit} minutes
+                      </span>
+                    </div>
+                  )}
+                  <div className='flex justify-between'>
+                    <span className='text-gray-600'>Passing Score:</span>
+                    <span className='text-gray-800 font-medium'>70%</span>
+                  </div>
+                  <div className='flex justify-between'>
+                    <span className='text-gray-600'>Attempts:</span>
+                    <span className='text-gray-800 font-medium'>
+                      {test.interactiveSettings?.allowRetry
+                        ? 'Multiple'
+                        : 'Single'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Guidelines */}
+              <div className='bg-gray-50 rounded-lg p-4'>
+                <h3 className='font-semibold text-gray-800 mb-3 flex items-center'>
+                  <Shield className='w-4 h-4 mr-2 text-green-600' />
+                  Guidelines
+                </h3>
+                <div className='space-y-2 text-sm text-gray-600'>
+                  <div className='flex items-start'>
+                    <div className='w-1.5 h-1.5 bg-green-500 rounded-full mt-2 mr-2 flex-shrink-0'></div>
+                    <span>
+                      Read each question carefully before selecting your answer
+                    </span>
+                  </div>
+                  <div className='flex items-start'>
+                    <div className='w-1.5 h-1.5 bg-green-500 rounded-full mt-2 mr-2 flex-shrink-0'></div>
+                    <span>You can navigate between questions freely</span>
+                  </div>
+                  <div className='flex items-start'>
+                    <div className='w-1.5 h-1.5 bg-green-500 rounded-full mt-2 mr-2 flex-shrink-0'></div>
+                    <span>
+                      Ensure all questions are answered before submitting
+                    </span>
+                  </div>
+                  <div className='flex items-start'>
+                    <div className='w-1.5 h-1.5 bg-green-500 rounded-full mt-2 mr-2 flex-shrink-0'></div>
+                    <span>Review your answers before final submission</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Important Notes */}
+            <div className='bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6'>
+              <h3 className='font-semibold text-orange-800 mb-2 flex items-center'>
+                <AlertCircle className='w-4 h-4 mr-2' />
+                Important Notes
+              </h3>
+              <div className='grid md:grid-cols-2 gap-3 text-sm text-orange-700'>
+                <div className='space-y-1'>
+                  {test.interactiveSettings?.timeLimit && (
+                    <div className='flex items-start'>
+                      <Clock className='w-3 h-3 mt-0.5 mr-2 flex-shrink-0' />
+                      <span>
+                        Timer starts immediately when you begin the test
+                      </span>
+                    </div>
+                  )}
+                  <div className='flex items-start'>
+                    <Zap className='w-3 h-3 mt-0.5 mr-2 flex-shrink-0' />
+                    <span>Test will auto-submit if time expires</span>
+                  </div>
+                </div>
+                <div className='space-y-1'>
+                  <div className='flex items-start'>
+                    <Users className='w-3 h-3 mt-0.5 mr-2 flex-shrink-0' />
+                    <span>This is an individual assessment</span>
+                  </div>
+                  <div className='flex items-start'>
+                    <Calendar className='w-3 h-3 mt-0.5 mr-2 flex-shrink-0' />
+                    <span>
+                      Results will be available immediately after submission
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Question Types Preview */}
+            <div className='bg-gray-50 rounded-lg p-4 mb-6'>
+              <h3 className='font-semibold text-gray-800 mb-3'>
+                Question Types
+              </h3>
+              <div className='grid grid-cols-2 gap-4 text-sm'>
+                {questions.some((q) => q.type === 'multiple-choice') && (
+                  <div className='flex items-center text-gray-600'>
+                    <div className='w-2 h-2 bg-blue-500 rounded-full mr-2'></div>
+                    Multiple Choice
+                  </div>
+                )}
+                {questions.some((q) => q.type === 'essay') && (
+                  <div className='flex items-center text-gray-600'>
+                    <div className='w-2 h-2 bg-purple-500 rounded-full mr-2'></div>
+                    Essay Questions
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Start Button */}
+            <div className='text-center'>
+              <button
+                onClick={handleStartTest}
+                className='bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold text-lg transition-colors flex items-center mx-auto'
+              >
+                <Play className='w-5 h-5 mr-2' />
+                Start Test
+              </button>
+              <p className='text-gray-500 text-sm mt-3'>
+                Once you start, the timer will begin counting down
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100'>
-      {/* Enhanced Timer */}
-      <AnimatePresence>
-        {test.interactiveSettings?.timeLimit && !isSubmitted && (
-          <motion.div
-            initial={{ opacity: 0, y: -30, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -30, scale: 0.9 }}
-            className={`fixed top-6 right-6 z-50 ${getTimerColor()} text-white px-6 py-4 rounded-2xl shadow-2xl backdrop-blur border border-white/20`}
-          >
-            <div className='flex items-center space-x-3'>
-              <Timer className='w-6 h-6' />
-              <div>
-                <div className='text-xs font-medium opacity-90'>
-                  Time Remaining
-                </div>
-                <div className='text-2xl font-bold tabular-nums'>
-                  {formatTime(timeLeft)}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className='max-w-5xl mx-auto p-6'>
-        {/* Enhanced Test Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className='bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/50 p-10 mb-8 relative overflow-hidden'
+    <div className='min-h-screen bg-gray-50'>
+      {/* Timer */}
+      {test.interactiveSettings?.timeLimit && !isSubmitted && (
+        <div
+          className={`fixed top-4 right-4 z-50 ${getTimerColor()} px-4 py-2 rounded-lg shadow-lg`}
         >
-          {/* Decorative background elements */}
-          <div className='absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-full opacity-30 -translate-y-32 translate-x-32'></div>
-          <div className='absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-purple-100 to-pink-200 rounded-full opacity-30 translate-y-24 -translate-x-24'></div>
-
-          <div className='relative z-10'>
-            <div className='text-center border-b border-gray-200/50 pb-8 mb-8'>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className='inline-flex items-center bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium mb-4'
-              >
-                <BookOpen className='w-4 h-4 mr-2' />
-                Assessment in Progress
-              </motion.div>
-
-              <h1 className='text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-4'>
-                {test.title}
-              </h1>
-
-              <p className='text-lg text-gray-600 mb-6 max-w-2xl mx-auto leading-relaxed'>
-                {test.metadata?.additionalInfo ||
-                  'Complete this assessment to test your knowledge and understanding.'}
-              </p>
-
-              <div className='flex flex-wrap justify-center items-center gap-6'>
-                <div className='flex items-center bg-gray-50 rounded-full px-4 py-2'>
-                  <Target className='w-5 h-5 text-blue-600 mr-2' />
-                  <span className='text-sm font-medium text-gray-700'>
-                    {questions.length} Questions
-                  </span>
-                </div>
-                {test.interactiveSettings?.timeLimit && (
-                  <div className='flex items-center bg-gray-50 rounded-full px-4 py-2'>
-                    <Clock className='w-5 h-5 text-green-600 mr-2' />
-                    <span className='text-sm font-medium text-gray-700'>
-                      {test.interactiveSettings.timeLimit} Minutes
-                    </span>
-                  </div>
-                )}
-                <div className='flex items-center bg-gray-50 rounded-full px-4 py-2'>
-                  <Trophy className='w-5 h-5 text-yellow-600 mr-2' />
-                  <span className='text-sm font-medium text-gray-700'>
-                    Passing: 70%
-                  </span>
-                </div>
+          <div className='flex items-center space-x-2'>
+            <Timer className='w-4 h-4' />
+            <div>
+              <div className='text-xs opacity-90'>Time Left</div>
+              <div className='text-lg font-bold tabular-nums'>
+                {formatTime(timeLeft)}
               </div>
             </div>
-
-            {/* Enhanced Progress Section */}
-            <div className='mb-8'>
-              <div className='flex justify-between items-center mb-4'>
-                <div>
-                  <h3 className='text-lg font-semibold text-gray-900'>
-                    Progress
-                  </h3>
-                  <p className='text-sm text-gray-600'>
-                    {answeredCount} of {questions.length} questions completed
-                  </p>
-                </div>
-                <div className='text-right'>
-                  <div className='text-2xl font-bold text-blue-600'>
-                    {Math.round((answeredCount / questions.length) * 100)}%
-                  </div>
-                  <div className='text-xs text-gray-500'>Complete</div>
-                </div>
-              </div>
-
-              <div className='relative'>
-                <div className='w-full bg-gray-200 rounded-full h-3 overflow-hidden'>
-                  <motion.div
-                    className='bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full shadow-sm'
-                    initial={{ width: 0 }}
-                    animate={{
-                      width: `${(answeredCount / questions.length) * 100}%`,
-                    }}
-                    transition={{ duration: 0.5, ease: 'easeOut' }}
-                  />
-                </div>
-                <div className='flex justify-between mt-2 text-xs text-gray-500'>
-                  <span>Start</span>
-                  <span>Complete</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Enhanced Instructions */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className='bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 rounded-2xl p-6'
-            >
-              <h3 className='font-bold text-blue-900 mb-4 flex items-center'>
-                <AlertCircle className='w-5 h-5 mr-2' />
-                Important Instructions
-              </h3>
-              <div className='grid md:grid-cols-2 gap-4 text-sm text-blue-800'>
-                <div className='space-y-2'>
-                  <div className='flex items-start'>
-                    <div className='w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0'></div>
-                    <span>
-                      Read each question carefully before selecting your answer
-                    </span>
-                  </div>
-                  {test.interactiveSettings?.timeLimit && (
-                    <div className='flex items-start'>
-                      <div className='w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0'></div>
-                      <span>
-                        You have {test.interactiveSettings.timeLimit} minutes to
-                        complete this assessment
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className='space-y-2'>
-                  <div className='flex items-start'>
-                    <div className='w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0'></div>
-                    <span>
-                      {test.interactiveSettings?.allowRetry
-                        ? 'You can retake this test if needed'
-                        : 'You have only one attempt - make it count'}
-                    </span>
-                  </div>
-                  <div className='flex items-start'>
-                    <div className='w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0'></div>
-                    <span>
-                      Ensure all questions are answered before submitting
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
           </div>
-        </motion.div>
+        </div>
+      )}
 
-        {/* Enhanced Questions Section */}
+      <div className='max-w-4xl mx-auto p-4'>
+        {/* Test Header */}
+        <div className='bg-white rounded-lg shadow-lg border p-6 mb-6'>
+          <div className='text-center border-b border-gray-200 pb-4 mb-4'>
+            <div className='inline-flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium mb-2'>
+              <BookOpen className='w-3 h-3 mr-1' />
+              Assessment in Progress
+            </div>
+
+            <h1 className='text-2xl font-bold text-gray-800 mb-2'>
+              {test.title}
+            </h1>
+
+            <div className='flex flex-wrap justify-center items-center gap-4 text-sm'>
+              <div className='flex items-center bg-gray-100 rounded-full px-3 py-1'>
+                <Target className='w-4 h-4 text-blue-600 mr-1' />
+                <span className='text-gray-700'>
+                  {questions.length} Questions
+                </span>
+              </div>
+              {test.interactiveSettings?.timeLimit && (
+                <div className='flex items-center bg-gray-100 rounded-full px-3 py-1'>
+                  <Clock className='w-4 h-4 text-green-600 mr-1' />
+                  <span className='text-gray-700'>
+                    {test.interactiveSettings.timeLimit} Min
+                  </span>
+                </div>
+              )}
+              <div className='flex items-center bg-gray-100 rounded-full px-3 py-1'>
+                <Trophy className='w-4 h-4 text-yellow-600 mr-1' />
+                <span className='text-gray-700'>Pass: 70%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress */}
+          <div className='mb-4'>
+            <div className='flex justify-between items-center mb-2'>
+              <span className='text-sm font-medium text-gray-700'>
+                Progress
+              </span>
+              <span className='text-sm text-blue-600 font-medium'>
+                {answeredCount}/{questions.length} (
+                {Math.round((answeredCount / questions.length) * 100)}%)
+              </span>
+            </div>
+            <div className='w-full bg-gray-200 rounded-full h-2'>
+              <div
+                className='bg-blue-600 h-2 rounded-full transition-all duration-300'
+                style={{
+                  width: `${(answeredCount / questions.length) * 100}%`,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Questions Section */}
         {!isSubmitted ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className='space-y-8'
-          >
+          <div className='space-y-4'>
             {questions.map((question, index) => (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index }}
-                className='bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300'
+                className='bg-white rounded-lg shadow-lg border p-5'
               >
-                <div className='flex items-start space-x-4 mb-6'>
+                <div className='flex items-start space-x-3 mb-4'>
                   <div
-                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                    className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                       answers[index] && answers[index].trim() !== ''
-                        ? 'bg-green-100 text-green-800 border-2 border-green-200'
-                        : 'bg-gray-100 text-gray-600 border-2 border-gray-200'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-300 text-gray-600'
                     }`}
                   >
                     {question.number}
                   </div>
                   <div className='flex-1'>
-                    <h3 className='text-xl font-semibold text-gray-900 mb-4 leading-relaxed'>
+                    <h3 className='text-lg font-medium text-gray-800 mb-3'>
                       {question.text}
                     </h3>
 
                     {question.instructions && (
-                      <div className='bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6'>
+                      <div className='bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4'>
                         <div className='flex items-start'>
-                          <AlertCircle className='w-5 h-5 text-amber-600 mr-3 mt-0.5 flex-shrink-0' />
-                          <p className='text-sm text-amber-800 font-medium'>
+                          <AlertCircle className='w-4 h-4 text-orange-600 mr-2 mt-0.5 flex-shrink-0' />
+                          <p className='text-sm text-orange-800'>
                             {question.instructions}
                           </p>
                         </div>
@@ -507,29 +560,25 @@ const TestViewerPage = () => {
 
                     {question.type === 'multiple-choice' &&
                     question.options.length > 0 ? (
-                      <div className='space-y-3'>
+                      <div className='space-y-2'>
                         {question.options.map((option) => (
                           <label
                             key={option.letter}
-                            className={`group flex items-center p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:scale-[1.02] ${
+                            className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
                               answers[index] === option.letter
-                                ? 'border-blue-500 bg-blue-50 shadow-md'
-                                : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                                ? 'border-blue-500 bg-blue-50'
+                                : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                             }`}
                           >
                             <div
-                              className={`relative w-6 h-6 rounded-full border-2 mr-4 flex-shrink-0 transition-all ${
+                              className={`relative w-5 h-5 rounded-full border-2 mr-3 flex-shrink-0 ${
                                 answers[index] === option.letter
                                   ? 'border-blue-500 bg-blue-500'
-                                  : 'border-gray-300 group-hover:border-gray-400'
+                                  : 'border-gray-400'
                               }`}
                             >
                               {answers[index] === option.letter && (
-                                <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  className='absolute inset-1 bg-white rounded-full'
-                                />
+                                <div className='absolute inset-1 bg-white rounded-full' />
                               )}
                               <input
                                 type='radio'
@@ -542,8 +591,8 @@ const TestViewerPage = () => {
                                 className='sr-only'
                               />
                             </div>
-                            <span className='text-gray-900 leading-relaxed'>
-                              <span className='font-semibold text-blue-600 mr-2'>
+                            <span className='text-gray-800 text-sm'>
+                              <span className='font-medium text-blue-600 mr-2'>
                                 {option.letter}.
                               </span>
                               {option.text}
@@ -555,154 +604,106 @@ const TestViewerPage = () => {
                       <div className='relative'>
                         <textarea
                           placeholder='Type your detailed answer here...'
-                          rows={8}
+                          rows={5}
                           value={answers[index] || ''}
                           onChange={(e) =>
                             handleAnswerChange(index, e.target.value)
                           }
-                          className='w-full p-6 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none resize-none transition-all duration-200 text-gray-700 leading-relaxed'
+                          className='w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none text-gray-800 placeholder-gray-500'
                         />
-                        <div className='absolute bottom-4 right-4 text-xs text-gray-400'>
+                        <div className='absolute bottom-3 right-3 text-xs text-gray-500'>
                           {answers[index]?.length || 0} characters
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
 
-            {/* Enhanced Submit Button */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              className='text-center pt-8'
-            >
-              <motion.button
+            {/* Submit Button */}
+            <div className='text-center pt-6'>
+              <button
                 onClick={() => handleSubmit()}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className='bg-gradient-to-r from-green-600 to-emerald-600 text-white px-12 py-4 rounded-2xl font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-xl hover:shadow-2xl'
+                className='bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors'
               >
                 Submit Test
-              </motion.button>
-
-              <p className='text-sm text-gray-500 mt-4'>
-                Double-check your answers before submitting
+              </button>
+              <p className='text-gray-500 text-sm mt-2'>
+                Review your answers before submitting
               </p>
-            </motion.div>
-          </motion.div>
-        ) : (
-          /* Enhanced Results */
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'spring', duration: 0.6 }}
-            className='bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 p-12 text-center relative overflow-hidden'
-          >
-            {/* Decorative elements */}
-            <div
-              className={`absolute inset-0 ${
-                score >= 70
-                  ? 'bg-gradient-to-br from-green-50 to-emerald-100'
-                  : 'bg-gradient-to-br from-red-50 to-orange-100'
-              } opacity-30`}
-            ></div>
-
-            <div className='relative z-10'>
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: 'spring' }}
-                className='mb-8'
-              >
-                {score >= 70 ? (
-                  <CheckCircle className='w-24 h-24 text-green-500 mx-auto mb-6' />
-                ) : (
-                  <AlertCircle className='w-24 h-24 text-red-500 mx-auto mb-6' />
-                )}
-
-                <h2 className='text-4xl font-bold text-gray-900 mb-4'>
-                  Test Completed Successfully!
-                </h2>
-
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.4, type: 'spring' }}
-                  className={`text-8xl font-black mb-6 ${
-                    score >= 70 ? 'text-green-600' : 'text-red-600'
-                  }`}
-                >
-                  {score}%
-                </motion.div>
-
-                <div
-                  className={`inline-flex items-center px-6 py-3 rounded-full text-lg font-semibold mb-6 ${
-                    score >= 70
-                      ? 'bg-green-100 text-green-800 border-2 border-green-200'
-                      : 'bg-red-100 text-red-800 border-2 border-red-200'
-                  }`}
-                >
-                  <Trophy className='w-6 h-6 mr-2' />
-                  {score >= 70 ? 'Passed' : 'Needs Improvement'}
-                </div>
-
-                <p className='text-xl text-gray-600 mb-8 max-w-md mx-auto leading-relaxed'>
-                  You scored {score >= 70 ? 'above' : 'below'} the passing
-                  threshold of 70%
-                </p>
-
-                {score >= 70 ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                    className='bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-8 mb-8'
-                  >
-                    <div className='text-6xl mb-4'>🎉</div>
-                    <h3 className='text-2xl font-bold text-green-900 mb-2'>
-                      Congratulations!
-                    </h3>
-                    <p className='text-green-800 text-lg leading-relaxed'>
-                      You have successfully passed this assessment. Your
-                      knowledge and understanding are commendable!
-                    </p>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                    className='bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl p-8 mb-8'
-                  >
-                    <div className='text-6xl mb-4'>📚</div>
-                    <h3 className='text-2xl font-bold text-red-900 mb-2'>
-                      Keep Learning!
-                    </h3>
-                    <p className='text-red-800 text-lg leading-relaxed'>
-                      Don't worry - this is a learning opportunity. Review the
-                      material and try again when you're ready.
-                    </p>
-                  </motion.div>
-                )}
-
-                {test.interactiveSettings?.allowRetry && score < 70 && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
-                    onClick={() => window.location.reload()}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className='bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl'
-                  >
-                    Retake Test
-                  </motion.button>
-                )}
-              </motion.div>
             </div>
-          </motion.div>
+          </div>
+        ) : (
+          /* Results */
+          <div className='bg-white rounded-lg shadow-lg border p-8 text-center'>
+            <div className='mb-6'>
+              {score >= 70 ? (
+                <CheckCircle className='w-16 h-16 text-green-600 mx-auto mb-4' />
+              ) : (
+                <AlertCircle className='w-16 h-16 text-red-600 mx-auto mb-4' />
+              )}
+
+              <h2 className='text-2xl font-bold text-gray-800 mb-3'>
+                Test Completed!
+              </h2>
+
+              <div
+                className={`text-5xl font-black mb-4 ${
+                  score >= 70 ? 'text-green-600' : 'text-red-600'
+                }`}
+              >
+                {score}%
+              </div>
+
+              <div
+                className={`inline-flex items-center px-4 py-2 rounded-full font-semibold mb-4 ${
+                  score >= 70
+                    ? 'bg-green-100 text-green-800 border border-green-300'
+                    : 'bg-red-100 text-red-800 border border-red-300'
+                }`}
+              >
+                <Trophy className='w-4 h-4 mr-2' />
+                {score >= 70 ? 'Passed' : 'Needs Improvement'}
+              </div>
+
+              <p className='text-gray-600 mb-6'>
+                You scored {score >= 70 ? 'above' : 'below'} the passing
+                threshold of 70%
+              </p>
+
+              {score >= 70 ? (
+                <div className='bg-green-50 border border-green-200 rounded-lg p-6 mb-6'>
+                  <div className='text-4xl mb-3'>🎉</div>
+                  <h3 className='text-xl font-bold text-green-800 mb-2'>
+                    Congratulations!
+                  </h3>
+                  <p className='text-green-700'>
+                    You have successfully passed this assessment!
+                  </p>
+                </div>
+              ) : (
+                <div className='bg-red-50 border border-red-200 rounded-lg p-6 mb-6'>
+                  <div className='text-4xl mb-3'>📚</div>
+                  <h3 className='text-xl font-bold text-red-800 mb-2'>
+                    Keep Learning!
+                  </h3>
+                  <p className='text-red-700'>
+                    Review the material and try again when you're ready.
+                  </p>
+                </div>
+              )}
+
+              {test.interactiveSettings?.allowRetry && score < 70 && (
+                <button
+                  onClick={() => window.location.reload()}
+                  className='bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors'
+                >
+                  Retake Test
+                </button>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </div>
