@@ -1,6 +1,8 @@
 import { Toaster } from 'react-hot-toast'
 import { useSelector } from 'react-redux'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+
+// Import all pages
 import AuthModal from './pages/Auth/AuthModal'
 import DashboardPage from './pages/Dashboard/DashboardPage'
 import MyDocumentsPage from './pages/Documents/MyDocumentsPage'
@@ -10,13 +12,13 @@ import ExamReport from './pages/TestManagement/ExamReport'
 import TestManagementPage from './pages/TestManagement/TestManagementPage'
 import TestReportPage from './pages/TestManagement/TestReportPage'
 
-// Protected Route Component
+// Simple component to protect routes - only logged in users can access
 const ProtectedRoute = ({ children }) => {
   const { currentUser } = useSelector((state) => state.user)
   return currentUser ? children : <Navigate to='/auth' replace />
 }
 
-// Public Route Component (redirects to dashboard if already logged in)
+// Simple component for public routes - redirect logged in users to dashboard
 const PublicRoute = ({ children }) => {
   const { currentUser } = useSelector((state) => state.user)
   return currentUser ? <Navigate to='/dashboard' replace /> : children
@@ -24,13 +26,13 @@ const PublicRoute = ({ children }) => {
 
 const App = () => {
   const { currentUser } = useSelector((state) => state.user)
-  console.log(currentUser)
 
   return (
     <BrowserRouter>
       <Toaster position='top-center' />
+
       <Routes>
-        {/* Root route - redirect based on auth status */}
+        {/* Home page - redirect based on login status */}
         <Route
           path='/'
           element={
@@ -42,7 +44,7 @@ const App = () => {
           }
         />
 
-        {/* Public routes - redirect to dashboard if logged in */}
+        {/* Login page - only for guests */}
         <Route
           path='/auth'
           element={
@@ -52,7 +54,7 @@ const App = () => {
           }
         />
 
-        {/* Protected routes - require authentication */}
+        {/* Dashboard - only for logged in users */}
         <Route
           path='/dashboard'
           element={
@@ -61,6 +63,8 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* My Templates page */}
         <Route
           path='/mytemplates'
           element={
@@ -69,6 +73,8 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* My Documents page */}
         <Route
           path='/mydocuments'
           element={
@@ -77,6 +83,8 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* Settings page */}
         <Route
           path='/settings'
           element={
@@ -85,6 +93,8 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* Test Management page */}
         <Route
           path='/management'
           element={
@@ -93,6 +103,8 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* Test Report page */}
         <Route
           path='/management/report'
           element={
@@ -101,6 +113,8 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* Exam Report page */}
         <Route
           path='/management/report/result'
           element={
@@ -110,7 +124,7 @@ const App = () => {
           }
         />
 
-        {/* Catch all route - redirect to auth or dashboard */}
+        {/* Any other page - redirect based on login status */}
         <Route
           path='*'
           element={

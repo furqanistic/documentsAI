@@ -717,7 +717,7 @@ const CreateDocumentsPage = () => {
                     </motion.div>
                   )}
 
-                  {/* Document Type - CONSISTENT SPACING */}
+                  {/* Document Type*/}
                   <motion.div variants={itemVariant} className='mb-5'>
                     <h3 className='text-lg font-bold text-black mb-3'>
                       Document Type

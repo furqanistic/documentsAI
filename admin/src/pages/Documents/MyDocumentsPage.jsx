@@ -219,11 +219,6 @@ const DocumentViewerDialog = React.memo(({ isOpen, onClose, document }) => {
           </DialogTitle>
           <DialogDescription className='text-gray-600 flex items-center gap-2'>
             <span className='capitalize'>{document?.documentType}</span>
-            {document?.isInteractive && (
-              <Badge variant='secondary' className='bg-blue-100 text-blue-800'>
-                Interactive
-              </Badge>
-            )}
             <span>•</span>
             <span>{new Date(document?.createdAt).toLocaleDateString()}</span>
           </DialogDescription>
@@ -342,14 +337,6 @@ const DocumentsTable = React.memo(({ documents, onView, onDelete }) => {
                               Modified: {modifiedDateTime.date} ·{' '}
                               {modifiedDateTime.time}
                             </span>
-                            {document.isInteractive && (
-                              <Badge
-                                variant='secondary'
-                                className='bg-blue-100 text-blue-800 text-xs'
-                              >
-                                Interactive
-                              </Badge>
-                            )}
                           </div>
                         </div>
                       </div>
@@ -472,9 +459,14 @@ const MyDocuments = () => {
   const deleteMutation = useDeleteDocument()
   const documentDetailsMutation = useDocumentDetails()
 
+  // Filter out interactive documents - they belong in test management
+  const nonInteractiveDocuments = useMemo(() => {
+    return documents.filter((doc) => !doc.isInteractive)
+  }, [documents])
+
   // Memoized filtered documents
   const filteredDocuments = useMemo(() => {
-    return documents.filter((doc) => {
+    return nonInteractiveDocuments.filter((doc) => {
       const matchesSearch =
         doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         getDocumentTypeDisplay(doc.documentType)
@@ -490,7 +482,7 @@ const MyDocuments = () => {
 
       return matchesSearch && matchesStatus && matchesType
     })
-  }, [documents, searchQuery, filterStatus, filterType])
+  }, [nonInteractiveDocuments, searchQuery, filterStatus, filterType])
 
   // Callback functions
   const handleDelete = useCallback((document) => {
@@ -560,7 +552,6 @@ const MyDocuments = () => {
         'Status',
         'Created Date',
         'Last Modified',
-        'Interactive',
         'Details',
       ]
       const csvContent = [
@@ -572,7 +563,6 @@ const MyDocuments = () => {
             getDocumentStatus(doc),
             new Date(doc.createdAt).toLocaleDateString(),
             new Date(doc.updatedAt).toLocaleDateString(),
-            doc.isInteractive ? 'Yes' : 'No',
             `"${getDocumentDetails(doc)}"`,
           ].join(',')
         ),
@@ -730,7 +720,8 @@ const MyDocuments = () => {
       {!isLoading && (
         <div className='mb-4'>
           <p className='text-gray-600 dark:text-gray-400 text-sm'>
-            Showing {filteredDocuments.length} of {documents.length} documents
+            Showing {filteredDocuments.length} of{' '}
+            {nonInteractiveDocuments.length} documents
             {filteredDocuments.length > 0 && searchQuery && (
               <span className='ml-2 text-blue-600'>for "{searchQuery}"</span>
             )}
@@ -755,7 +746,7 @@ const MyDocuments = () => {
             </p>
           </div>
         </motion.div>
-      ) : documents.length === 0 ? (
+      ) : nonInteractiveDocuments.length === 0 ? (
         <EmptyState />
       ) : (
         <DocumentsTable

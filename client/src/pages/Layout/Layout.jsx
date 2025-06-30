@@ -7,6 +7,7 @@ import {
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ChevronDown,
+  CreditCard,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -72,17 +73,17 @@ const UserDropdown = ({ user, onSignOut }) => {
   const dropdownItems = [
     {
       label: 'Dashboard',
-      href: '/dashboard',
+      href: 'https://dashboard.documnt.ai/',
       icon: <LayoutDashboard size={16} />,
     },
     {
-      label: 'Profile',
-      href: '/profile',
-      icon: <UserIcon size={16} />,
+      label: 'Subscriptions',
+      href: '/',
+      icon: <CreditCard size={16} />,
     },
     {
       label: 'Settings',
-      href: '/settings',
+      href: 'https://dashboard.documnt.ai/settings',
       icon: <Settings size={16} />,
     },
   ]
@@ -91,18 +92,25 @@ const UserDropdown = ({ user, onSignOut }) => {
     <div className='relative' ref={dropdownRef}>
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className='flex items-center space-x-2 px-3 py-1.5 rounded-md text-white hover:bg-gray-800 transition-colors duration-200'
+        className='flex items-center space-x-2 px-2 lg:px-3 py-1.5 rounded-md text-white hover:bg-gray-800 transition-colors duration-200'
         whileHover={{ y: -1 }}
       >
         {/* User Icon */}
-        <div className='flex items-center justify-center w-8 h-8 bg-gray-700 rounded-full'>
-          <UserIcon size={16} className='text-gray-300' />
+        <div className='flex items-center justify-center w-7 h-7 lg:w-8 lg:h-8 bg-gray-700 rounded-full'>
+          <UserIcon size={14} className='text-gray-300 lg:w-4 lg:h-4' />
         </div>
 
-        <div className='text-left'>
+        <div className='text-left hidden lg:block'>
           <div className='text-sm font-medium'>{user.name}</div>
           <div className='text-xs text-gray-300 capitalize'>
             {user.role || 'User'}
+          </div>
+        </div>
+
+        {/* Show abbreviated name on tablets */}
+        <div className='text-left lg:hidden'>
+          <div className='text-sm font-medium'>
+            {user.name?.split(' ')[0] || 'User'}
           </div>
         </div>
 
@@ -110,7 +118,7 @@ const UserDropdown = ({ user, onSignOut }) => {
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
         >
-          <ChevronDown size={16} className='text-gray-300' />
+          <ChevronDown size={14} className='text-gray-300 lg:w-4 lg:h-4' />
         </motion.div>
       </motion.button>
 
@@ -121,13 +129,13 @@ const UserDropdown = ({ user, onSignOut }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className='absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50'
+            className='absolute right-0 mt-2 w-44 lg:w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50'
           >
             {dropdownItems.map((item, index) => (
               <motion.a
                 key={item.label}
                 href={item.href}
-                className='flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors'
+                className='flex items-center space-x-3 px-3 lg:px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors'
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: index * 0.05 }}
@@ -142,7 +150,7 @@ const UserDropdown = ({ user, onSignOut }) => {
 
             <motion.button
               onClick={onSignOut}
-              className='flex items-center space-x-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors'
+              className='flex items-center space-x-3 w-full px-3 lg:px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors'
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: dropdownItems.length * 0.05 }}
@@ -160,8 +168,8 @@ const UserDropdown = ({ user, onSignOut }) => {
 // Mobile User Menu Component
 const MobileUserMenu = ({ user, onSignOut }) => {
   const menuItems = [
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Profile', href: '/profile' },
+    { label: 'Dashboard', href: 'https://dashboard.documnt.ai/' },
+    { label: 'Subscriptions', href: '/subscriptions' },
     { label: 'Settings', href: '/settings' },
   ]
 
@@ -253,7 +261,7 @@ const Topbar = () => {
   return (
     <>
       <header className='w-full bg-black text-white fixed top-0 left-0 z-50 h-16'>
-        <div className='container mx-auto h-full px-2 md:px-4 flex items-center justify-between'>
+        <div className='container mx-auto h-full px-2 md:px-4 lg:px-6 xl:px-8 flex items-center justify-between'>
           {/* Logo with Text */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -265,13 +273,13 @@ const Topbar = () => {
               <img
                 src='./logo-3.png'
                 alt='Logo'
-                className='h-12 object-contain lg:h-10'
+                className='h-10 md:h-11 lg:h-12 object-contain'
               />
             </a>
           </motion.div>
 
-          {/* Desktop Navigation */}
-          <div className='hidden md:flex items-center justify-center md:space-x-3 lg:space-x-6 xl:space-x-8'>
+          {/* Desktop Navigation - Better tablet spacing */}
+          <div className='hidden md:flex items-center justify-center space-x-2 md:space-x-3 lg:space-x-5 xl:space-x-8'>
             {navLinks.map((link, index) => (
               <motion.div
                 key={link.name}
@@ -281,7 +289,7 @@ const Topbar = () => {
               >
                 <motion.a
                   href={link.href}
-                  className='text-sm text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-0 whitespace-nowrap'
+                  className='text-xs md:text-sm text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-0 whitespace-nowrap px-1 md:px-2 lg:px-0'
                   whileHover={{ scale: 1.05 }}
                 >
                   {link.name}
@@ -291,7 +299,7 @@ const Topbar = () => {
           </div>
 
           {/* Right side - User Info or Auth Buttons */}
-          <div className='flex items-center space-x-4'>
+          <div className='flex items-center space-x-2 md:space-x-4'>
             {isAuthenticated && currentUser ? (
               // User is logged in - show user dropdown (desktop only)
               <div className='hidden md:block'>
@@ -302,7 +310,7 @@ const Topbar = () => {
               <>
                 <motion.button
                   whileHover={{ y: -1 }}
-                  className='hidden md:block text-sm font-medium text-white hover:text-white transition-colors duration-200 whitespace-nowrap'
+                  className='hidden md:block text-sm font-medium text-white hover:text-white transition-colors duration-200 whitespace-nowrap px-2 lg:px-0'
                   onClick={() => openAuthModal('login')}
                 >
                   Log In
@@ -310,7 +318,7 @@ const Topbar = () => {
 
                 <motion.button
                   whileHover={{ y: -1 }}
-                  className='hidden md:flex items-center space-x-2 bg-white text-black rounded-md px-4 py-1.5 transition-all duration-200 cursor-pointer hover:bg-gray-100 whitespace-nowrap'
+                  className='hidden md:flex items-center space-x-2 bg-white text-black rounded-md px-3 lg:px-4 py-1.5 transition-all duration-200 cursor-pointer hover:bg-gray-100 whitespace-nowrap'
                   onClick={() => openAuthModal('signup')}
                 >
                   <span className='text-sm font-medium'>Sign Up</span>
@@ -320,7 +328,7 @@ const Topbar = () => {
 
             {/* Mobile menu button */}
             <button
-              className='inline-flex md:hidden items-center justify-center w-8 h-8 rounded-md text-gray-300  hover:text-black hover:bg-white focus:outline-none focus:ring-0 transition-colors'
+              className='inline-flex md:hidden items-center justify-center w-8 h-8 rounded-md text-gray-300 hover:text-black hover:bg-white focus:outline-none focus:ring-0 transition-colors'
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label='Menu'
             >

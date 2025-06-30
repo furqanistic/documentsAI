@@ -1,853 +1,863 @@
-// file 2
 import { motion } from 'framer-motion'
 import {
   ArrowRight,
   Check,
-  Clock,
   Copy,
-  Download,
-  FilePlus,
+  ExternalLink,
   FileQuestion,
   FileText,
-  FileType,
-  Globe,
   HelpCircle,
+  RefreshCw,
   Share,
   Sparkles,
-  Upload,
   Users,
   Zap,
 } from 'lucide-react'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { toast } from 'react-hot-toast'
+import { useDispatch, useSelector } from 'react-redux'
 
-// You'll need to create or import these components
-
+import AuthModal from '@/pages/Auth/AuthModal'
+import {
+  loginSuccess,
+  selectCurrentUser,
+  selectIsAuthenticated,
+} from '@/redux/userSlice'
+import { axiosInstance } from '../../../config'
 import AiPromptSuggestions from '../CreateDocuments/AiPromptSuggestions'
 import InteractiveTestOptions from './InteractiveTestOptions'
 import SidebarCreateTest from './SidebarCreateTest'
 import TestPreview from './TestPreview'
 
 const InteractiveTestsMain = () => {
+  const dispatch = useDispatch()
+  const isAuthenticated = useSelector(selectIsAuthenticated)
+
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedTestType, setSelectedTestType] = useState(null) // Default to first option
-  const [showExportOptions, setShowExportOptions] = useState(false)
-  const [selectedExportFormat, setSelectedExportFormat] = useState('html') // Default to HTML for interactive tests
+  const [progress, setProgress] = useState(0)
+  const [progressMessage, setProgressMessage] = useState('')
+  const [selectedTestType, setSelectedTestType] = useState(0)
   const [generationComplete, setGenerationComplete] = useState(false)
   const [promptText, setPromptText] = useState('')
   const [testContent, setTestContent] = useState('')
-  const [selectedFile, setSelectedFile] = useState(null)
+  const [currentTestId, setCurrentTestId] = useState(null)
+  const [userTests, setUserTests] = useState([])
+  const [showAuthModal, setShowAuthModal] = useState(false)
+
   const [interactiveSettings, setInteractiveSettings] = useState({
-    timeLimit: null,
+    timeLimit: 30,
     showResults: true,
-    allowRetry: true,
+    allowRetry: false,
+    randomizeQuestions: true,
     isPublic: false,
-    generateLink: false,
   })
   const [interactiveLink, setInteractiveLink] = useState('')
-  // Test metadata state
+
   const [testMetadata, setTestMetadata] = useState({
     title: '',
     description: '',
-    author: '',
-    date: '',
     passingScore: 70,
-    randomizeQuestions: true,
-    showProgress: true,
+    totalQuestions: 0,
   })
-  const fileInputRef = useRef(null)
 
-  // Animation variants
-  const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  }
-
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  }
-
-  const itemVariant = {
-    hidden: { opacity: 0, y: 10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.3 },
-    },
-  }
-
-  // Test type options
   const testTypes = [
     {
       icon: <FileQuestion className='h-5 w-5' />,
       name: 'Multiple Choice',
       description: 'Auto-graded quiz with MCQ',
+      documentType: 'exam',
     },
     {
       icon: <FileText className='h-5 w-5' />,
       name: 'Essay Questions',
       description: 'Long form answers',
+      documentType: 'exam',
     },
     {
       icon: <Users className='h-5 w-5' />,
       name: 'Interview Assessment',
-      description: 'Assessment for interview candidates',
+      description: 'Assessment for candidates',
+      documentType: 'interview',
     },
     {
-      icon: <FilePlus className='h-5 w-5' />,
+      icon: <Zap className='h-5 w-5' />,
       name: 'Mixed Format',
       description: 'Combination of question types',
+      documentType: 'exam',
     },
   ]
 
-  // Export formats
-  const exportFormats = [
-    {
-      id: 'pdf',
-      name: 'PDF Document',
-      icon: <FileText />,
-      description: 'Best for sharing and printing',
-    },
-    {
-      id: 'docx',
-      name: 'Word Document',
-      icon: <FileText />,
-      description: 'Editable document for Microsoft Word',
-    },
-    {
-      id: 'html',
-      name: 'Web Page',
-      icon: <Globe />,
-      description: 'Online interactive version',
-    },
-    {
-      id: 'text',
-      name: 'Plain Text',
-      icon: <FileType />,
-      description: 'Simple text format',
-    },
-  ]
-
-  // AI prompt suggestions based on selected test type
   const promptSuggestions = {
     0: [
-      'Create a multiple choice quiz about world history with 20 questions focusing on the 20th century',
-      'Generate a biology quiz with 15 multiple choice questions about the human body systems',
-      'Make a computer science quiz with 25 questions covering algorithms and data structures',
+      'Create a multiple choice quiz about world history with 20 questions focusing on the 20th century. Each question should have 4 options with one correct answer clearly marked.',
+      'Generate a biology quiz with 15 multiple choice questions about the human body systems. Include clear answer choices and mark correct answers.',
+      'Make a computer science quiz with 25 questions covering algorithms and data structures. Format as multiple choice with explanations.',
     ],
     1: [
-      'Create 5 essay questions for a literature course on Shakespeares tragedies',
-      'Generate 3 long-form questions about environmental sustainability challenges',
-      'Create an essay exam with 4 questions on macroeconomic theory',
+      "Create 5 essay questions for a literature course on Shakespeare's tragedies. Provide clear instructions and grading criteria for each question.",
+      'Generate 3 long-form questions about environmental sustainability challenges. Include suggested answer length and key points to cover.',
+      'Create an essay exam with 4 questions on macroeconomic theory. Provide detailed prompts and evaluation rubrics.',
     ],
     2: [
-      'Create a technical interview assessment for a senior JavaScript developer position',
-      'Generate a design thinking challenge for UX designer candidates',
-      'Create a problem-solving assessment for project manager candidates',
+      'Create a technical interview assessment for a senior JavaScript developer position. Include coding challenges, system design questions, and behavioral questions.',
+      'Generate a design thinking challenge for UX designer candidates. Include portfolio review questions and practical exercises.',
+      'Create a problem-solving assessment for project manager candidates. Include scenario-based questions and case studies.',
     ],
     3: [
-      'Create a mixed format exam with multiple choice, short answer, and essay questions about American history',
-      'Generate a comprehensive assessment with various question types for a marketing course',
-      'Create a mixed format quiz covering data analysis with both theoretical and practical questions',
+      'Create a mixed format exam with multiple choice, short answer, and essay questions about American history. Include clear instructions for each section.',
+      'Generate a comprehensive assessment with various question types for a marketing course. Mix MCQs, case studies, and analytical questions.',
+      'Create a mixed format quiz covering data analysis with both theoretical multiple choice and practical problem-solving questions.',
     ],
   }
 
-  // Simulated test generation
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadUserTests()
+    }
+  }, [isAuthenticated])
+
+  const simulateProgress = () => {
+    setProgress(0)
+    setProgressMessage('Initializing AI request...')
+
+    const progressSteps = [
+      { progress: 15, message: 'Analyzing your requirements...', delay: 500 },
+      { progress: 30, message: 'Processing test prompt...', delay: 800 },
+      {
+        progress: 50,
+        message: 'DeepSeek AI is generating questions...',
+        delay: 1200,
+      },
+      { progress: 70, message: 'Creating answer choices...', delay: 1000 },
+      {
+        progress: 85,
+        message: 'Setting up interactive features...',
+        delay: 800,
+      },
+      { progress: 95, message: 'Finalizing test structure...', delay: 500 },
+    ]
+
+    let currentStep = 0
+    const updateProgress = () => {
+      if (currentStep < progressSteps.length) {
+        const step = progressSteps[currentStep]
+        setTimeout(() => {
+          setProgress(step.progress)
+          setProgressMessage(step.message)
+          currentStep++
+          updateProgress()
+        }, step.delay)
+      }
+    }
+    updateProgress()
+  }
+
+  const resetProgress = () => {
+    setProgress(0)
+    setProgressMessage('')
+  }
+
+  const loadUserTests = async () => {
+    try {
+      const response = await axiosInstance.get('/documents/my-documents', {
+        params: {
+          documentType: 'exam',
+          limit: 10,
+        },
+      })
+
+      if (response.data.success) {
+        setUserTests(response.data.documents)
+      }
+    } catch (error) {
+      console.error('Error loading tests:', error)
+    }
+  }
+
+  const createStructuredTestPrompt = (userPrompt, testType) => {
+    const basePrompt = userPrompt.trim()
+
+    let structuredPrompt = basePrompt
+
+    if (testType === 0) {
+      // Multiple Choice
+      structuredPrompt += `\n\nFORMATTING REQUIREMENTS:
+- Generate ONLY the test content, no explanations or meta-commentary
+- Number each question clearly (1., 2., 3., etc.)
+- For each question, provide exactly 4 answer choices labeled A, B, C, D
+- Mark the correct answer with [CORRECT] after the option
+- Use this exact format:
+
+1. [Question text here]
+   A. [Option A]
+   B. [Option B] [CORRECT]
+   C. [Option C]
+   D. [Option D]
+
+Generate the test content directly without any introductory text or explanations.`
+    } else if (testType === 1) {
+      // Essay Questions
+      structuredPrompt += `\n\nFORMATTING REQUIREMENTS:
+- Generate ONLY the test content, no explanations or meta-commentary
+- Number each question clearly (1., 2., 3., etc.)
+- Provide clear instructions for each question
+- Include suggested word count or time allocation
+- Add grading criteria or key points to cover
+- Generate the test content directly without any introductory text`
+    } else if (testType === 3) {
+      // Mixed Format
+      structuredPrompt += `\n\nFORMATTING REQUIREMENTS:
+- Generate ONLY the test content, no explanations or meta-commentary
+- Clearly separate different question types into sections
+- Number all questions sequentially
+- For multiple choice: use A, B, C, D format with [CORRECT] after correct answers
+- For short answer: specify expected answer length
+- For essay: include grading criteria
+- Generate the test content directly without any introductory text`
+    }
+
+    return structuredPrompt
+  }
+
   const handleGenerate = async () => {
-    if (!promptText && !selectedFile) {
-      alert('Please enter a prompt or upload a file for your test')
+    if (!isAuthenticated) {
+      setShowAuthModal(true)
+      return
+    }
+
+    if (!promptText.trim()) {
+      toast.error('Please describe what test you want to create')
       return
     }
 
     setIsLoading(true)
-    setShowExportOptions(false)
     setGenerationComplete(false)
     setInteractiveLink('')
+    setCurrentTestId(null)
+
+    simulateProgress()
 
     try {
-      // Simulate API call to AI service
-      await new Promise((resolve) => setTimeout(resolve, 2500))
+      const structuredPrompt = createStructuredTestPrompt(
+        promptText,
+        selectedTestType
+      )
 
-      // Generate test content based on prompt or file
-      const generatedContent = generateSampleContent()
-      setTestContent(generatedContent)
-
-      // Auto-fill test metadata with AI-generated title if empty
-      if (!testMetadata.title) {
-        const inferredTitle = getInferredTitle()
-        setTestMetadata({
-          ...testMetadata,
-          title: inferredTitle,
+      const requestData = {
+        prompt: structuredPrompt,
+        documentType: testTypes[selectedTestType].documentType,
+        metadata: {
+          orgName: testMetadata.title || 'Documnt AI Test',
           date: new Date().toISOString().split('T')[0],
-        })
+          additionalInfo: `Interactive ${testTypes[selectedTestType].name} - Generated for online testing`,
+        },
+        isInteractive: true,
+        interactiveSettings: {
+          timeLimit: interactiveSettings.timeLimit,
+          showResults: interactiveSettings.showResults,
+          allowRetry: interactiveSettings.allowRetry,
+          randomizeQuestions: interactiveSettings.randomizeQuestions,
+          isPublic: interactiveSettings.isPublic,
+        },
       }
 
-      setIsLoading(false)
-      setGenerationComplete(true)
-      setShowExportOptions(true)
+      const response = await axiosInstance.post(
+        '/documents/generate',
+        requestData
+      )
+
+      if (response.data.success) {
+        setProgress(100)
+        setProgressMessage('Test generated successfully!')
+
+        setTimeout(() => {
+          setTestContent(response.data.document.content)
+          setCurrentTestId(response.data.document.id)
+
+          setTestMetadata({
+            title: response.data.document.title,
+            description: `Generated ${testTypes[selectedTestType].name} based on your requirements`,
+            passingScore: 70,
+            totalQuestions: getTotalQuestions(response.data.document.content),
+          })
+
+          setGenerationComplete(true)
+          loadUserTests()
+          toast.success('Test generated successfully with Documnt AI!')
+          setTimeout(resetProgress, 1000)
+        }, 500)
+      } else {
+        throw new Error(response.data.message || 'Failed to generate test')
+      }
     } catch (error) {
       console.error('Error generating test:', error)
-      setIsLoading(false)
-      alert('Failed to generate test. Please try again.')
-    }
-  }
+      resetProgress()
 
-  // Get inferred title from the prompt
-  const getInferredTitle = () => {
-    if (promptText.length < 10) return 'Interactive Test'
+      const errorMessage = error.response?.data?.message || error.message
 
-    // Extract a title from the prompt text
-    const words = promptText.split(' ').slice(0, 5).join(' ')
-    return words.charAt(0).toUpperCase() + words.slice(1) + '...'
-  }
-
-  // Simulate test content generation based on type
-  const generateSampleContent = () => {
-    const testTypes = ['multiple-choice', 'essay', 'interview', 'mixed']
-    const selectedType = testTypes[selectedTestType]
-
-    let testContent = ''
-
-    if (selectedType === 'multiple-choice') {
-      testContent = `
-## World History Quiz: 20th Century Events
-
-**Instructions:** Select the best answer for each question. You have 30 minutes to complete this quiz.
-
-1. Which event marked the beginning of World War I?
-   - [ ] The invasion of Poland
-   - [x] The assassination of Archduke Franz Ferdinand
-   - [ ] The sinking of the Lusitania
-   - [ ] The Treaty of Versailles
-
-2. Which country was NOT part of the Allied Powers during World War II?
-   - [ ] United States
-   - [ ] Great Britain
-   - [x] Italy
-   - [ ] Soviet Union
-
-3. The Cold War was primarily a geopolitical tension between:
-   - [x] The United States and the Soviet Union
-   - [ ] Great Britain and Germany
-   - [ ] China and Japan
-   - [ ] France and Russia
-
-4. Which agreement divided Korea into two separate countries?
-   - [ ] Treaty of Versailles
-   - [ ] NATO Agreement
-   - [x] Potsdam Agreement
-   - [ ] Camp David Accords
-
-5. The Cuban Missile Crisis occurred during which decade?
-   - [ ] 1950s
-   - [x] 1960s
-   - [ ] 1970s
-   - [ ] 1980s
-
-[... remaining questions would appear here ...]
-      `
-    } else if (selectedType === 'essay') {
-      testContent = `
-## Literature Examination: Shakespeare's Tragedies
-
-**Instructions:** Answer each question thoroughly with well-developed arguments and specific examples from the texts. Each essay should be approximately 500-750 words.
-
-### Essay Questions (20 points each)
-
-1. **Character Analysis**: Compare and contrast the tragic flaws of Macbeth and Hamlet. How do their respective flaws drive the action of each play and lead to their downfalls? Use specific examples from both texts to support your analysis.
-
-2. **Thematic Exploration**: Examine the theme of ambition in "Macbeth" and "Julius Caesar." How does Shakespeare portray the corrupting influence of ambition, and what commentary does he make about power and leadership? Support your argument with textual evidence.
-
-3. **Literary Devices**: Analyze Shakespeare's use of supernatural elements in his tragedies. Choose at least two plays and discuss how supernatural occurrences (ghosts, witches, prophecies, etc.) function within the narratives. What purpose do they serve beyond mere dramatic effect?
-
-4. **Historical Context**: Discuss how the political climate of Elizabethan England influenced Shakespeare's portrayal of monarchy and governance in his tragedies. Consider plays such as "King Lear," "Macbeth," or "Richard III" in your response.
-
-5. **Critical Perspectives**: Choose ONE of Shakespeare's tragic heroines (Lady Macbeth, Ophelia, Desdemona, etc.) and analyze her character through both a contemporary lens and from the perspective of Shakespeare's time. How might interpretations of this character have changed over time?
-
-[Grading Rubric details would appear here...]
-    `
-    } else if (selectedType === 'interview') {
-      testContent = `
-## Senior JavaScript Developer Technical Assessment
-
-**Candidate Instructions:** This assessment evaluates your JavaScript proficiency, problem-solving abilities, and software architecture knowledge. Complete all sections within the 60-minute time limit.
-
-### Section 1: Conceptual Questions (10 points)
-
-1. Explain the difference between 'let', 'const', and 'var' in JavaScript.
-
-2. What is closure in JavaScript and how might you use it in practical applications?
-
-3. Describe the event loop in JavaScript and how it handles asynchronous operations.
-
-### Section 2: Code Implementation (15 points)
-
-Implement a function called 'debounce' that takes a function and a delay time as arguments and returns a debounced version of the function.
-
-\`\`\`javascript
-// Your implementation here
-function debounce(func, delay) {
-  // Complete this function
-}
-\`\`\`
-
-### Section 3: Problem Solving (15 points)
-
-You are tasked with optimizing a web application that is experiencing performance issues. The application loads data from an API and renders a large list of items (>1000) with complex DOM structures.
-
-1. What potential issues might be causing performance problems?
-2. Describe your approach to diagnosing the performance bottlenecks.
-3. Outline specific strategies you would implement to improve performance.
-
-### Section 4: System Design (10 points)
-
-Design a frontend architecture for a real-time collaborative document editing system similar to Google Docs. Include considerations for:
-
-1. State management
-2. Real-time synchronization
-3. Conflict resolution
-4. User presence indicators
-5. Offline capabilities
-
-[... assessment continues ...]
-    `
-    } else {
-      testContent = `
-## Comprehensive Marketing Assessment
-
-**Instructions:** This assessment contains multiple types of questions. Complete all sections within the allotted time.
-
-### Section 1: Multiple Choice (2 points each)
-
-1. Which of the following is NOT one of the 4 Ps of marketing?
-   - [ ] Product
-   - [ ] Price
-   - [ ] Place
-   - [x] Purpose
-   - [ ] Promotion
-
-2. Which digital marketing channel typically has the highest ROI?
-   - [ ] Social media advertising
-   - [x] Email marketing
-   - [ ] Display advertising
-   - [ ] Print media
-
-3. What does SEO stand for?
-   - [ ] Search Engine Operations
-   - [x] Search Engine Optimization
-   - [ ] Search Engine Ownership
-   - [ ] Search Engine Outcomes
-
-[... more multiple choice questions ...]
-
-### Section 2: Short Answer Questions (5 points each)
-
-1. Explain the concept of customer segmentation and why it's important in marketing strategy.
-
-2. Describe the difference between inbound and outbound marketing approaches.
-
-3. What is a unique selling proposition (USP) and why is it important for brand positioning?
-
-### Section 3: Case Study Analysis (20 points)
-
-**Scenario:** You are the marketing director for a direct-to-consumer fitness equipment company that has been experiencing declining sales over the past year despite increased spending on digital advertising.
-
-1. What potential factors might be contributing to the declining sales?
-2. Outline a comprehensive marketing strategy to reverse this trend.
-3. Describe how you would measure the success of your proposed strategy.
-
-[... additional content would appear here ...]
-      `
-    }
-
-    return testContent
-  }
-
-  // File upload handler
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0]
-    if (file) {
-      setSelectedFile(file)
-
-      // Read file content for preview (simplified for demo)
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setPromptText(
-          `Process this ${
-            file.type.split('/')[1]
-          } file and create an interactive test based on its content.`
+      if (error.response?.status === 429) {
+        toast.error(
+          'Rate limit exceeded. Please wait a few minutes before trying again.'
+        )
+      } else if (error.response?.status === 401) {
+        toast.error('Authentication failed. Please log in again.')
+        setShowAuthModal(true)
+      } else if (error.response?.status === 400) {
+        toast.error(
+          errorMessage ||
+            'Invalid request. Please check your input and try again.'
+        )
+      } else if (error.response?.status === 503) {
+        toast.error(
+          'AI service temporarily unavailable. Please try again later.'
+        )
+      } else if (errorMessage.includes('API key')) {
+        toast.error('AI service configuration error. Please contact support.')
+      } else {
+        toast.error(
+          errorMessage || 'Failed to generate test. Please try again.'
         )
       }
-      reader.readAsText(file)
-    }
-  }
-
-  // Handle drag and drop
-  const handleDragOver = (e) => {
-    e.preventDefault()
-  }
-
-  const handleDrop = (e) => {
-    e.preventDefault()
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setSelectedFile(e.dataTransfer.files[0])
-    }
-  }
-
-  // Handle export action
-  const handleExport = (format) => {
-    setIsLoading(true)
-
-    // Simulate export process
-    setTimeout(() => {
+    } finally {
       setIsLoading(false)
-
-      // In a real implementation, this would trigger the actual file download
-      console.log(`Exporting test as ${format}...`)
-
-      // Create a simulated download for demonstration purposes
-      const element = document.createElement('a')
-      const file = new Blob([testContent], { type: 'text/plain' })
-      element.href = URL.createObjectURL(file)
-      element.download = `interactive-test.${format}`
-      document.body.appendChild(element)
-      element.click()
-      document.body.removeChild(element)
-    }, 1500)
-  }
-
-  // Generate interactive test link
-  const handleGenerateInteractiveLink = () => {
-    if (!interactiveSettings.generateLink) {
-      setInteractiveSettings({ ...interactiveSettings, generateLink: true })
-
-      // Simulate link generation
-      setIsLoading(true)
-      setTimeout(() => {
-        setIsLoading(false)
-        // Generate a fake unique URL
-        const uniqueId = Math.random().toString(36).substring(2, 10)
-        setInteractiveLink(`https://yourdomain.com/take-test/${uniqueId}`)
-      }, 1500)
-    } else {
-      setInteractiveSettings({ ...interactiveSettings, generateLink: false })
-      setInteractiveLink('')
     }
   }
 
-  // Apply AI suggestion to prompt
+  const getTotalQuestions = (content) => {
+    const questionMatches = content.match(/^\d+\./gm)
+    return questionMatches ? questionMatches.length : 10
+  }
+
+  const handleGenerateInteractiveLink = async () => {
+    if (!currentTestId) {
+      toast.error('Please generate a test first')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await axiosInstance.post(
+        `/documents/${currentTestId}/interactive-link`
+      )
+
+      if (response.data.success) {
+        setInteractiveLink(response.data.shareLink)
+        toast.success('Interactive link generated successfully!')
+      } else {
+        throw new Error(response.data.message || 'Failed to generate link')
+      }
+    } catch (error) {
+      console.error('Error generating interactive link:', error)
+      const errorMessage = error.response?.data?.message || error.message
+      toast.error(errorMessage || 'Failed to generate interactive link')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleViewTest = () => {
+    if (!testContent || !currentTestId) {
+      toast.error('No test content to preview')
+      return
+    }
+
+    // Open test viewer page in new tab
+    const testUrl = `/test-viewer/${currentTestId}`
+    window.open(testUrl, '_blank')
+  }
+
   const applyPromptSuggestion = (suggestion) => {
     setPromptText(suggestion)
   }
 
-  return (
-    <>
-      <div className='min-h-screen bg-gray-50 text-gray-900'>
-        {/* Header component */}
+  const handleClearForm = () => {
+    setPromptText('')
+    setTestContent('')
+    setGenerationComplete(false)
+    setCurrentTestId(null)
+    setInteractiveLink('')
+    setTestMetadata({
+      title: '',
+      description: '',
+      passingScore: 70,
+      totalQuestions: 0,
+    })
+    resetProgress()
+    toast.success('Form cleared!')
+  }
 
-        {/* REDUCED TOP PADDING */}
-        <main className='container mx-auto px-4 py-4 md:py-6 max-w-7xl'>
-          {/* Main Content Area with enhanced grid layout */}
-          <div className='grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8'>
-            {/* Left Column - Input with enhanced styling */}
-            <motion.div
-              initial='hidden'
-              animate='visible'
-              variants={fadeIn}
-              className='lg:col-span-8 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden'
-            >
-              {/* Content area - KEEPING ORIGINAL HORIZONTAL PADDING */}
-              <div className='p-4 pt-5.5 md:p-8 md:pt-6'>
+  const handleTestUpdate = async (newContent) => {
+    if (!currentTestId) {
+      setTestContent(newContent)
+      return
+    }
+
+    try {
+      const response = await axiosInstance.put(`/documents/${currentTestId}`, {
+        content: newContent,
+        metadata: testMetadata,
+      })
+
+      if (response.data.success) {
+        setTestContent(newContent)
+        toast.success('Test updated successfully!')
+        loadUserTests()
+      }
+    } catch (error) {
+      console.error('Error updating test:', error)
+      const errorMessage = error.response?.data?.message || error.message
+      toast.error(errorMessage || 'Failed to update test')
+    }
+  }
+
+  const loadTest = async (testId) => {
+    try {
+      setIsLoading(true)
+      const response = await axiosInstance.get(`/documents/${testId}`)
+
+      if (response.data.success) {
+        const test = response.data.document
+        setTestContent(test.content)
+        setCurrentTestId(test._id)
+        setPromptText(test.prompt)
+        setTestMetadata({
+          title: test.title,
+          description: test.metadata?.additionalInfo || '',
+          passingScore: 70,
+          totalQuestions: getTotalQuestions(test.content),
+        })
+        setGenerationComplete(true)
+
+        if (test.isInteractive && test.interactiveSettings) {
+          setInteractiveSettings(test.interactiveSettings)
+        }
+
+        const typeIndex = testTypes.findIndex(
+          (type) => type.documentType === test.documentType
+        )
+        if (typeIndex !== -1) {
+          setSelectedTestType(typeIndex)
+        }
+
+        toast.success('Test loaded successfully!')
+      }
+    } catch (error) {
+      console.error('Error loading test:', error)
+      const errorMessage = error.response?.data?.message || error.message
+      toast.error(errorMessage || 'Failed to load test')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const deleteTest = async (testId) => {
+    if (!window.confirm('Are you sure you want to delete this test?')) {
+      return
+    }
+
+    try {
+      const response = await axiosInstance.delete(`/documents/${testId}`)
+
+      if (response.data.success) {
+        toast.success('Test deleted successfully!')
+        loadUserTests()
+
+        if (testId === currentTestId) {
+          handleClearForm()
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting test:', error)
+      const errorMessage = error.response?.data?.message || error.message
+      toast.error(errorMessage || 'Failed to delete test')
+    }
+  }
+
+  const handleLoginSuccess = (userData) => {
+    dispatch(loginSuccess(userData))
+    localStorage.setItem('token', userData.token)
+    loadUserTests()
+  }
+
+  return (
+    <div className='min-h-screen bg-gray-50'>
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onLogin={handleLoginSuccess}
+      />
+
+      <main className='container mx-auto px-4 py-6 max-w-7xl'>
+        <div className='grid grid-cols-1 lg:grid-cols-12 gap-8'>
+          {/* Main Content */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className='lg:col-span-8 bg-white rounded-xl shadow-sm border border-gray-200'
+          >
+            <div className='p-8'>
+              {/* Recent Tests */}
+              {/* Recent Tests */}
+              {isAuthenticated && userTests.length > 0 && (
                 <motion.div
-                  initial='hidden'
-                  animate='visible'
-                  variants={staggerContainer}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className='mb-6'
                 >
-                  {/* Test Type Selection - REMOVED EXTRA TOP PADDING */}
-                  <motion.div variants={itemVariant} className='mb-5'>
-                    <h3 className='text-lg  font-bold text-black mb-3'>
-                      Test Type
-                    </h3>
-                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4'>
-                      {testTypes.map((type, index) => (
-                        <motion.div
-                          key={index}
-                          whileHover={{ scale: 1.01 }}
-                          whileTap={{ scale: 0.98 }}
-                          className='cursor-pointer rounded-lg p-2 sm:p-3 flex items-center space-x-2 sm:space-x-3 transition-all duration-300 relative border border-transparent hover:bg-gray-50'
-                          style={{
-                            boxShadow:
-                              selectedTestType === index
-                                ? '0 0 0 2px rgb(31 41 55)'
-                                : '0 0 0 1px rgb(229 231 235)',
-                          }}
-                          onClick={() => setSelectedTestType(index)}
-                        >
-                          <div
-                            className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md flex-shrink-0 ${
-                              selectedTestType === index
-                                ? 'bg-gray-800 text-white'
-                                : 'bg-gray-100 text-black'
-                            }`}
-                          >
-                            {type.icon}
+                  <h3 className='text-lg font-bold text-black mb-3'>
+                    Recent Tests
+                  </h3>
+                  <div className='space-y-2'>
+                    {userTests.slice(0, 4).map((test) => (
+                      <div
+                        key={test._id}
+                        className='flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm cursor-pointer transition-all group'
+                        onClick={() => loadTest(test._id)}
+                      >
+                        <div className='flex items-center space-x-3 flex-1 min-w-0'>
+                          <div className='w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0'>
+                            <FileQuestion className='h-5 w-5 text-white' />
                           </div>
                           <div className='flex-1 min-w-0'>
-                            <div className='flex items-center justify-between'>
-                              <span className='font-medium text-gray-800 text-sm md:text-base truncate'>
-                                {type.name}
-                              </span>
-
-                              {selectedTestType === index && (
-                                <div className='flex-shrink-0 ml-1'>
-                                  <div className='h-5 w-5 sm:h-5 sm:w-5 bg-gray-900 rounded-full flex items-center justify-center'>
-                                    <Check className='h-3 w-3 sm:h-3 sm:w-3 text-white' />
-                                  </div>
-                                </div>
-                              )}
+                            <p className='text-sm font-medium text-gray-900 truncate'>
+                              {test.title}
+                            </p>
+                            <div className='flex items-center space-x-2 mt-0.5'>
+                              <p className='text-xs text-gray-500'>
+                                {new Date(test.createdAt).toLocaleDateString()}
+                              </p>
+                              <span className='w-1 h-1 bg-gray-300 rounded-full'></span>
+                              <p className='text-xs text-gray-500'>
+                                {test.content
+                                  ? test.content.match(/^\d+\./gm)?.length || 0
+                                  : 0}{' '}
+                                questions
+                              </p>
                             </div>
-                            <span className='text-xs sm:text-sm text-gray-500 block truncate'>
-                              {type.description}
-                            </span>
                           </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-
-                  {/* Introduction Help Text */}
-                  <motion.div variants={itemVariant} className='mb-5'>
-                    <div className='p-3 md:p-4 bg-blue-50 rounded-lg border border-blue-200 flex items-center'>
-                      <HelpCircle className='h-5 w-5 text-blue-500 mr-2 md:mr-3 flex-shrink-0' />
-                      <p className='text-xs md:text-sm text-black'>
-                        Create an interactive test by uploading a file or
-                        describing what you need. Our AI will generate test
-                        content that can be shared with participants to take
-                        online.
-                      </p>
-                    </div>
-                  </motion.div>
-
-                  {/* FILE UPLOAD SECTION - REMOVED EXTRA TOP PADDING */}
-                  <motion.div variants={itemVariant} className='mb-5'>
-                    <div className='flex items-center justify-between mb-3'>
-                      <label className='block text-lg  font-bold text-black'>
-                        Upload a File (Optional)
-                      </label>
-                    </div>
-                    <div
-                      className='border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-gray-400 transition-colors'
-                      onDragOver={handleDragOver}
-                      onDrop={handleDrop}
-                      onClick={() => fileInputRef.current.click()}
-                    >
-                      <input
-                        type='file'
-                        ref={fileInputRef}
-                        onChange={handleFileUpload}
-                        className='hidden'
-                        accept='.pdf,.docx,.doc,.txt,.rtf'
-                      />
-                      <div className='flex flex-col md:flex-row items-center justify-center gap-4'>
-                        <div className='bg-gray-100 h-12 w-12 rounded-full flex items-center justify-center text-black'>
-                          <Upload className='h-5 w-5' />
                         </div>
-                        <div className='flex-1'>
-                          <h3 className='text-sm md:text-base font-medium mb-1'>
-                            {selectedFile
-                              ? selectedFile.name
-                              : 'Drag & drop or click to browse'}
-                          </h3>
-                          <p className='text-xs sm:text-sm text-gray-500'>
-                            {selectedFile
-                              ? `${(selectedFile.size / 1024).toFixed(2)} KB`
-                              : 'Supports PDF, DOC, DOCX, TXT files (Max 10MB)'}
-                          </p>
-                        </div>
-                        {selectedFile && (
-                          <button
-                            className='text-xs text-gray-500 hover:text-black border border-gray-200 rounded px-2 py-1'
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setSelectedFile(null)
-                            }}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            deleteTest(test._id)
+                          }}
+                          className='opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 p-1.5 rounded-md hover:bg-red-50 transition-all'
+                        >
+                          <svg
+                            className='w-4 h-4'
+                            fill='none'
+                            stroke='currentColor'
+                            viewBox='0 0 24 24'
                           >
-                            Remove
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {/* Prompt input - REMOVED EXTRA TOP PADDING */}
-                  <motion.div variants={itemVariant} className='mb-5'>
-                    <div className='flex items-center justify-between mb-3'>
-                      <label className='block text-lg  font-bold text-black'>
-                        Describe Your Test
-                      </label>
-                      <div className='flex items-center space-x-1'>
-                        <button
-                          className='p-1 rounded-md hover:bg-gray-100 text-gray-500'
-                          title='Help'
-                        >
-                          <HelpCircle className='h-4 w-4' />
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth={2}
+                              d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+                            />
+                          </svg>
                         </button>
                       </div>
-                    </div>
-                    <div className='relative h-35 md:h-40'>
-                      <textarea
-                        className='w-full h-full p-3 md:p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none resize-none text-xs md:text-sm shadow-sm placeholder:text-xs md:placeholder:text-sm'
-                        placeholder='E.g., Create a multiple choice quiz about world history with 20 questions focusing on the 20th century. Include questions about both World Wars, the Cold War, and major political movements.'
-                        value={promptText}
-                        onChange={(e) => setPromptText(e.target.value)}
-                      ></textarea>
-                      <div className='absolute bottom-3 right-3 flex space-x-2'>
-                        <button
-                          className='p-1.5 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors'
-                          title='Copy to clipboard'
-                          onClick={() =>
-                            navigator.clipboard.writeText(promptText)
-                          }
-                        >
-                          <Copy className='h-4 w-4 text-gray-600' />
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
 
-                  {/* AI Prompt Suggestions Component - IMPROVED SPACING */}
-                  <div className='mb-3'>
-                    <AiPromptSuggestions
-                      suggestions={promptSuggestions[selectedTestType] || []}
-                      onSuggestionClick={applyPromptSuggestion}
+              {/* Test Type Selection */}
+              <motion.div className='mb-6'>
+                <h3 className='text-lg font-bold text-black mb-3'>Test Type</h3>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4'>
+                  {testTypes.map((type, index) => (
+                    <motion.div
+                      key={index}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.98 }}
+                      className='cursor-pointer rounded-lg p-2 sm:p-3 flex items-center space-x-2 sm:space-x-3 transition-all duration-300 relative border border-transparent hover:bg-gray-50'
+                      style={{
+                        boxShadow:
+                          selectedTestType === index
+                            ? '0 0 0 2px rgb(31 41 55)'
+                            : '0 0 0 1px rgb(229 231 235)',
+                      }}
+                      onClick={() => setSelectedTestType(index)}
+                    >
+                      <div
+                        className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md flex-shrink-0 ${
+                          selectedTestType === index
+                            ? 'bg-gray-800 text-white'
+                            : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        {type.icon}
+                      </div>
+                      <div className='flex-1 min-w-0'>
+                        <div className='flex items-center justify-between'>
+                          <span className='font-medium text-gray-800 text-sm md:text-base truncate'>
+                            {type.name}
+                          </span>
+                          {selectedTestType === index && (
+                            <div className='flex-shrink-0 ml-1'>
+                              <div className='h-5 w-5 sm:h-5 sm:w-5 bg-gray-900 rounded-full flex items-center justify-center'>
+                                <Check className='h-3 w-3 sm:h-3 sm:w-3 text-white' />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <span className='text-xs sm:text-sm text-gray-500 block truncate'>
+                          {type.description}
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Help Text */}
+              <div className='mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200'>
+                <div className='flex items-center'>
+                  <HelpCircle className='h-5 w-5 text-blue-500 mr-3 flex-shrink-0' />
+                  <p className='text-sm text-gray-700'>
+                    Describe the test you want to create. Our AI will generate
+                    interactive test content with proper formatting for online
+                    testing.
+                  </p>
+                </div>
+              </div>
+
+              {/* Prompt Input */}
+              <div className='mb-6'>
+                <label className='block text-lg font-bold text-gray-900 mb-3'>
+                  Describe Your Test
+                </label>
+                <div className='relative'>
+                  <textarea
+                    className='w-full h-40 p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none text-sm'
+                    placeholder='E.g., Create a multiple choice quiz about world history with 20 questions focusing on the 20th century. Include questions about both World Wars, the Cold War, and major political movements. Each question should have 4 options with clear correct answers.'
+                    value={promptText}
+                    onChange={(e) => setPromptText(e.target.value)}
+                  />
+                  <button
+                    className='absolute bottom-3 right-3 p-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors'
+                    onClick={() => {
+                      navigator.clipboard.writeText(promptText)
+                      toast.success('Copied to clipboard!')
+                    }}
+                  >
+                    <Copy className='h-4 w-4 text-gray-600' />
+                  </button>
+                </div>
+              </div>
+
+              {/* AI Suggestions */}
+              <AiPromptSuggestions
+                suggestions={promptSuggestions[selectedTestType] || []}
+                onSuggestionClick={applyPromptSuggestion}
+              />
+
+              {/* Generate Button */}
+              <div className='mt-6 flex justify-between items-center'>
+                <button
+                  onClick={handleClearForm}
+                  className='flex items-center px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors'
+                >
+                  <RefreshCw className='h-4 w-4 mr-2' />
+                  Clear All
+                </button>
+
+                <button
+                  className='bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-md font-medium hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 flex items-center'
+                  onClick={handleGenerate}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          duration: 1,
+                          repeat: Infinity,
+                          ease: 'linear',
+                        }}
+                        className='h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2'
+                      />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className='h-4 w-4 mr-2' />
+                      {generationComplete ? 'Regenerate' : 'Generate Test'}
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Progress Bar */}
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className='mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200'
+                >
+                  <div className='flex items-center mb-3'>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: 'linear',
+                      }}
+                      className='w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-3'
+                    >
+                      <Sparkles className='h-5 w-5 text-white' />
+                    </motion.div>
+                    <div className='flex-1'>
+                      <h4 className='text-sm font-medium text-gray-900'>
+                        Documnt AI is creating your test
+                      </h4>
+                      <p className='text-xs text-gray-600'>{progressMessage}</p>
+                    </div>
+                    <span className='text-sm font-medium text-blue-600'>
+                      {progress}%
+                    </span>
+                  </div>
+                  <div className='w-full bg-gray-200 rounded-full h-2'>
+                    <motion.div
+                      className='h-full bg-blue-600 rounded-full'
+                      initial={{ width: '0%' }}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ duration: 0.5, ease: 'easeOut' }}
                     />
                   </div>
+                </motion.div>
+              )}
 
-                  {/* Generate Test Button - REDUCED TOP MARGIN */}
-                  <motion.div
-                    variants={itemVariant}
-                    className='mt-6 flex justify-end'
-                  >
-                    <div className='flex items-center space-x-3 md:space-x-4 w-full'>
-                      <button className='text-black py-2 px-3 md:px-4 rounded-md text-sm font-medium flex items-center hover:bg-gray-100 transition-all border border-gray-300'>
-                        <div className='flex items-center space-x-1 md:space-x-2'>
-                          <Clock className='h-4 w-4' />
-                          <span>Save Draft</span>
-                        </div>
+              {/* Test Preview & Actions */}
+              {generationComplete && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className='mt-6'
+                >
+                  <TestPreview
+                    content={testContent}
+                    metadata={testMetadata}
+                    onContentChange={handleTestUpdate}
+                    onMetadataChange={setTestMetadata}
+                  />
+
+                  <InteractiveTestOptions
+                    settings={interactiveSettings}
+                    onSettingsChange={setInteractiveSettings}
+                    onGenerateLink={handleGenerateInteractiveLink}
+                    interactiveLink={interactiveLink}
+                    isLoading={isLoading}
+                  />
+
+                  {/* Action Buttons */}
+                  <div className='mt-6 p-4 bg-gray-50 rounded-lg'>
+                    <h3 className='text-lg font-bold text-gray-900 mb-4'>
+                      Test Actions
+                    </h3>
+
+                    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+                      <button
+                        onClick={handleViewTest}
+                        className='bg-blue-600 text-white py-3 px-4 rounded-md font-medium hover:bg-blue-700 transition-colors flex items-center justify-center'
+                      >
+                        <ExternalLink className='h-4 w-4 mr-2' />
+                        View Test
                       </button>
 
                       <button
-                        className='bg-gradient-to-br from-blue-600 to-blue-800 text-white py-2 px-4 md:px-6 rounded-md text-sm font-medium flex items-center justify-center shadow-sm hover:bg-blue-700 transition-all ml-auto'
-                        onClick={handleGenerate}
-                        disabled={isLoading}
+                        onClick={() => {
+                          if (interactiveLink) {
+                            navigator.clipboard.writeText(interactiveLink)
+                            toast.success('Test link copied to clipboard!')
+                          } else {
+                            toast.error('Generate a test link first')
+                          }
+                        }}
+                        className='bg-green-600 text-white py-3 px-4 rounded-md font-medium hover:bg-green-700 transition-colors flex items-center justify-center'
                       >
-                        {isLoading ? (
-                          <div className='flex items-center space-x-2 md:space-x-3'>
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{
-                                duration: 1,
-                                repeat: Infinity,
-                                ease: 'linear',
-                              }}
-                              className='h-4 w-4 border-2 border-white border-t-transparent rounded-full'
-                            />
-                            <span>Generating...</span>
-                          </div>
-                        ) : (
-                          <div className='flex items-center space-x-1 md:space-x-2'>
-                            <Sparkles className='h-4 w-4' />
-                            <span>
-                              {generationComplete ? 'Regenerate' : 'Generate'}
-                            </span>
-                          </div>
-                        )}
+                        <Share className='h-4 w-4 mr-2' />
+                        Share Test
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const element = document.createElement('a')
+                          const file = new Blob([testContent], {
+                            type: 'text/plain',
+                          })
+                          element.href = URL.createObjectURL(file)
+                          element.download = `${
+                            testMetadata.title || 'test'
+                          }.txt`
+                          document.body.appendChild(element)
+                          element.click()
+                          document.body.removeChild(element)
+                          toast.success('Test downloaded!')
+                        }}
+                        className='bg-gray-600 text-white py-3 px-4 rounded-md font-medium hover:bg-gray-700 transition-colors flex items-center justify-center'
+                      >
+                        Download
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
 
-                  {/* Test Preview Section */}
-                  {generationComplete && (
+                  {/* Interactive Link Display */}
+                  {interactiveLink && (
                     <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.3, duration: 0.5 }}
-                      className='mt-6'
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className='mt-4 p-4 bg-white border border-gray-200 rounded-lg'
                     >
-                      <TestPreview
-                        content={testContent}
-                        metadata={testMetadata}
-                        onContentChange={(newContent) => {
-                          setTestContent(newContent)
-                        }}
-                        onMetadataChange={setTestMetadata}
-                      />
-
-                      <InteractiveTestOptions
-                        settings={interactiveSettings}
-                        onSettingsChange={setInteractiveSettings}
-                        onGenerateLink={handleGenerateInteractiveLink}
-                        interactiveLink={interactiveLink}
-                        isLoading={isLoading}
-                      />
-
-                      {/* Display Interactive Link */}
-                      {interactiveLink && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, ease: 'easeOut' }}
-                          className='mt-6'
-                        >
-                          <div className='bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 p-5'>
-                            <p className='text-sm font-medium text-gray-700 mb-3'>
-                              Your generated link:
-                            </p>
-                            <div className='flex flex-col sm:flex-row items-center gap-4'>
-                              <div className='relative flex-1 w-full'>
-                                <input
-                                  type='text'
-                                  value={interactiveLink}
-                                  readOnly
-                                  className='w-full bg-gray-50 border border-gray-200 rounded-md px-4 py-2 text-sm text-gray-800 pr-10 font-mono hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                                  onClick={(e) => e.target.select()}
-                                />
-                                <div className='absolute right-3 top-1/2 transform -translate-y-1/2'>
-                                  <svg
-                                    className='w-4 h-4 text-gray-400'
-                                    fill='none'
-                                    viewBox='0 0 24 24'
-                                    stroke='currentColor'
-                                  >
-                                    <path
-                                      strokeLinecap='round'
-                                      strokeLinejoin='round'
-                                      strokeWidth={2}
-                                      d='M13 7l5 5m0 0l-5 5m5-5H6'
-                                    />
-                                  </svg>
-                                </div>
-                              </div>
-                              <div className='flex gap-2 w-full sm:w-auto'>
-                                <button
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(
-                                      interactiveLink
-                                    )
-                                    // You could add a toast notification here
-                                  }}
-                                  className='flex-1 sm:flex-initial flex items-center justify-center py-2 px-4 bg-white border border-gray-200 rounded-md text-gray-700 hover:bg-gray-200 hover:border-gray-300 transition-all text-sm font-medium'
-                                >
-                                  <Copy className='h-4 w-4 mr-2' />
-                                  Copy
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    window.open(interactiveLink, '_blank')
-                                  }
-                                  className='flex-1 sm:flex-initial flex items-center justify-center py-2 px-4 bg-blue-600 rounded-md text-white hover:bg-blue-700 transition-all text-sm font-medium shadow-sm hover:shadow-md'
-                                >
-                                  <ArrowRight className='h-4 w-4 mr-2' />
-                                  Open
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  )}
-
-                  {/* Export Options Section */}
-                  {showExportOptions && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.3 }}
-                      className='mt-5 pt-4 border-t border-gray-100'
-                    >
-                      <h3 className='text-lg  font-bold text-black mb-3'>
-                        Export Options
-                      </h3>
-
-                      <div className='mb-4'>
-                        {/* Removed "Select Format" text */}
-                        <div className='grid grid-cols-2 sm:grid-cols-4 gap-2'>
-                          {exportFormats.map((format) => (
-                            <button
-                              key={format.id}
-                              className={`relative py-2 px-4 rounded-md text-sm font-medium transition-all ${
-                                selectedExportFormat === format.id
-                                  ? 'bg-blue-50 border-2 border-blue-600 text-blue-700'
-                                  : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'
-                              }`}
-                              onClick={() => setSelectedExportFormat(format.id)}
-                            >
-                              <div className='flex flex-col items-center'>
-                                <div className='text-lg mb-1'>
-                                  {format.icon}
-                                </div>
-                                <span className='text-xs font-medium'>
-                                  {format.name}
-                                </span>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Action buttons */}
-                      <div className='grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4'>
-                        {/* Share button positioned under PDF */}
+                      <p className='text-sm font-medium text-gray-700 mb-3'>
+                        Share this link with your test takers:
+                      </p>
+                      <div className='flex items-center gap-2'>
+                        <input
+                          type='text'
+                          value={interactiveLink}
+                          readOnly
+                          className='flex-1 bg-gray-50 border border-gray-200 rounded-md px-3 py-2 text-sm font-mono'
+                          onClick={(e) => e.target.select()}
+                        />
                         <button
-                          className='bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md text-sm font-medium flex items-center justify-center hover:bg-gray-50 transition-all col-span-1 sm:col-start-1'
-                          onClick={() => {}}
+                          onClick={() => {
+                            navigator.clipboard.writeText(interactiveLink)
+                            toast.success('Link copied!')
+                          }}
+                          className='px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors'
                         >
-                          <Share className='h-4 w-4 mr-2' />
-                          <span>Share</span>
+                          <Copy className='h-4 w-4' />
                         </button>
-
-                        {/* Download button positioned under Plain Text */}
                         <button
-                          className='bg-green-600 text-white py-2 px-4 rounded-md text-sm font-medium flex items-center justify-center shadow-sm hover:bg-green-700 transition-all col-span-1 sm:col-start-4'
-                          onClick={() => handleExport(selectedExportFormat)}
-                          disabled={isLoading}
+                          onClick={() => window.open(interactiveLink, '_blank')}
+                          className='px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors'
                         >
-                          {isLoading ? (
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{
-                                duration: 1,
-                                repeat: Infinity,
-                                ease: 'linear',
-                              }}
-                              className='h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2'
-                            />
-                          ) : (
-                            <Download className='h-4 w-4 mr-2' />
-                          )}
-                          <span>Download</span>
+                          <ArrowRight className='h-4 w-4' />
                         </button>
                       </div>
                     </motion.div>
                   )}
                 </motion.div>
-              </div>
-            </motion.div>
-
-            {/* Right Sidebar Component */}
-            <div className='lg:col-span-4'>
-              <SidebarCreateTest />
+              )}
             </div>
+          </motion.div>
+
+          {/* Sidebar */}
+          <div className='lg:col-span-4'>
+            <SidebarCreateTest
+              userTests={userTests}
+              onLoadTest={loadTest}
+              onDeleteTest={deleteTest}
+              isLoading={isLoading}
+            />
           </div>
-        </main>
-      </div>
-    </>
+        </div>
+      </main>
+    </div>
   )
 }
 
