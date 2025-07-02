@@ -445,7 +445,7 @@ const TestManagementPage = () => {
         break
       case 'edit':
         // Navigate to edit page
-        window.location.href = `/edit/${test._id}`
+        window.location.href = `/management/edit/${test._id}`
         break
       case 'viewReport':
         // Navigate to analytics/report page

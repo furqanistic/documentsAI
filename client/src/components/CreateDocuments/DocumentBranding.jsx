@@ -23,14 +23,76 @@ const DocumentBranding = ({
   const [isTimePickerOpen, setIsTimePickerOpen] = useState(false)
   const timeInputRef = useRef(null)
 
-  useEffect(() => {
-    if (!metadata.documentDate) {
-      handleDateChange(new Date())
+  // Convert string date to Date object for DatePicker
+  const getDateFromString = (dateString) => {
+    if (!dateString) return new Date()
+    const date = new Date(dateString)
+    return isNaN(date.getTime()) ? new Date() : date
+  }
+
+  // Convert string time to Date object for TimePicker
+  const getTimeFromString = (timeString) => {
+    if (!timeString) return new Date()
+
+    // Parse time string (e.g., "3:30 PM" or "15:30")
+    const timeRegex12Hr = /^(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)$/
+    const timeRegex24Hr = /^(\d{1,2}):(\d{2})$/
+
+    const result = new Date()
+
+    let match = timeString.match(timeRegex12Hr)
+    if (match) {
+      let hours = parseInt(match[1])
+      const minutes = parseInt(match[2])
+      const meridiem = match[3].toUpperCase()
+
+      if (meridiem === 'PM' && hours !== 12) {
+        hours += 12
+      } else if (meridiem === 'AM' && hours === 12) {
+        hours = 0
+      }
+
+      result.setHours(hours, minutes, 0, 0)
+      return result
     }
-    if (!metadata.documentTime) {
-      handleTimeChange(new Date())
+
+    match = timeString.match(timeRegex24Hr)
+    if (match) {
+      const hours = parseInt(match[1])
+      const minutes = parseInt(match[2])
+
+      if (hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60) {
+        result.setHours(hours, minutes, 0, 0)
+        return result
+      }
+    }
+
+    return new Date()
+  }
+
+  // Initialize with current date/time if not set
+  useEffect(() => {
+    if (!metadata.date) {
+      const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+      onMetadataChange({ ...metadata, date: today })
+    }
+    if (!metadata.time) {
+      const now = new Date()
+      const timeString = now.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      })
+      onMetadataChange({ ...metadata, time: timeString })
     }
   }, [])
+
+  // Set up logo preview if logo exists
+  useEffect(() => {
+    if (metadata.logo && typeof metadata.logo === 'string') {
+      setPreviewLogo(metadata.logo)
+    }
+  }, [metadata.logo])
 
   // Format time for display
   const formatTime = (date) => {
@@ -45,9 +107,12 @@ const DocumentBranding = ({
   const handleLogoUpload = (event) => {
     const file = event.target.files[0]
     if (file) {
-      onMetadataChange({ ...metadata, logo: file })
       const reader = new FileReader()
-      reader.onload = (e) => setPreviewLogo(e.target.result)
+      reader.onload = (e) => {
+        const imageData = e.target.result
+        setPreviewLogo(imageData)
+        onMetadataChange({ ...metadata, logo: imageData })
+      }
       reader.readAsDataURL(file)
     }
   }
@@ -58,16 +123,24 @@ const DocumentBranding = ({
   }
 
   const handleDateChange = (date) => {
-    onMetadataChange({ ...metadata, documentDate: date })
+    if (date) {
+      // Convert Date object to YYYY-MM-DD string
+      const dateString = date.toISOString().split('T')[0]
+      onMetadataChange({ ...metadata, date: dateString })
+    }
   }
 
   const handleTimeChange = (time) => {
-    onMetadataChange({ ...metadata, documentTime: time })
+    if (time) {
+      // Convert Date object to time string
+      const timeString = formatTime(time)
+      onMetadataChange({ ...metadata, time: timeString })
+    }
   }
 
   const handleRemoveLogo = (e) => {
     e.stopPropagation()
-    onMetadataChange({ ...metadata, logo: null })
+    onMetadataChange({ ...metadata, logo: '' })
     setPreviewLogo(null)
   }
 
@@ -134,16 +207,14 @@ const DocumentBranding = ({
 
   const CustomTimeInput = React.forwardRef(({ value, onClick }, ref) => {
     // Use local state for the input value to prevent focus loss
-    const [localValue, setLocalValue] = useState(
-      formatTime(metadata.documentTime)
-    )
+    const [localValue, setLocalValue] = useState(metadata.time || '')
 
     // Update local value when metadata changes from picker
     useEffect(() => {
-      if (metadata.documentTime && !timeInputRef.current?.matches(':focus')) {
-        setLocalValue(formatTime(metadata.documentTime))
+      if (metadata.time && !timeInputRef.current?.matches(':focus')) {
+        setLocalValue(metadata.time)
       }
-    }, [metadata.documentTime])
+    }, [metadata.time])
 
     return (
       <div className='relative w-full'>
@@ -163,7 +234,7 @@ const DocumentBranding = ({
               handleTimeChange(parsedTime)
             } else {
               // Reset to previous valid time if parsing fails
-              setLocalValue(formatTime(metadata.documentTime))
+              setLocalValue(metadata.time || '')
             }
           }}
           onKeyDown={(e) => {
@@ -298,7 +369,7 @@ const DocumentBranding = ({
                 Date
               </label>
               <DatePicker
-                selected={metadata.documentDate}
+                selected={getDateFromString(metadata.date)}
                 onChange={handleDateChange}
                 customInput={<CustomDateInput />}
                 dateFormat='MMM d, yyyy'
@@ -311,7 +382,7 @@ const DocumentBranding = ({
                 Time
               </label>
               <DatePicker
-                selected={metadata.documentTime}
+                selected={getTimeFromString(metadata.time)}
                 onChange={handleTimeChange}
                 showTimeSelect
                 showTimeSelectOnly

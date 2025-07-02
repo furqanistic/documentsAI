@@ -37,14 +37,66 @@ const DocumentSchema = new mongoose.Schema(
       default: false,
     },
     interactiveSettings: {
-      timeLimit: Number,
-      showResults: Boolean,
-      allowRetry: Boolean,
-      isPublic: Boolean,
+      // Basic Test Settings
+      timeLimit: { type: Number, default: 30 },
+      showResults: { type: Boolean, default: true },
+      allowRetry: { type: Boolean, default: true },
+      isPublic: { type: Boolean, default: false },
+      allowSaving: { type: Boolean, default: true },
+      randomizeQuestions: { type: Boolean, default: false },
+      questionTimeLimit: { type: Boolean, default: false },
+
+      // Grading & Scoring
+      passingScore: { type: Number, default: 70 },
+      gradingScheme: {
+        type: String,
+        enum: ['standard', 'percentage', 'passfail', 'points'],
+        default: 'standard',
+      },
+      enablePartialCredit: { type: Boolean, default: false },
+      certificate: { type: Boolean, default: false },
+
+      // Appearance & Branding
+      customTheme: {
+        type: String,
+        enum: ['default', 'orion', 'kids', 'minimal'],
+        default: 'default',
+      },
+      showProgressBar: { type: Boolean, default: true },
+      questionLayout: {
+        type: String,
+        enum: ['standard', 'all', 'sections'],
+        default: 'standard',
+      },
+      showBranding: { type: Boolean, default: false },
+
+      // Security & Privacy
+      requireLogin: { type: Boolean, default: true },
+      preventTabSwitching: { type: Boolean, default: false },
+      disableCopyPaste: { type: Boolean, default: false },
+      ipRestriction: { type: Boolean, default: false },
+
+      // Results & Feedback
+      showCorrectAnswers: { type: Boolean, default: true },
+      showFeedback: { type: Boolean, default: true },
+      feedbackType: {
+        type: String,
+        enum: ['detailed', 'basic', 'endOnly'],
+        default: 'detailed',
+      },
+
+      // Email Notifications
+      sendResultsEmail: { type: Boolean, default: false },
+      emailTemplate: {
+        type: String,
+        enum: ['default', 'friendly', 'detailed', 'certificate'],
+        default: 'default',
+      },
+      notifyInstructor: { type: Boolean, default: false },
     },
     shareLink: {
       type: String,
-      unique: true, // This creates the index automatically
+      unique: true,
       sparse: true,
     },
     isDeleted: {
@@ -55,10 +107,7 @@ const DocumentSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-// Index for faster queries (keep these - they're not duplicates)
 DocumentSchema.index({ userId: 1, createdAt: -1 })
 DocumentSchema.index({ documentType: 1 })
-
-// REMOVED: DocumentSchema.index({ shareLink: 1 }) - this was the duplicate!
 
 export default mongoose.model('Document', DocumentSchema)

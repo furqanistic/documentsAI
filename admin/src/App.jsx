@@ -8,6 +8,7 @@ import DashboardPage from './pages/Dashboard/DashboardPage'
 import MyDocumentsPage from './pages/Documents/MyDocumentsPage'
 import ProfileSettingsPage from './pages/Settings/ProfileSettingsPage'
 import MyTemplatesPage from './pages/Template/MyTemplatesPage'
+import EditTest from './pages/TestManagement/EditTest'
 import ExamReport from './pages/TestManagement/ExamReport'
 import TestManagementPage from './pages/TestManagement/TestManagementPage'
 import TestReportPage from './pages/TestManagement/TestReportPage'
@@ -110,6 +111,15 @@ const App = () => {
           element={
             <ProtectedRoute>
               <TestReportPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Edit Report page */}
+        <Route
+          path='/management/edit/:id'
+          element={
+            <ProtectedRoute>
+              <EditTest />
             </ProtectedRoute>
           }
         />
